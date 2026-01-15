@@ -1,0 +1,165 @@
+{
+  "common": {
+    "loading": "පූරණය වෙමින්...",
+    "error": "යම් දෝෂයක් සිදුවිය",
+    "retry": "නැවත උත්සාහ කරන්න",
+    "cancel": "අවලංගු කරන්න",
+    "save": "සුරකින්න",
+    "delete": "මකන්න",
+    "edit": "සංස්කරණය",
+    "back": "ආපසු",
+    "next": "ඊළඟ",
+    "previous": "පෙර",
+    "search": "සොයන්න",
+    "noResults": "ප්‍රතිඵල හමු නොවීය",
+    "offline": "ඔබ ඔෆ්ලයින්",
+    "online": "නැවත ඔන්ලයින්"
+  },
+  "nav": {
+    "home": "මුල් පිටුව",
+    "library": "මගේ පුස්තකාලය",
+    "settings": "සැකසුම්",
+    "login": "පිවිසෙන්න",
+    "logout": "පිටවීම"
+  },
+  "auth": {
+    "phone": {
+      "title": "ඔබගේ දුරකථන අංකය ඇතුළත් කරන්න",
+      "subtitle": "අපි ඔබට සත්‍යාපන කේතයක් එවන්නෙමු",
+      "placeholder": "07X XXX XXXX",
+      "submit": "කේතය යවන්න",
+      "invalid": "කරුණාකර වලංගු ශ්‍රී ලංකා දුරකථන අංකයක් ඇතුළත් කරන්න"
+    },
+    "otp": {
+      "title": "සත්‍යාපන කේතය ඇතුළත් කරන්න",
+      "subtitle": "{phone} වෙත කේතය යවන ලදී",
+      "placeholder": "ඉලක්කම් 4ක කේතය ඇතුළත් කරන්න",
+      "submit": "සත්‍යාපනය",
+      "resend": "කේතය නැවත යවන්න",
+      "resendIn": "තත්පර {seconds}කින් නැවත යවන්න",
+      "invalid": "වලංගු නොවන සත්‍යාපන කේතය",
+      "expired": "කේතය කල් ඉකුත් වී ඇත. කරුණාකර අලුත් එකක් ඉල්ලන්න."
+    },
+    "welcome": {
+      "title": "සාදරයෙන් පිළිගනිමු!",
+      "subtitle": "ඔබේ කියවීමේ අත්දැකීම සකසමු",
+      "languageLabel": "ඔබේ භාෂාව තෝරන්න",
+      "installTitle": "යෙදුම ස්ථාපනය කරන්න",
+      "installSubtitle": "හොඳම අත්දැකීම සඳහා Book Reader ඔබේ මුල් තිරයට එක් කරන්න",
+      "installButton": "ස්ථාපනය",
+      "skipInstall": "පසුව",
+      "continue": "ආරම්භ කරන්න"
+    }
+  },
+  "books": {
+    "catalog": {
+      "title": "පොත් පරිශීලනය",
+      "subtitle": "සිංහල සාහිත්‍යය සොයා ගන්න",
+      "searchPlaceholder": "පොත් සොයන්න...",
+      "noBooks": "තවම පොත් නොමැත",
+      "featured": "විශේෂිත",
+      "latest": "නවතම",
+      "free": "නොමිලේ",
+      "all": "සියලුම පොත්"
+    },
+    "details": {
+      "by": "විසින්",
+      "chapters": "පරිච්ඡේද",
+      "chapter": "පරිච්ඡේදය",
+      "words": "වචන",
+      "readingTime": "කියවීමේ කාලය",
+      "preview": "නොමිලේ පෙරදසුන",
+      "purchase": "රු. {price} ට මිලදී ගන්න",
+      "purchased": "මිලදී ගෙන ඇත",
+      "startReading": "කියවීම ආරම්භ කරන්න",
+      "continueReading": "කියවීම දිගටම කරගෙන යන්න",
+      "description": "විස්තරය"
+    },
+    "price": {
+      "free": "නොමිලේ",
+      "currency": "රු."
+    }
+  },
+  "reader": {
+    "chapter": "පරිච්ඡේදය {number}",
+    "progress": "{percent}% සම්පූර්ණයි",
+    "settings": {
+      "title": "කියවීමේ සැකසුම්",
+      "theme": "තේමාව",
+      "fontSize": "අකුරු ප්‍රමාණය",
+      "lineSpacing": "පේළි පරතරය",
+      "smaller": "කුඩා",
+      "larger": "විශාල",
+      "tighter": "සමීප",
+      "looser": "දුර"
+    },
+    "themes": {
+      "light": "ආලෝකය",
+      "dark": "අඳුරු",
+      "sepia": "සේපියා"
+    },
+    "navigation": {
+      "previousChapter": "පෙර පරිච්ඡේදය",
+      "nextChapter": "ඊළඟ පරිච්ඡේදය",
+      "tableOfContents": "පටුන"
+    },
+    "offline": {
+      "available": "ඔෆ්ලයින් ලබා ගත හැක",
+      "downloading": "බාගත වෙමින්...",
+      "download": "ඔෆ්ලයින් සඳහා බාගන්න",
+      "remove": "බාගැනීම ඉවත් කරන්න"
+    }
+  },
+  "library": {
+    "title": "මගේ පුස්තකාලය",
+    "empty": "ඔබේ පුස්තකාලය හිස්ය",
+    "emptySubtitle": "ඔබ මිලදී ගන්නා පොත් මෙහි පෙන්වනු ඇත",
+    "browseBooks": "පොත් පරිශීලනය කරන්න",
+    "continueReading": "කියවීම දිගටම කරගෙන යන්න",
+    "progress": "පරිච්ඡේදය {current} / {total}",
+    "lastRead": "අවසන් වරට කියවූයේ {date}",
+    "downloaded": "බාගත කර ඇත",
+    "notDownloaded": "බාගත කර නැත"
+  },
+  "purchase": {
+    "title": "පොත මිලදී ගන්න",
+    "bankDetails": "බැංකු මාරු විස්තර",
+    "bankName": "බැංකුවේ නම",
+    "accountNumber": "ගිණුම් අංකය",
+    "accountName": "ගිණුම් නාමය",
+    "branch": "ශාඛාව",
+    "amount": "මුදල",
+    "reference": "යොමුව",
+    "referenceHint": "මෙය ඔබේ ගෙවීම් යොමුව ලෙස භාවිතා කරන්න",
+    "instructions": "මාරු කිරීමෙන් පසු, ඔබේ ගෙවීම් තහවුරු කිරීමේ තිර රුවක් පහතින් උඩුගත කරන්න.",
+    "uploadProof": "ගෙවීම් සාක්ෂි උඩුගත කරන්න",
+    "uploadHint": "JPG, PNG හෝ PDF, උපරිම 5MB",
+    "submit": "අනුමැතිය සඳහා ඉදිරිපත් කරන්න",
+    "pending": "අනුමැතිය බලාපොරොත්තුවෙන්",
+    "pendingMessage": "අපි ඔබේ ගෙවීම සමාලෝචනය කරමින් සිටිමු. අනුමත වූ පසු ඔබට SMS එකක් ලැබෙනු ඇත.",
+    "approved": "ගෙවීම අනුමත කරන ලදී",
+    "rejected": "ගෙවීම ප්‍රතික්ෂේප කරන ලදී",
+    "rejectedReason": "හේතුව: {reason}"
+  },
+  "settings": {
+    "title": "සැකසුම්",
+    "language": "භාෂාව",
+    "languageSubtitle": "ඔබ කැමති භාෂාව තෝරන්න",
+    "reading": "කියවීමේ මනාපයන්",
+    "readingSubtitle": "ඔබේ කියවීමේ අත්දැකීම අභිරුචිකරණය කරන්න",
+    "storage": "ගබඩාව",
+    "storageUsed": "{total} න් {used} භාවිතා කර ඇත",
+    "clearCache": "බාගත කළ පොත් මකන්න",
+    "about": "ගැන",
+    "version": "අනුවාදය",
+    "privacy": "පෞද්ගලිකත්ව ප්‍රතිපත්තිය",
+    "terms": "සේවා නියමයන්"
+  },
+  "errors": {
+    "generic": "යම් දෝෂයක් සිදුවිය. කරුණාකර නැවත උත්සාහ කරන්න.",
+    "network": "ජාල දෝෂයකි. කරුණාකර ඔබේ සම්බන්ධතාවය පරීක්ෂා කරන්න.",
+    "notFound": "පිටුව හමු නොවීය",
+    "unauthorized": "කරුණාකර ඉදිරියට යාමට පිවිසෙන්න",
+    "forbidden": "මෙම අන්තර්ගතයට ඔබට ප්‍රවේශය නැත"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "noResults": "No results found",
+    "offline": "You are offline",
+    "online": "Back online"
+  },
+  "nav": {
+    "home": "Home",
+    "library": "My Library",
+    "settings": "Settings",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "auth": {
+    "phone": {
+      "title": "Enter your phone number",
+      "subtitle": "We'll send you a verification code",
+      "placeholder": "07X XXX XXXX",
+      "submit": "Send Code",
+      "invalid": "Please enter a valid Sri Lankan phone number"
+    },
+    "otp": {
+      "title": "Enter verification code",
+      "subtitle": "Code sent to {phone}",
+      "placeholder": "Enter 4-digit code",
+      "submit": "Verify",
+      "resend": "Resend code",
+      "resendIn": "Resend in {seconds}s",
+      "invalid": "Invalid verification code",
+      "expired": "Code has expired. Please request a new one."
+    },
+    "welcome": {
+      "title": "Welcome!",
+      "subtitle": "Let's set up your reading experience",
+      "languageLabel": "Choose your language",
+      "installTitle": "Install App",
+      "installSubtitle": "Add Book Reader to your home screen for the best experience",
+      "installButton": "Install",
+      "skipInstall": "Maybe later",
+      "continue": "Get Started"
+    }
+  },
+  "books": {
+    "catalog": {
+      "title": "Browse Books",
+      "subtitle": "Discover Sinhala literature",
+      "searchPlaceholder": "Search books...",
+      "noBooks": "No books available yet",
+      "featured": "Featured",
+      "latest": "Latest",
+      "free": "Free",
+      "all": "All Books"
+    },
+    "details": {
+      "by": "by",
+      "chapters": "Chapters",
+      "chapter": "Chapter",
+      "words": "words",
+      "readingTime": "reading time",
+      "preview": "Free Preview",
+      "purchase": "Purchase for Rs. {price}",
+      "purchased": "Purchased",
+      "startReading": "Start Reading",
+      "continueReading": "Continue Reading",
+      "description": "Description"
+    },
+    "price": {
+      "free": "Free",
+      "currency": "Rs."
+    }
+  },
+  "reader": {
+    "chapter": "Chapter {number}",
+    "progress": "{percent}% complete",
+    "settings": {
+      "title": "Reading Settings",
+      "theme": "Theme",
+      "fontSize": "Font Size",
+      "lineSpacing": "Line Spacing",
+      "smaller": "Smaller",
+      "larger": "Larger",
+      "tighter": "Tighter",
+      "looser": "Looser"
+    },
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "sepia": "Sepia"
+    },
+    "navigation": {
+      "previousChapter": "Previous Chapter",
+      "nextChapter": "Next Chapter",
+      "tableOfContents": "Table of Contents"
+    },
+    "offline": {
+      "available": "Available offline",
+      "downloading": "Downloading...",
+      "download": "Download for offline",
+      "remove": "Remove download"
+    }
+  },
+  "library": {
+    "title": "My Library",
+    "empty": "Your library is empty",
+    "emptySubtitle": "Books you purchase will appear here",
+    "browseBooks": "Browse Books",
+    "continueReading": "Continue Reading",
+    "progress": "Chapter {current} of {total}",
+    "lastRead": "Last read {date}",
+    "downloaded": "Downloaded",
+    "notDownloaded": "Not downloaded"
+  },
+  "purchase": {
+    "title": "Purchase Book",
+    "bankDetails": "Bank Transfer Details",
+    "bankName": "Bank Name",
+    "accountNumber": "Account Number",
+    "accountName": "Account Name",
+    "branch": "Branch",
+    "amount": "Amount",
+    "reference": "Reference",
+    "referenceHint": "Use this as your payment reference",
+    "instructions": "After transferring, upload a screenshot of your payment confirmation below.",
+    "uploadProof": "Upload Payment Proof",
+    "uploadHint": "JPG, PNG or PDF, max 5MB",
+    "submit": "Submit for Approval",
+    "pending": "Pending Approval",
+    "pendingMessage": "We're reviewing your payment. You'll receive an SMS once approved.",
+    "approved": "Payment Approved",
+    "rejected": "Payment Rejected",
+    "rejectedReason": "Reason: {reason}"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageSubtitle": "Choose your preferred language",
+    "reading": "Reading Preferences",
+    "readingSubtitle": "Customize your reading experience",
+    "storage": "Storage",
+    "storageUsed": "{used} of {total} used",
+    "clearCache": "Clear downloaded books",
+    "about": "About",
+    "version": "Version",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "notFound": "Page not found",
+    "unauthorized": "Please login to continue",
+    "forbidden": "You don't have access to this content"
+  }
+}

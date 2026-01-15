@@ -1,0 +1,156 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getSession } from "@/lib/auth";
+import { LibraryContent } from "./library-content";
+
+export const metadata = {
+  title: "My Library",
+  description: "Your personal collection of Sinhala novels",
+};
+
+interface LibraryBook {
+  book_id: string;
+  title_en: string;
+  title_si: string;
+  author_en: string;
+  author_si: string;
+  cover_image_url: string | null;
+  total_chapters: number;
+  current_chapter: number | null;
+  completed_chapters: number[];
+  last_read_at: string | null;
+  purchased_at: string;
+}
+
+async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
+  const supabase = await createClient();
+
+  // Get user's purchased books with reading progress
+  const { data: purchases, error: purchaseError } = await supabase
+    .from("purchases")
+    .select(`
+      book_id,
+      created_at,
+      books (
+        id,
+        title_en,
+        title_si,
+        author_en,
+        author_si,
+        cover_image_url,
+        total_chapters
+      )
+    `)
+    .eq("user_id", userId)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false });
+
+  if (purchaseError) {
+    console.error("Error fetching purchases:", purchaseError);
+    return [];
+  }
+
+  // Get reading progress for all books
+  const { data: progress, error: progressError } = await supabase
+    .from("reading_progress")
+    .select("book_id, chapter_id, completed_chapters, last_read_at")
+    .eq("user_id", userId);
+
+  if (progressError) {
+    console.error("Error fetching progress:", progressError);
+  }
+
+  // Map progress to books
+  const progressMap = new Map(
+    (progress || []).map((p) => [p.book_id, p])
+  );
+
+  // Also get free books the user has started reading
+  const { data: freeBooks, error: freeBooksError } = await supabase
+    .from("books")
+    .select("*")
+    .eq("is_free", true)
+    .eq("is_published", true);
+
+  if (freeBooksError) {
+    console.error("Error fetching free books:", freeBooksError);
+  }
+
+  // Combine purchased books
+  const libraryBooks: LibraryBook[] = (purchases || [])
+    .filter((p) => p.books)
+    .map((p) => {
+      // Handle both single object and array responses from Supabase
+      const booksData = p.books;
+      const book = (Array.isArray(booksData) ? booksData[0] : booksData) as {
+        id: string;
+        title_en: string;
+        title_si: string;
+        author_en: string;
+        author_si: string;
+        cover_image_url: string | null;
+        total_chapters: number;
+      };
+      const bookProgress = progressMap.get(book.id);
+
+      return {
+        book_id: book.id,
+        title_en: book.title_en,
+        title_si: book.title_si,
+        author_en: book.author_en,
+        author_si: book.author_si,
+        cover_image_url: book.cover_image_url,
+        total_chapters: book.total_chapters,
+        current_chapter: bookProgress?.completed_chapters?.length
+          ? Math.max(...bookProgress.completed_chapters) + 1
+          : 1,
+        completed_chapters: bookProgress?.completed_chapters || [],
+        last_read_at: bookProgress?.last_read_at || null,
+        purchased_at: p.created_at,
+      };
+    });
+
+  // Add free books that have progress
+  if (freeBooks) {
+    for (const book of freeBooks) {
+      const bookProgress = progressMap.get(book.id);
+      if (bookProgress && !libraryBooks.find((lb) => lb.book_id === book.id)) {
+        libraryBooks.push({
+          book_id: book.id,
+          title_en: book.title_en,
+          title_si: book.title_si,
+          author_en: book.author_en,
+          author_si: book.author_si,
+          cover_image_url: book.cover_image_url,
+          total_chapters: book.total_chapters,
+          current_chapter: bookProgress.completed_chapters?.length
+            ? Math.max(...bookProgress.completed_chapters) + 1
+            : 1,
+          completed_chapters: bookProgress.completed_chapters || [],
+          last_read_at: bookProgress.last_read_at,
+          purchased_at: bookProgress.last_read_at || new Date().toISOString(),
+        });
+      }
+    }
+  }
+
+  // Sort by last_read_at (most recent first)
+  return libraryBooks.sort((a, b) => {
+    if (!a.last_read_at && !b.last_read_at) return 0;
+    if (!a.last_read_at) return 1;
+    if (!b.last_read_at) return -1;
+    return new Date(b.last_read_at).getTime() - new Date(a.last_read_at).getTime();
+  });
+}
+
+export default async function LibraryPage() {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/auth?redirect=/library");
+  }
+
+  const books = await getLibraryBooks(session.userId);
+
+  return <LibraryContent books={books} />;
+}

@@ -1,0 +1,438 @@
+/* ========================================
+   OFFLINE PAGE STYLES
+   ======================================== */
+
+.offline-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--auth-cream);
+}
+
+.offline-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.offline-illustration {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  color: var(--auth-burgundy);
+  opacity: 0.6;
+}
+
+.offline-title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--auth-ink);
+  margin-bottom: 0.5rem;
+}
+
+.offline-subtitle {
+  font-family: var(--font-sinhala);
+  font-size: 1.125rem;
+  color: var(--auth-burgundy);
+  margin-bottom: 1.5rem;
+}
+
+.offline-message {
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.offline-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.offline-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: var(--auth-burgundy);
+  color: white;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.offline-btn-primary:hover {
+  background: var(--auth-burgundy-light);
+  transform: translateY(-1px);
+}
+
+.offline-btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  background: white;
+  color: var(--auth-ink);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.offline-btn-secondary:hover {
+  background: var(--auth-cream-dark);
+  border-color: var(--auth-burgundy);
+}
+
+.offline-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(114, 47, 55, 0.08);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--auth-burgundy);
+}
+
+@media (prefers-color-scheme: dark) {
+  .offline-page {
+    background: #1A1510;
+  }
+
+  .offline-title {
+    color: #F5F0E8;
+  }
+
+  .offline-illustration {
+    color: var(--auth-gold);
+  }
+
+  .offline-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #F5F0E8;
+  }
+
+  .offline-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--auth-gold);
+  }
+
+  .offline-tip {
+    background: rgba(201, 162, 39, 0.1);
+    color: var(--auth-gold);
+  }
+}
+
+/* ========================================
+   OFFLINE BANNER STYLES
+   ======================================== */
+
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: linear-gradient(135deg, var(--auth-burgundy) 0%, #5A252C 100%);
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  animation: slideDown 0.3s ease-out;
+}
+
+.offline-banner-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.9;
+}
+
+.offline-banner-text {
+  opacity: 0.95;
+}
+
+.offline-banner-dismiss {
+  position: absolute;
+  right: 0.75rem;
+  padding: 0.25rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.offline-banner-dismiss:hover {
+  opacity: 1;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   PWA INSTALL PROMPT STYLES
+   ======================================== */
+
+.pwa-install-prompt {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1rem;
+  right: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 90;
+  animation: slideUp 0.4s ease-out;
+}
+
+.pwa-install-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.pwa-install-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--auth-burgundy) 0%, #5A252C 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.pwa-install-title {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--auth-ink);
+  margin-bottom: 0.25rem;
+}
+
+.pwa-install-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.pwa-install-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.pwa-install-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+}
+
+.pwa-install-btn-primary {
+  background: var(--auth-burgundy);
+  color: white;
+}
+
+.pwa-install-btn-primary:hover {
+  background: var(--auth-burgundy-light);
+}
+
+.pwa-install-btn-secondary {
+  background: var(--auth-cream);
+  color: var(--auth-ink);
+}
+
+.pwa-install-btn-secondary:hover {
+  background: var(--auth-cream-dark);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .pwa-install-prompt {
+    background: #2A2520;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .pwa-install-icon {
+    background: linear-gradient(135deg, var(--auth-gold) 0%, #A88920 100%);
+  }
+
+  .pwa-install-title {
+    color: #F5F0E8;
+  }
+
+  .pwa-install-btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: #F5F0E8;
+  }
+
+  .pwa-install-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* ========================================
+   DOWNLOAD PROGRESS STYLES
+   ======================================== */
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: rgba(114, 47, 55, 0.1);
+  color: var(--auth-burgundy);
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: rgba(114, 47, 55, 0.15);
+}
+
+.download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.download-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.download-btn-downloading {
+  position: relative;
+  overflow: hidden;
+}
+
+.download-btn-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(114, 47, 55, 0.2);
+  transition: width 0.3s ease;
+}
+
+.download-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.download-indicator-icon {
+  width: 14px;
+  height: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .download-btn {
+    background: rgba(201, 162, 39, 0.15);
+    color: var(--auth-gold);
+  }
+
+  .download-btn:hover:not(:disabled) {
+    background: rgba(201, 162, 39, 0.25);
+  }
+
+  .download-btn-progress {
+    background: rgba(201, 162, 39, 0.25);
+  }
+
+  .download-indicator {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+  }
+}
+
+/* ========================================
+   SYNC STATUS INDICATOR
+   ======================================== */
+
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.sync-indicator-syncing {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.sync-indicator-synced {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.sync-indicator-pending {
+  background: rgba(234, 179, 8, 0.1);
+  color: #ca8a04;
+}
+
+.sync-indicator-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.sync-indicator-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.sync-indicator-spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
