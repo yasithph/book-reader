@@ -3,46 +3,9 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PhoneInput, OTPInput } from "@/components/auth";
+import Link from "next/link";
 
 type AuthStep = "phone" | "otp";
-
-function BookIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M8 12C8 9.79086 9.79086 8 12 8H36C38.2091 8 40 9.79086 40 12V36C40 38.2091 38.2091 40 36 40H12C9.79086 40 8 38.2091 8 36V12Z"
-        className="fill-[var(--auth-burgundy)] dark:fill-[var(--auth-gold)]"
-        fillOpacity="0.1"
-      />
-      <path
-        d="M14 14V34M14 14H34M14 14L24 24M34 14V34M34 14L24 24M14 34H34M14 34L24 24M34 34L24 24"
-        className="stroke-[var(--auth-burgundy)] dark:stroke-[var(--auth-gold)]"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeOpacity="0.4"
-      />
-      <path
-        d="M24 8V40"
-        className="stroke-[var(--auth-burgundy)] dark:stroke-[var(--auth-gold)]"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M12 8C12 8 16 11 24 11C32 11 36 8 36 8"
-        className="stroke-[var(--auth-burgundy)] dark:stroke-[var(--auth-gold)]"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeOpacity="0.6"
-      />
-    </svg>
-  );
-}
 
 function AuthContent() {
   const router = useRouter();
@@ -124,115 +87,404 @@ function AuthContent() {
   };
 
   return (
-    <main className="auth-background min-h-screen flex items-center justify-center p-4 sm:p-6">
-      {/* Ambient decorative elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 -left-32 w-64 h-64 bg-[var(--auth-burgundy)] dark:bg-[var(--auth-gold)] rounded-full opacity-[0.03] blur-3xl" />
-        <div className="absolute bottom-1/4 -right-32 w-80 h-80 bg-[var(--auth-gold)] dark:bg-[var(--auth-burgundy)] rounded-full opacity-[0.04] blur-3xl" />
-      </div>
+    <main className="kindle-auth">
+      {/* Back to home link */}
+      <Link href="/" className="kindle-auth-back">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+        </svg>
+      </Link>
 
-      <div className="auth-card auth-card-animate w-full max-w-[420px] rounded-2xl p-8 sm:p-10">
-        <div className="auth-stagger">
-          {/* Header with book icon */}
-          <div className="text-center mb-8 auth-animate-in opacity-0">
-            <BookIcon className="book-icon-decoration" />
-
-            {step === "phone" ? (
-              <>
-                <h1 className="auth-title text-3xl sm:text-4xl mb-2">
-                  <span className="sinhala block">ලොග් වන්න</span>
-                </h1>
-                <p className="font-serif text-lg text-[var(--auth-ink)]/60 dark:text-[#F5F0E8]/50">
-                  Sign in to continue
-                </p>
-              </>
-            ) : (
-              <>
-                <h1 className="auth-title text-3xl sm:text-4xl mb-2">
-                  <span className="sinhala block">සත්‍යාපනය</span>
-                </h1>
-                <p className="font-serif text-lg text-[var(--auth-ink)]/60 dark:text-[#F5F0E8]/50">
-                  Verification
-                </p>
-              </>
-            )}
-          </div>
-
-          {/* Content */}
-          <div className="auth-animate-in opacity-0" style={{ animationDelay: "0.1s" }}>
-            {step === "phone" ? (
-              <PhoneInput
-                onSubmit={handleSendOTP}
-                loading={loading}
-                error={error}
-              />
-            ) : (
-              <div>
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="auth-link flex items-center gap-2 mb-6 -ml-2 text-sm"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m15 18-6-6 6-6" />
-                  </svg>
-                  Change number
-                </button>
-
-                <OTPInput
-                  phone={phone}
-                  onSubmit={handleVerifyOTP}
-                  onResend={handleResendOTP}
-                  loading={loading}
-                  error={error}
-                  expiresIn={expiresIn}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="auth-animate-in opacity-0 mt-10 pt-6 border-t border-[var(--auth-burgundy)]/10 dark:border-[var(--auth-gold)]/10" style={{ animationDelay: "0.2s" }}>
-            <p className="text-xs text-center text-[var(--auth-ink)]/40 dark:text-[#F5F0E8]/30 leading-relaxed">
-              By continuing, you agree to our{" "}
-              <span className="text-[var(--auth-burgundy)] dark:text-[var(--auth-gold)] cursor-pointer hover:underline">
-                Terms of Service
-              </span>{" "}
-              and{" "}
-              <span className="text-[var(--auth-burgundy)] dark:text-[var(--auth-gold)] cursor-pointer hover:underline">
-                Privacy Policy
-              </span>
-            </p>
-          </div>
+      <div className="kindle-auth-container">
+        {/* Logo */}
+        <div className="kindle-auth-logo">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path
+              d="M6 8C6 7.4 6.4 7 7 7H13C14.7 7 16 8.3 16 10V26C16 25.4 15.6 25 15 25H7C6.4 25 6 24.6 6 24V8Z"
+              fill="currentColor"
+              fillOpacity="0.15"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M26 8C26 7.4 25.6 7 25 7H19C17.3 7 16 8.3 16 10V26C16 25.4 16.4 25 17 25H25C25.6 25 26 24.6 26 24V8Z"
+              fill="currentColor"
+              fillOpacity="0.1"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+          </svg>
         </div>
+
+        {/* Header */}
+        <div className="kindle-auth-header">
+          {step === "phone" ? (
+            <>
+              <h1 className="kindle-auth-title">Sign in</h1>
+              <p className="kindle-auth-subtitle sinhala">ලොග් වන්න</p>
+            </>
+          ) : (
+            <>
+              <h1 className="kindle-auth-title">Verify</h1>
+              <p className="kindle-auth-subtitle sinhala">සත්‍යාපනය</p>
+            </>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="kindle-auth-content">
+          {step === "phone" ? (
+            <PhoneStep
+              onSubmit={handleSendOTP}
+              loading={loading}
+              error={error}
+            />
+          ) : (
+            <OTPStep
+              phone={phone}
+              onSubmit={handleVerifyOTP}
+              onResend={handleResendOTP}
+              onBack={handleBack}
+              loading={loading}
+              error={error}
+              expiresIn={expiresIn}
+            />
+          )}
+        </div>
+
+        {/* Footer */}
+        <p className="kindle-auth-footer">
+          By continuing, you agree to our Terms of Service and Privacy Policy
+        </p>
       </div>
     </main>
   );
 }
 
+// Phone Input Step
+function PhoneStep({
+  onSubmit,
+  loading,
+  error,
+}: {
+  onSubmit: (phone: string) => void;
+  loading: boolean;
+  error: string;
+}) {
+  const [phone, setPhone] = React.useState("");
+  const [isFocused, setIsFocused] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const formatDisplayPhone = (value: string) => {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 5) return `${digits.slice(0, 2)} ${digits.slice(2)}`;
+    return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 9)}`;
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 10) {
+      setPhone(value);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phone.length >= 9) {
+      onSubmit(phone);
+    }
+  };
+
+  const isValid = phone.length >= 9;
+
+  return (
+    <form onSubmit={handleSubmit} className="kindle-auth-form">
+      <div className="kindle-auth-field">
+        <label className="kindle-auth-label">
+          Phone number
+          <span className="kindle-auth-label-si sinhala">දුරකථන අංකය</span>
+        </label>
+
+        <div
+          className={`kindle-auth-phone-input ${isFocused ? "kindle-auth-phone-input-focused" : ""}`}
+          onClick={() => inputRef.current?.focus()}
+        >
+          <span className="kindle-auth-country-code">+94</span>
+          <input
+            ref={inputRef}
+            type="tel"
+            inputMode="numeric"
+            placeholder="7X XXX XXXX"
+            value={formatDisplayPhone(phone)}
+            onChange={handleChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            disabled={loading}
+            autoComplete="tel"
+            className="kindle-auth-input"
+          />
+          {phone.length > 0 && (
+            <span className="kindle-auth-input-status">
+              {isValid ? (
+                <svg viewBox="0 0 20 20" fill="currentColor" className="kindle-auth-check">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <span className="kindle-auth-remaining">{9 - phone.length}</span>
+              )}
+            </span>
+          )}
+        </div>
+
+        {error && (
+          <div className="kindle-auth-error">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <p className="kindle-auth-hint sinhala">
+          ඔබගේ දුරකථන අංකයට සත්‍යාපන කේතයක් යවනු ලැබේ
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        disabled={!isValid || loading}
+        className="kindle-auth-submit"
+      >
+        {loading ? (
+          <span className="kindle-auth-loading">
+            <svg className="kindle-auth-spinner" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+            Sending code...
+          </span>
+        ) : (
+          <>
+            Continue
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+            </svg>
+          </>
+        )}
+      </button>
+    </form>
+  );
+}
+
+// OTP Input Step
+function OTPStep({
+  phone,
+  onSubmit,
+  onResend,
+  onBack,
+  loading,
+  error,
+  expiresIn,
+}: {
+  phone: string;
+  onSubmit: (code: string) => void;
+  onResend: () => void;
+  onBack: () => void;
+  loading: boolean;
+  error: string;
+  expiresIn: number;
+}) {
+  const [code, setCode] = React.useState(["", "", "", "", "", ""]);
+  const [timeLeft, setTimeLeft] = React.useState(expiresIn);
+  const [canResend, setCanResend] = React.useState(false);
+  const inputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
+  React.useEffect(() => {
+    if (timeLeft <= 0) {
+      setCanResend(true);
+      return;
+    }
+    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
+  React.useEffect(() => {
+    setTimeLeft(expiresIn);
+    setCanResend(false);
+  }, [expiresIn]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const newCode = [...code];
+    newCode[index] = digit;
+    setCode(newCode);
+
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+
+    if (digit && index === 5) {
+      const fullCode = newCode.join("");
+      if (fullCode.length === 6) {
+        onSubmit(fullCode);
+      }
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pastedData.length > 0) {
+      const newCode = [...code];
+      for (let i = 0; i < 6; i++) {
+        newCode[i] = pastedData[i] || "";
+      }
+      setCode(newCode);
+      const nextEmpty = newCode.findIndex((c) => !c);
+      inputRefs.current[nextEmpty === -1 ? 5 : nextEmpty]?.focus();
+      if (pastedData.length === 6) {
+        onSubmit(pastedData);
+      }
+    }
+  };
+
+  const handleResend = () => {
+    setCode(["", "", "", "", "", ""]);
+    setTimeLeft(expiresIn);
+    setCanResend(false);
+    onResend();
+    inputRefs.current[0]?.focus();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const fullCode = code.join("");
+    if (fullCode.length === 6) {
+      onSubmit(fullCode);
+    }
+  };
+
+  const maskedPhone = phone.replace(/(\d{2})(\d+)(\d{2})/, "$1****$3");
+
+  return (
+    <form onSubmit={handleSubmit} className="kindle-auth-form">
+      {/* Back button */}
+      <button type="button" onClick={onBack} className="kindle-auth-back-btn">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+        </svg>
+        Change number
+      </button>
+
+      {/* Phone display */}
+      <div className="kindle-auth-phone-display">
+        <p className="kindle-auth-phone-label">Code sent to</p>
+        <p className="kindle-auth-phone-number">+94 {maskedPhone}</p>
+      </div>
+
+      {/* OTP Input */}
+      <div className="kindle-auth-otp-container" onPaste={handlePaste}>
+        {code.map((digit, index) => (
+          <React.Fragment key={index}>
+            <input
+              ref={(el) => { inputRefs.current[index] = el; }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleChange(index, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(index, e)}
+              disabled={loading}
+              className={`kindle-auth-otp-digit ${digit ? "kindle-auth-otp-digit-filled" : ""}`}
+              autoFocus={index === 0}
+            />
+            {index === 2 && <span className="kindle-auth-otp-separator">–</span>}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {error && (
+        <div className="kindle-auth-error kindle-auth-error-centered">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Timer */}
+      <div className="kindle-auth-timer-section">
+        {timeLeft > 0 ? (
+          <p className="kindle-auth-timer-text">
+            Code expires in <span className="kindle-auth-timer-value">{formatTime(timeLeft)}</span>
+          </p>
+        ) : (
+          <p className="kindle-auth-timer-expired">Code has expired</p>
+        )}
+
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={!canResend || loading}
+          className="kindle-auth-resend"
+        >
+          {canResend ? "Resend code" : `Resend in ${formatTime(timeLeft)}`}
+        </button>
+      </div>
+
+      <button
+        type="submit"
+        disabled={code.join("").length !== 6 || loading}
+        className="kindle-auth-submit"
+      >
+        {loading ? (
+          <span className="kindle-auth-loading">
+            <svg className="kindle-auth-spinner" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+            Verifying...
+          </span>
+        ) : (
+          <>
+            Verify
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+            </svg>
+          </>
+        )}
+      </button>
+    </form>
+  );
+}
+
 function AuthSkeleton() {
   return (
-    <main className="auth-background min-h-screen flex items-center justify-center p-4 sm:p-6">
-      <div className="auth-card w-full max-w-[420px] rounded-2xl p-8 sm:p-10">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 mx-auto mb-5 rounded-lg bg-[var(--auth-burgundy)]/10 dark:bg-[var(--auth-gold)]/10 animate-pulse" />
-          <div className="h-10 w-32 mx-auto mb-2 rounded bg-[var(--auth-burgundy)]/10 dark:bg-[var(--auth-gold)]/10 animate-pulse" />
-          <div className="h-5 w-24 mx-auto rounded bg-[var(--auth-burgundy)]/5 dark:bg-[var(--auth-gold)]/5 animate-pulse" />
+    <main className="kindle-auth">
+      <div className="kindle-auth-container">
+        <div className="kindle-auth-logo">
+          <div className="kindle-auth-skeleton" style={{ width: 40, height: 40, borderRadius: 8 }} />
         </div>
-        <div className="space-y-4">
-          <div className="h-4 w-28 rounded bg-[var(--auth-burgundy)]/10 dark:bg-[var(--auth-gold)]/10 animate-pulse" />
-          <div className="h-14 w-full rounded-lg bg-[var(--auth-burgundy)]/5 dark:bg-[var(--auth-gold)]/5 animate-pulse" />
-          <div className="h-3 w-48 rounded bg-[var(--auth-burgundy)]/5 dark:bg-[var(--auth-gold)]/5 animate-pulse" />
-          <div className="h-14 w-full rounded-lg bg-[var(--auth-burgundy)]/10 dark:bg-[var(--auth-gold)]/10 animate-pulse" />
+        <div className="kindle-auth-header">
+          <div className="kindle-auth-skeleton" style={{ width: 120, height: 32, marginBottom: 8 }} />
+          <div className="kindle-auth-skeleton" style={{ width: 80, height: 20 }} />
+        </div>
+        <div className="kindle-auth-content">
+          <div className="kindle-auth-skeleton" style={{ width: '100%', height: 56, marginBottom: 16 }} />
+          <div className="kindle-auth-skeleton" style={{ width: '100%', height: 48 }} />
         </div>
       </div>
     </main>

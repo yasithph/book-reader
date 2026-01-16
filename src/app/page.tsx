@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getSession } from "@/lib/auth";
 import type { Book } from "@/types";
+import { KindleHomeContent } from "@/components/home/kindle-home-content";
+import { BottomNav } from "@/components/layout/bottom-nav";
 
 export const metadata = {
   title: "කශ්වි අමරසූරිය - Kashvi Amarasooriya",
@@ -44,7 +47,7 @@ function BookIcon({ className }: { className?: string }) {
   );
 }
 
-// Personal book card component
+// Personal book card component (for public view)
 function PersonalBookCard({ book, index }: { book: Book; index: number }) {
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("en-LK", {
@@ -106,7 +109,7 @@ function PersonalBookCard({ book, index }: { book: Book; index: number }) {
   );
 }
 
-// Featured book component - compact design
+// Featured book component - compact design (for public view)
 function FeaturedBook({ book }: { book: Book }) {
   return (
     <Link href={`/books/${book.id}`} className="featured-book-link">
@@ -161,8 +164,8 @@ function BooksSkeleton() {
   );
 }
 
-// Books content component
-async function BooksContent() {
+// Public books content component (for non-logged-in users)
+async function PublicBooksContent() {
   const books = await getBooks();
 
   if (books.length === 0) {
@@ -198,7 +201,31 @@ async function BooksContent() {
   );
 }
 
-export default function HomePage() {
+// Logged-in home content with Kindle design
+async function LoggedInHomeContent() {
+  const books = await getBooks();
+
+  return (
+    <>
+      <KindleHomeContent books={books} />
+      <BottomNav isLoggedIn={true} />
+    </>
+  );
+}
+
+export default async function HomePage() {
+  const session = await getSession();
+
+  // Show Kindle-style interface for logged-in users
+  if (session) {
+    return (
+      <Suspense fallback={<BooksSkeleton />}>
+        <LoggedInHomeContent />
+      </Suspense>
+    );
+  }
+
+  // Show public landing page for non-logged-in users
   return (
     <main className="home-page">
       {/* Hero Header with Background Image */}
@@ -216,7 +243,7 @@ export default function HomePage() {
           <LotusIcon className="hero-lotus" />
           <h1 className="hero-author-name">කශ්වි අමරසූරිය</h1>
           <p className="hero-author-name-en">Kashvi Amarasooriya</p>
-          <p className="hero-tagline">Kerala Dark Romance</p>
+          <p className="hero-tagline">Books by Kashvi Amarasooriya</p>
         </div>
 
         {/* Login Button */}
@@ -233,7 +260,7 @@ export default function HomePage() {
       {/* Books Section */}
       <section className="books-section">
         <Suspense fallback={<BooksSkeleton />}>
-          <BooksContent />
+          <PublicBooksContent />
         </Suspense>
       </section>
     </main>

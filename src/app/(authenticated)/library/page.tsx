@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { LibraryContent } from "./library-content";
+import { BottomNav } from "@/components/layout/bottom-nav";
 
 export const metadata = {
   title: "My Library",
@@ -152,5 +153,10 @@ export default async function LibraryPage() {
 
   const books = await getLibraryBooks(session.userId);
 
-  return <LibraryContent books={books} />;
+  return (
+    <>
+      <LibraryContent books={books} />
+      <BottomNav isLoggedIn={true} />
+    </>
+  );
 }
