@@ -17,6 +17,7 @@
 - **Stack**: Next.js 16 (App Router), Supabase, Tailwind CSS 4, TypeScript
 - **Purpose**: Sinhala novel reading platform with phone OTP auth, book purchases, offline PWA support
 - **Author**: Single author platform for "කශ්වි අමරසූරිය" (Kashvi Amarasooriya)
+- **Auth**: Uses custom session cookies (`session_user_id`, `session_phone`) - use `getSession()` / `getCurrentUser()` from `@/lib/auth`, NOT Supabase's `getUser()`
 
 ## Key Directories
 

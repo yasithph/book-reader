@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { BookForm } from "../book-form";
-import { ChapterList } from "./chapter-list";
+import { BookEditTabs } from "./book-edit-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -70,35 +69,7 @@ export default async function EditBookPage({ params }: PageProps) {
         <p className="admin-page-subtitle">{book.title_en}</p>
       </div>
 
-      <div style={{ display: "grid", gap: "2rem" }}>
-        <BookForm book={book} isEdit />
-
-        {/* Chapters Section */}
-        <div className="admin-card">
-          <div className="admin-card-header">
-            <h2 className="admin-card-title">
-              Chapters
-              <span
-                style={{
-                  marginLeft: "0.5rem",
-                  fontSize: "0.875rem",
-                  fontWeight: 500,
-                  color: "var(--muted-foreground)",
-                }}
-              >
-                ({chapters.length})
-              </span>
-            </h2>
-            <Link
-              href={`/admin/books/${bookId}/chapters/new`}
-              className="admin-btn admin-btn-primary admin-btn-sm"
-            >
-              + Add Chapter
-            </Link>
-          </div>
-          <ChapterList bookId={bookId} chapters={chapters} />
-        </div>
-      </div>
+      <BookEditTabs book={book} chapters={chapters} bookId={bookId} />
     </div>
   );
 }
