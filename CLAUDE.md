@@ -32,3 +32,27 @@
 ## Architecture Documentation
 
 See `ARCHITECTURE.md` for detailed system documentation.
+
+## Custom Commands
+
+### /commit
+Commits all changes and pushes to remote without any AI attribution. Creates a clean commit message following conventional commit format.
+
+## Custom Skills
+
+### Nano Banana (Image Generation)
+
+Generate images using Google's Nano Banana (Gemini Image) API.
+
+**Usage:**
+```bash
+# Using the shell script
+./.claude/skills/nano-banana/generate.sh "A cozy reading nook with warm lighting" "reading-nook"
+
+# Using TypeScript
+npx ts-node .claude/skills/nano-banana/generate.ts "prompt" "filename"
+```
+
+**Output:** Images are saved to `/public/images/generated/` and can be referenced as `/images/generated/filename.png`
+
+**When to use:** When the user asks for an image to be generated for book covers, illustrations, UI elements, etc.

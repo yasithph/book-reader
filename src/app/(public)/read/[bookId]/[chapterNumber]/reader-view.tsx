@@ -192,55 +192,135 @@ export function ReaderView({
       style={{ backgroundColor: currentTheme.bg }}
       data-reader-theme={settings.theme}
     >
-      {/* Top bar */}
+      {/* Top bar - Kindle-style minimal */}
       <header
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
           ${showControls ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0"}
         `}
-        style={{ backgroundColor: `${currentTheme.bg}ee` }}
+        style={{ backgroundColor: currentTheme.bg }}
       >
-        <div className="backdrop-blur-md border-b" style={{ borderColor: `${currentTheme.text}15` }}>
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-            <Link
-              href={`/books/${book.id}`}
-              className="flex items-center gap-2 text-sm font-serif"
-              style={{ color: currentTheme.secondary }}
+        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between">
+          {/* Back button */}
+          <Link
+            href={`/books/${book.id}`}
+            className="p-1.5 -ml-1.5 transition-opacity hover:opacity-60"
+            aria-label="Back to book"
+          >
+            <svg
+              className="w-5 h-5"
+              style={{ color: currentTheme.text }}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
             >
-              <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="hidden sm:inline sinhala">{book.title_si}</span>
-            </Link>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </Link>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-serif" style={{ color: currentTheme.secondary }}>
-                {chapterNumber} / {totalChapters}
+          {/* Chapter indicator - center */}
+          <span
+            className="text-[11px] tracking-widest uppercase"
+            style={{ color: `${currentTheme.text}60` }}
+          >
+            {chapterNumber} of {totalChapters}
+          </span>
+
+          {/* Quick controls */}
+          <div className="flex items-center">
+            {/* Font size controls */}
+            <button
+              onClick={() => setFontSize(Math.max(14, settings.fontSize - 2))}
+              className="px-1 py-2 transition-opacity hover:opacity-60 disabled:opacity-30"
+              disabled={settings.fontSize <= 14}
+              aria-label="Decrease font size"
+            >
+              <span style={{ color: currentTheme.text, fontSize: "12px", fontWeight: 500 }}>
+                A<span style={{ fontSize: "9px", opacity: 0.5 }}>−</span>
               </span>
+            </button>
+            <button
+              onClick={() => setFontSize(Math.min(28, settings.fontSize + 2))}
+              className="px-1 py-2 transition-opacity hover:opacity-60 disabled:opacity-30"
+              disabled={settings.fontSize >= 28}
+              aria-label="Increase font size"
+            >
+              <span style={{ color: currentTheme.text, fontSize: "18px", fontWeight: 500 }}>
+                A<span style={{ fontSize: "11px", opacity: 0.5 }}>+</span>
+              </span>
+            </button>
 
-              <button
-                onClick={() => setShowSettings(true)}
-                className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-                aria-label="Open settings"
-              >
+            {/* Divider */}
+            <div
+              className="w-px h-4 mx-1"
+              style={{ backgroundColor: `${currentTheme.text}20` }}
+            />
+
+            {/* Theme toggle - cycles through light → dark → sepia */}
+            <button
+              onClick={() => {
+                const themes: Array<"light" | "dark" | "sepia"> = ["light", "dark", "sepia"];
+                const currentIndex = themes.indexOf(settings.theme);
+                const nextTheme = themes[(currentIndex + 1) % themes.length];
+                setTheme(nextTheme);
+              }}
+              className="p-2 transition-opacity hover:opacity-60"
+              aria-label={`Current theme: ${settings.theme}. Click to change.`}
+            >
+              {settings.theme === "dark" ? (
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   style={{ color: currentTheme.text }}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.84 1.804A1 1 0 018.82 1h2.36a1 1 0 01.98.804l.331 1.652a6.993 6.993 0 011.929 1.115l1.598-.54a1 1 0 011.186.447l1.18 2.044a1 1 0 01-.205 1.251l-1.267 1.113a7.047 7.047 0 010 2.228l1.267 1.113a1 1 0 01.206 1.25l-1.18 2.045a1 1 0 01-1.187.447l-1.598-.54a6.993 6.993 0 01-1.929 1.115l-.33 1.652a1 1 0 01-.98.804H8.82a1 1 0 01-.98-.804l-.331-1.652a6.993 6.993 0 01-1.929-1.115l-1.598.54a1 1 0 01-1.186-.447l-1.18-2.044a1 1 0 01.205-1.251l1.267-1.114a7.05 7.05 0 010-2.227L1.821 7.773a1 1 0 01-.206-1.25l1.18-2.045a1 1 0 011.187-.447l1.598.54A6.993 6.993 0 017.51 3.456l.33-1.652zM10 13a3 3 0 100-6 3 3 0 000 6z"
-                    clipRule="evenodd"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
                 </svg>
-              </button>
-            </div>
+              ) : settings.theme === "sepia" ? (
+                <svg
+                  className="w-4 h-4"
+                  style={{ color: currentTheme.text }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+              ) : (
+                <svg
+                  className="w-4 h-4"
+                  style={{ color: currentTheme.text }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Settings button */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className="p-2 -mr-1.5 transition-opacity hover:opacity-60"
+              aria-label="Open settings"
+            >
+              <svg
+                className="w-4 h-4"
+                style={{ color: currentTheme.text }}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+              </svg>
+            </button>
           </div>
         </div>
       </header>
@@ -296,129 +376,85 @@ export function ReaderView({
           }}
         />
 
-        {/* End of chapter */}
-        <footer className="mt-16 pt-8 border-t" style={{ borderColor: `${currentTheme.text}15` }}>
-          <p className="text-center text-sm font-serif mb-8" style={{ color: currentTheme.secondary }}>
-            End of Chapter {chapterNumber}
-          </p>
+        {/* End of chapter - minimal */}
+        <footer className="mt-12 pt-6">
+          <div
+            className="w-12 h-px mx-auto mb-6"
+            style={{ backgroundColor: `${currentTheme.text}20` }}
+          />
 
           {/* Navigation */}
-          <div className="flex items-center justify-between gap-4">
-            {hasPreviousChapter ? (
-              <Link
-                href={`/read/${book.id}/${chapterNumber - 1}`}
-                className="flex items-center gap-2 px-4 py-3 rounded-xl transition-colors font-serif"
-                style={{
-                  backgroundColor: `${currentTheme.text}08`,
-                  color: currentTheme.text,
-                }}
-              >
-                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Previous</span>
-              </Link>
-            ) : (
-              <div />
+          <div className="flex items-center justify-center gap-4">
+            {hasPreviousChapter && (
+              <>
+                <Link
+                  href={`/read/${book.id}/${chapterNumber - 1}`}
+                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+                  style={{ color: `${currentTheme.text}60` }}
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                  </svg>
+                  <span>Previous</span>
+                </Link>
+                <span style={{ color: `${currentTheme.text}25` }}>·</span>
+              </>
             )}
 
             {hasNextChapter ? (
               nextChapterAccessible ? (
                 <Link
                   href={`/read/${book.id}/${chapterNumber + 1}`}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl transition-colors font-serif font-medium"
-                  style={{
-                    backgroundColor: currentTheme.accent,
-                    color: settings.theme === "dark" ? "#1a1512" : "#FFFEF9",
-                  }}
+                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+                  style={{ color: currentTheme.text }}
                 >
                   <span>Next Chapter</span>
-                  <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z"
-                      clipRule="evenodd"
-                    />
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
                   </svg>
                 </Link>
               ) : (
                 <Link
                   href={`/purchase/${book.id}`}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl transition-colors font-serif font-medium"
-                  style={{
-                    backgroundColor: currentTheme.accent,
-                    color: settings.theme === "dark" ? "#1a1512" : "#FFFEF9",
-                  }}
+                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+                  style={{ color: currentTheme.accent }}
                 >
-                  <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
-                      clipRule="evenodd"
-                    />
+                  <span>Purchase to continue</span>
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
                   </svg>
-                  <span>Purchase to Continue</span>
                 </Link>
               )
             ) : (
               <Link
                 href={`/books/${book.id}`}
-                className="flex items-center gap-2 px-6 py-3 rounded-xl transition-colors font-serif"
-                style={{
-                  backgroundColor: `${currentTheme.text}08`,
-                  color: currentTheme.text,
-                }}
+                className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+                style={{ color: `${currentTheme.text}70` }}
               >
-                <span>Finished</span>
-                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <span>Back to book</span>
               </Link>
             )}
           </div>
         </footer>
       </main>
 
-      {/* Bottom navigation bar with scroll progress */}
+      {/* Bottom navigation bar - minimal Kindle-style */}
       <nav
         className={`
           fixed bottom-0 left-0 right-0 z-50 transition-all duration-300
           ${showControls ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}
         `}
-        style={{ backgroundColor: `${currentTheme.bg}ee` }}
+        style={{ backgroundColor: currentTheme.bg }}
       >
-        {/* Scroll progress indicator */}
-        <div
-          className="h-0.5 transition-all duration-150"
-          style={{ backgroundColor: `${currentTheme.text}10` }}
-        >
-          <div
-            className="h-full transition-all duration-150"
-            style={{
-              width: `${scrollProgress}%`,
-              backgroundColor: currentTheme.accent,
-            }}
-          />
-        </div>
-
-        <div className="backdrop-blur-md border-t safe-bottom" style={{ borderColor: `${currentTheme.text}15` }}>
-          <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="safe-bottom">
+          <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
             <button
               onClick={() => hasPreviousChapter && router.push(`/read/${book.id}/${chapterNumber - 1}`)}
               disabled={!hasPreviousChapter}
-              className="p-3 rounded-lg transition-colors disabled:opacity-30"
-              style={{ backgroundColor: hasPreviousChapter ? `${currentTheme.text}10` : "transparent" }}
+              className="p-1.5 transition-opacity disabled:opacity-20"
               aria-label="Previous chapter"
             >
-              <svg className="w-5 h-5" style={{ color: currentTheme.text }} viewBox="0 0 20 20" fill="currentColor">
+              <svg className="w-4 h-4" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
@@ -427,39 +463,37 @@ export function ReaderView({
               </svg>
             </button>
 
-            {/* Chapter progress */}
-            <div className="flex-1 mx-4">
-              <div className="flex items-center justify-center gap-1">
-                {Array.from({ length: totalChapters }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-1.5 rounded-full transition-all duration-200"
-                    style={{
-                      width: i === chapterNumber - 1 ? "16px" : "6px",
-                      backgroundColor:
-                        i < chapterNumber
-                          ? currentTheme.accent
-                          : i === chapterNumber - 1
-                          ? currentTheme.accent
-                          : `${currentTheme.text}20`,
-                      opacity: i < chapterNumber ? 1 : i === chapterNumber - 1 ? 1 : 0.5,
-                    }}
-                  />
-                ))}
+            {/* Minimal progress indicator */}
+            <div className="flex-1 mx-6">
+              {/* Progress bar */}
+              <div
+                className="h-[3px] rounded-full"
+                style={{ backgroundColor: `${currentTheme.text}12` }}
+              >
+                <div
+                  className="h-full rounded-full transition-all duration-150"
+                  style={{
+                    width: `${scrollProgress}%`,
+                    backgroundColor: `${currentTheme.text}40`,
+                  }}
+                />
               </div>
-              <p className="text-center text-xs mt-1 font-serif" style={{ color: currentTheme.secondary }}>
-                {Math.round(scrollProgress)}% of chapter
+              {/* Page info */}
+              <p
+                className="text-center text-[10px] mt-1 tabular-nums"
+                style={{ color: `${currentTheme.text}50` }}
+              >
+                {Math.round(scrollProgress)}%
               </p>
             </div>
 
             <button
               onClick={() => hasNextChapter && nextChapterAccessible && router.push(`/read/${book.id}/${chapterNumber + 1}`)}
               disabled={!hasNextChapter || !nextChapterAccessible}
-              className="p-3 rounded-lg transition-colors disabled:opacity-30"
-              style={{ backgroundColor: hasNextChapter && nextChapterAccessible ? `${currentTheme.text}10` : "transparent" }}
+              className="p-1.5 transition-opacity disabled:opacity-20"
               aria-label="Next chapter"
             >
-              <svg className="w-5 h-5" style={{ color: currentTheme.text }} viewBox="0 0 20 20" fill="currentColor">
+              <svg className="w-4 h-4" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"

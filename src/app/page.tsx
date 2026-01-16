@@ -203,7 +203,7 @@ async function BooksContent() {
   );
 }
 
-export default function BooksPage() {
+export default function HomePage() {
   return (
     <main style={{ minHeight: '100vh', background: 'var(--color-cream)' }}>
       {/* Author Welcome Section */}

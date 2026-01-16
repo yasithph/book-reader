@@ -1,148 +1,138 @@
 @import "tailwindcss";
 
 /* ===========================================
-   PERSONAL AUTHOR'S COLLECTION THEME
-   Warm, intimate, literary aesthetic
+   LITERARY INK THEME
+   Deep ink on warm paper - refined minimalism
    =========================================== */
 
 @theme inline {
-  /* Primary Palette - Warm Cream & Earth Tones */
-  --color-cream: #FBF8F3;
-  --color-cream-soft: #F7F3EB;
-  --color-cream-warm: #F2EBE0;
-  --color-ivory: #FFFEF9;
+  /* Deep Ink Palette */
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #2d2d2d;
+  --color-ink-muted: #6b6b6b;
+  --color-ink-faint: #9a9a9a;
+  --color-ink-whisper: #c4c4c4;
 
-  /* Accent Colors - Earthy & Literary */
-  --color-terracotta: #B8614E;
-  --color-terracotta-light: #C97A69;
-  --color-terracotta-dark: #9A4F3F;
-  --color-gold: #C9A55C;
-  --color-gold-light: #D4B876;
-  --color-sage: #8B9A7D;
-
-  /* Text Colors - Warm, never pure black */
-  --color-ink: #3D3229;
-  --color-ink-light: #5A4F44;
-  --color-ink-muted: #7A7067;
-  --color-ink-faint: #A39B91;
+  /* Paper Tones */
+  --color-paper: #FAF9F6;
+  --color-paper-warm: #F5F4F1;
+  --color-paper-dark: #EFEEE9;
 
   /* Semantic colors for Tailwind */
-  --color-background: #FBF8F3;
-  --color-foreground: #3D3229;
-  --color-muted: #F7F3EB;
-  --color-muted-foreground: #7A7067;
-  --color-border: rgba(61, 50, 41, 0.1);
-  --color-primary: #B8614E;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #F2EBE0;
-  --color-secondary-foreground: #3D3229;
-  --color-accent: #C9A55C;
-  --color-accent-foreground: #3D3229;
-  --color-destructive: #C25B5B;
+  --color-background: #FAF9F6;
+  --color-foreground: #1a1a1a;
+  --color-muted: #F5F4F1;
+  --color-muted-foreground: #6b6b6b;
+  --color-border: rgba(26, 26, 26, 0.08);
+  --color-primary: #1a1a1a;
+  --color-primary-foreground: #FAF9F6;
+  --color-secondary: #F5F4F1;
+  --color-secondary-foreground: #1a1a1a;
+  --color-accent: #1a1a1a;
+  --color-accent-foreground: #FAF9F6;
+  --color-destructive: #dc2626;
   --color-destructive-foreground: #ffffff;
 
   /* Fonts */
-  --font-sans: 'DM Sans', system-ui, sans-serif;
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Source Sans 3', system-ui, sans-serif;
+  --font-serif: 'Libre Baskerville', Georgia, serif;
   --font-sinhala: 'Noto Sans Sinhala', sans-serif;
 }
 
-/* CSS Custom Properties for use in feature CSS files */
+/* CSS Custom Properties */
 :root {
-  /* Colors (duplicated for use in custom CSS) */
-  --color-cream: #FBF8F3;
-  --color-cream-soft: #F7F3EB;
-  --color-cream-warm: #F2EBE0;
-  --color-ivory: #FFFEF9;
-  --color-terracotta: #B8614E;
-  --color-terracotta-light: #C97A69;
-  --color-terracotta-dark: #9A4F3F;
-  --color-gold: #C9A55C;
-  --color-gold-light: #D4B876;
-  --color-sage: #8B9A7D;
-  --color-ink: #3D3229;
-  --color-ink-light: #5A4F44;
-  --color-ink-muted: #7A7067;
-  --color-ink-faint: #A39B91;
+  /* Deep Ink Palette */
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #2d2d2d;
+  --color-ink-muted: #6b6b6b;
+  --color-ink-faint: #9a9a9a;
+  --color-ink-whisper: #c4c4c4;
+
+  /* Paper Tones */
+  --color-paper: #FAF9F6;
+  --color-paper-warm: #F5F4F1;
+  --color-paper-dark: #EFEEE9;
 
   /* Semantic mappings */
-  --background: #FBF8F3;
-  --foreground: #3D3229;
-  --muted: #F7F3EB;
-  --muted-foreground: #7A7067;
-  --border: rgba(61, 50, 41, 0.1);
-  --primary: #B8614E;
-  --primary-foreground: #ffffff;
-  --secondary: #F2EBE0;
-  --secondary-foreground: #3D3229;
-  --accent: #C9A55C;
-  --accent-foreground: #3D3229;
-  --destructive: #C25B5B;
-  --destructive-foreground: #ffffff;
+  --background: #FAF9F6;
+  --foreground: #1a1a1a;
+  --muted: #F5F4F1;
+  --muted-foreground: #6b6b6b;
+  --border: rgba(26, 26, 26, 0.08);
+  --primary: #1a1a1a;
+  --primary-foreground: #FAF9F6;
+  --secondary: #F5F4F1;
+  --secondary-foreground: #1a1a1a;
 
-  /* Reader theme - Light (default) */
+  /* Reader theme defaults */
   --reader-bg: #FFFEF9;
-  --reader-text: #3D3229;
-  --reader-secondary: #7A7067;
-  --reader-border: rgba(61, 50, 41, 0.1);
+  --reader-text: #1a1a1a;
+  --reader-secondary: #6b6b6b;
+  --reader-border: rgba(26, 26, 26, 0.08);
 
   /* Fonts */
-  --font-sans: 'DM Sans', system-ui, sans-serif;
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Source Sans 3', system-ui, sans-serif;
+  --font-serif: 'Libre Baskerville', Georgia, serif;
+  --font-display: 'Libre Baskerville', Georgia, serif;
   --font-sinhala: 'Noto Sans Sinhala', sans-serif;
 
-  /* Legacy auth colors (kept for compatibility) */
-  --auth-burgundy: #B8614E;
-  --auth-burgundy-light: #C97A69;
-  --auth-cream: #FBF8F3;
-  --auth-cream-dark: #F2EBE0;
-  --auth-ink: #3D3229;
-  --auth-gold: #C9A55C;
+  /* Warm accent */
+  --color-accent-warm: #c4785a;
+  --color-accent-warm-light: #d4917a;
+  --color-accent-warm-dark: #a8624a;
 
-  /* Shadows - Soft & Natural */
-  --shadow-sm: 0 1px 2px rgba(61, 50, 41, 0.04);
-  --shadow-md: 0 4px 12px rgba(61, 50, 41, 0.06);
-  --shadow-lg: 0 8px 24px rgba(61, 50, 41, 0.08);
-  --shadow-book: 4px 4px 20px rgba(61, 50, 41, 0.1), 0 0 1px rgba(61, 50, 41, 0.1);
+  /* Legacy compatibility */
+  --auth-burgundy: #c4785a;
+  --auth-burgundy-light: #d4917a;
+  --auth-cream: #FAF9F6;
+  --auth-cream-dark: #EFEEE9;
+  --auth-ink: #1a1a1a;
+  --auth-gold: #c4785a;
+  --color-terracotta: #c4785a;
+  --color-terracotta-light: #d4917a;
+  --color-terracotta-dark: #a8624a;
+  --color-gold: #c4785a;
+  --color-cream: #FAF9F6;
+  --color-cream-soft: #F5F4F1;
+  --color-cream-warm: #FAF3EE;
+  --color-ivory: #FFFEF9;
+  --color-sage: #7d9a8c;
 }
 
-/* Dark mode - for admin/reader only */
+/* Dark mode */
 .dark {
-  --background: #1A1714;
-  --foreground: #F5F0E8;
-  --muted: #2A2520;
-  --muted-foreground: #A39B91;
-  --border: rgba(245, 240, 232, 0.1);
-  --primary: #C9A55C;
-  --primary-foreground: #1A1714;
-  --secondary: #2A2520;
-  --secondary-foreground: #F5F0E8;
+  --background: #1a1a1a;
+  --foreground: #FAF9F6;
+  --muted: #2d2d2d;
+  --muted-foreground: #9a9a9a;
+  --border: rgba(250, 249, 246, 0.08);
+  --primary: #FAF9F6;
+  --primary-foreground: #1a1a1a;
 }
 
-/* Reader themes - controlled by data attribute */
+/* Reader themes */
 [data-reader-theme="light"] {
-  --reader-bg: #ffffff;
+  --reader-bg: #FFFEF9;
   --reader-text: #1a1a1a;
-  --reader-secondary: #666666;
-  --reader-border: #e5e5e5;
+  --reader-secondary: #6b6b6b;
+  --reader-border: rgba(26, 26, 26, 0.08);
 }
 
 [data-reader-theme="dark"] {
   --reader-bg: #1a1a1a;
-  --reader-text: #f0f0f0;
-  --reader-secondary: #a0a0a0;
-  --reader-border: #333333;
+  --reader-text: #FAF9F6;
+  --reader-secondary: #9a9a9a;
+  --reader-border: rgba(250, 249, 246, 0.1);
 }
 
 [data-reader-theme="sepia"] {
   --reader-bg: #f4ecd8;
-  --reader-text: #5c4b37;
-  --reader-secondary: #8b7355;
-  --reader-border: #d4c4a8;
+  --reader-text: #433422;
+  --reader-secondary: #7a6a55;
+  --reader-border: rgba(67, 52, 34, 0.1);
 }
 
-/* Force light mode for public pages */
+/* Base styles */
 html {
   color-scheme: light;
 }
@@ -153,18 +143,16 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
-/* Sinhala text class with optimized rendering */
+/* Sinhala text */
 .sinhala {
   font-family: var(--font-sinhala);
   font-feature-settings: "kern" 1, "liga" 1;
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Ensure Sinhala font loads smoothly without layout shift */
 @font-face {
   font-family: 'Noto Sans Sinhala Fallback';
   src: local('Iskoola Pota'), local('Malithi Web'), local('Arial');
@@ -172,7 +160,7 @@ body {
   unicode-range: U+0D80-0DFF;
 }
 
-/* Reader content styling */
+/* Reader content */
 .reader-content {
   background-color: var(--reader-bg);
   color: var(--reader-text);
@@ -192,7 +180,6 @@ body {
   color: var(--reader-secondary);
 }
 
-/* Rich text content from editor */
 .reader-content h2 {
   font-family: var(--font-serif);
   font-size: 1.5em;
@@ -225,7 +212,7 @@ body {
 }
 
 .reader-content blockquote {
-  border-left: 3px solid currentColor;
+  border-left: 2px solid currentColor;
   padding-left: 1.25em;
   margin: 1.5em 0;
   opacity: 0.85;
@@ -252,18 +239,17 @@ body {
   border: none;
   height: 1px;
   background: currentColor;
-  opacity: 0.2;
+  opacity: 0.15;
   margin: 2.5em auto;
-  width: 40%;
+  width: 30%;
 }
 
-/* Smooth scrolling for reader */
+/* Utilities */
 .reader-scroll {
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Hide scrollbar but keep functionality */
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -273,7 +259,6 @@ body {
   display: none;
 }
 
-/* Safe area padding for mobile */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
@@ -282,7 +267,7 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
-/* Animation utilities */
+/* Animations */
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -291,7 +276,7 @@ body {
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -300,28 +285,23 @@ body {
 }
 
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in 0.3s ease-out;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+  animation: slide-up 0.4s ease-out;
 }
 
-/* Bottom sheet animation */
 @keyframes slide-up-sheet {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 .animate-sheet {
   animation: slide-up-sheet 0.3s ease-out;
 }
 
-/* Feature-specific styles */
+/* Feature imports */
 @import "./auth.css";
 @import "./books.css";
 @import "./reader.css";
