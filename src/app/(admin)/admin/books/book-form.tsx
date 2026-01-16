@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+
+// Hardcoded author name
+const AUTHOR_EN = "Kashvi Amarasooriya";
+const AUTHOR_SI = "කශ්වි අමරසූරිය";
 
 // Database shape (allows null)
 interface BookData {
@@ -26,8 +30,6 @@ interface BookFormData {
   title_si: string;
   description_en: string;
   description_si: string;
-  author_en: string;
-  author_si: string;
   cover_image_url: string;
   price_lkr: number;
   is_free: boolean;
@@ -45,8 +47,6 @@ const emptyBook: BookFormData = {
   title_si: "",
   description_en: "",
   description_si: "",
-  author_en: "",
-  author_si: "",
   cover_image_url: "",
   price_lkr: 0,
   is_free: false,
@@ -56,6 +56,8 @@ const emptyBook: BookFormData = {
 
 export function BookForm({ book, isEdit = false }: BookFormProps) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Ensure no null values - convert to empty strings for controlled inputs
   const [formData, setFormData] = useState<BookFormData>(() => ({
     id: book?.id,
@@ -63,8 +65,6 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
     title_si: book?.title_si ?? "",
     description_en: book?.description_en ?? "",
     description_si: book?.description_si ?? "",
-    author_en: book?.author_en ?? "",
-    author_si: book?.author_si ?? "",
     cover_image_url: book?.cover_image_url ?? "",
     price_lkr: book?.price_lkr ?? 0,
     is_free: book?.is_free ?? false,
@@ -72,6 +72,7 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
     is_published: book?.is_published ?? false,
   }));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
@@ -89,6 +90,55 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be less than 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload image");
+      }
+
+      setFormData((prev) => ({ ...prev, cover_image_url: data.url }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, cover_image_url: "" }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -99,10 +149,17 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
         ? `/api/admin/books/${formData.id}`
         : "/api/admin/books";
 
+      // Include hardcoded author values
+      const submitData = {
+        ...formData,
+        author_en: AUTHOR_EN,
+        author_si: AUTHOR_SI,
+      };
+
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await res.json();
@@ -167,62 +224,59 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
               </div>
             </div>
 
-            <div className="admin-form-row">
-              <div className="admin-form-group">
-                <label className="admin-label">Author (English) *</label>
-                <input
-                  type="text"
-                  name="author_en"
-                  value={formData.author_en}
-                  onChange={handleChange}
-                  className="admin-input"
-                  required
-                  placeholder="Author name"
-                />
-              </div>
-              <div className="admin-form-group">
-                <label className="admin-label">Author (Sinhala) *</label>
-                <input
-                  type="text"
-                  name="author_si"
-                  value={formData.author_si}
-                  onChange={handleChange}
-                  className="admin-input"
-                  required
-                  placeholder="කතුවරයාගේ නම"
-                  style={{ fontFamily: "var(--font-sinhala)" }}
-                />
-              </div>
-            </div>
-
             <div className="admin-form-group">
-              <label className="admin-label">Cover Image URL</label>
-              <input
-                type="url"
-                name="cover_image_url"
-                value={formData.cover_image_url}
-                onChange={handleChange}
-                className="admin-input"
-                placeholder="https://example.com/cover.jpg"
-              />
-              {formData.cover_image_url && (
-                <div style={{ marginTop: "0.75rem" }}>
-                  <img
-                    src={formData.cover_image_url}
-                    alt="Cover preview"
-                    style={{
-                      width: "80px",
-                      height: "120px",
-                      objectFit: "cover",
-                      borderRadius: "6px",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    }}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                </div>
-              )}
+              <label className="admin-label">Cover Image</label>
+              <div className="cover-upload-area">
+                {formData.cover_image_url ? (
+                  <div className="cover-preview">
+                    <img
+                      src={formData.cover_image_url}
+                      alt="Cover preview"
+                      className="cover-preview-image"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder-cover.png";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="cover-remove-btn"
+                      title="Remove image"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <label className="cover-upload-label">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="cover-upload-input"
+                      disabled={isUploading}
+                    />
+                    <div className="cover-upload-content">
+                      {isUploading ? (
+                        <>
+                          <span className="admin-btn-spinner" style={{ width: 24, height: 24 }} />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="cover-upload-icon">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                          </svg>
+                          <span>Click to upload cover image</span>
+                          <span className="cover-upload-hint">PNG, JPG up to 5MB</span>
+                        </>
+                      )}
+                    </div>
+                  </label>
+                )}
+              </div>
             </div>
           </div>
         </div>

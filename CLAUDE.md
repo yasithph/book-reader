@@ -16,7 +16,7 @@
 
 - **Stack**: Next.js 16 (App Router), Supabase, Tailwind CSS 4, TypeScript
 - **Purpose**: Sinhala novel reading platform with phone OTP auth, book purchases, offline PWA support
-- **Author**: Single author platform for "සමන්ති විජේසිංහ" (Samanthi Wijesinghe)
+- **Author**: Single author platform for "කශ්වි අමරසූරිය" (Kashvi Amarasooriya)
 
 ## Key Directories
 
@@ -42,36 +42,4 @@ Commits all changes and pushes to remote without any AI attribution. Creates a c
 
 ### Nano Banana (Image Generation)
 
-Generate images using Google's Gemini Image API.
-
-**Environment:** Requires `GEMINI_API_KEY` environment variable.
-
-**Recommended Usage (Direct API call with proper parsing):**
-```bash
-cd "/Users/yasith/Dev/Book Reader" && mkdir -p public/images/generated && curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$GEMINI_API_KEY" \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "contents": [{
-      "parts": [{"text": "Generate an image: YOUR_PROMPT_HERE"}]
-    }],
-    "generationConfig": {
-      "responseModalities": ["TEXT", "IMAGE"]
-    }
-  }' | python3 -c "
-import sys, json, base64
-d = json.load(sys.stdin)
-for part in d.get('candidates', [{}])[0].get('content', {}).get('parts', []):
-    if 'inlineData' in part:
-        img_data = part['inlineData']['data']
-        with open('public/images/generated/FILENAME.jpg', 'wb') as f:
-            f.write(base64.b64decode(img_data))
-        print('Image saved!')
-        break
-"
-```
-
-**Note:** The shell script at `.claude/skills/nano-banana/generate.sh` has JSON parsing issues with the API response format. Use the direct curl + python approach above for reliable image generation.
-
-**Output:** Images are saved to `/public/images/generated/` and can be referenced as `/images/generated/filename.jpg`
-
-**When to use:** When the user asks for an image to be generated for book covers, illustrations, UI elements, etc.
+Run `.claude/skills/nano-banana/generate.sh "YOUR_PROMPT" "output-filename.jpg"` to generate images (requires `GEMINI_API_KEY` in environment).

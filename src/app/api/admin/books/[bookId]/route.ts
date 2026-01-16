@@ -1,23 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getSession, getCurrentUser } from "@/lib/auth";
 
-// Helper to check admin
+// Helper to check admin using session-based auth
 async function checkAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const session = await getSession();
+  if (!session) return { error: "Unauthorized", status: 401 };
 
-  if (!user) return { error: "Unauthorized", status: 401 };
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") return { error: "Forbidden", status: 403 };
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (userData?.role !== "admin") return { error: "Forbidden", status: 403 };
-
-  return { user, userData };
+  return { user };
 }
 
 interface RouteParams {
@@ -32,7 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const { bookId } = await params;
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: book, error } = await supabase
       .from("books")

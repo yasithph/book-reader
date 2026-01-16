@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendSMS, formatPhoneNumber, isValidSriLankanPhone } from "@/lib/textit/client";
+import { getSession, getCurrentUser } from "@/lib/auth";
 
 interface BookSelection {
   bookId: string;
@@ -16,25 +16,16 @@ interface RegisterRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
     const adminSupabase = createAdminClient();
 
-    // Check if requesting user is admin
-    const {
-      data: { user: adminUser },
-    } = await supabase.auth.getUser();
-
-    if (!adminUser) {
+    // Check if requesting user is admin using session-based auth
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: adminData } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", adminUser.id)
-      .single();
-
-    if (adminData?.role !== "admin") {
+    const adminUser = await getCurrentUser();
+    if (!adminUser || adminUser.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
