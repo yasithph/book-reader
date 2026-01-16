@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import Image from "next/image";
+// Using native img for simpler image loading
 
 interface LibraryBook {
   book_id: string;
@@ -176,11 +176,10 @@ export function LibraryContent({ books }: LibraryContentProps) {
                 </div>
                 <div className="library-continue-cover">
                   {mostRecentBook.cover_image_url ? (
-                    <Image
+                    <img
                       src={mostRecentBook.cover_image_url}
                       alt={mostRecentBook.title_en}
-                      fill
-                      className="object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-[var(--auth-burgundy)]/20 to-[var(--auth-burgundy)]/5 dark:from-[var(--auth-gold)]/20 dark:to-[var(--auth-gold)]/5 flex items-center justify-center">
@@ -209,11 +208,10 @@ export function LibraryContent({ books }: LibraryContentProps) {
                   {/* Cover */}
                   <div className="library-book-cover">
                     {book.cover_image_url ? (
-                      <Image
+                      <img
                         src={book.cover_image_url}
                         alt={book.title_en}
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-[var(--auth-burgundy)]/20 to-[var(--auth-burgundy)]/5 dark:from-[var(--auth-gold)]/20 dark:to-[var(--auth-gold)]/5 flex items-center justify-center">

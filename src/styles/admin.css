@@ -2134,6 +2134,30 @@
   box-shadow: 0 0 0 3px rgba(114, 47, 55, 0.1);
 }
 
+/* Image upload indicator */
+.editor-upload-indicator {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 1px solid #f59e0b;
+  font-size: 0.875rem;
+  color: #92400e;
+  text-align: center;
+}
+
+/* Image in editor */
+.rich-text-editor .ProseMirror img.chapter-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.5em 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.rich-text-editor .ProseMirror img.chapter-image.ProseMirror-selectednode {
+  outline: 3px solid var(--auth-burgundy);
+  outline-offset: 2px;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .editor-toolbar {

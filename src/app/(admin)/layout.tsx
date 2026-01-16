@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/register", label: "Register User", icon: "➕" },
   { href: "/admin/users", label: "Users", icon: "👥" },
   { href: "/admin/books", label: "Books", icon: "📚" },
+  { href: "/admin/import", label: "Import PDF", icon: "📄" },
 ];
 
 export default function AdminLayout({

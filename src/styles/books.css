@@ -137,6 +137,45 @@
   }
 }
 
+/* Hero Login Button */
+.hero-login-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(26, 26, 26, 0.1);
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.hero-login-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.hero-login-btn svg {
+  opacity: 0.7;
+}
+
+@media (min-width: 640px) {
+  .hero-login-btn {
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+}
+
 /* ===========================================
    BOOKS SECTION
    =========================================== */

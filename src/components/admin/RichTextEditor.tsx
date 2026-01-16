@@ -3,7 +3,8 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import type { Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useEffect } from "react";
+import Image from "@tiptap/extension-image";
+import { useEffect, useRef, useState } from "react";
 
 interface RichTextEditorProps {
   content: string;
@@ -11,7 +12,7 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-function MenuBar({ editor }: { editor: Editor | null }) {
+function MenuBar({ editor, onImageUpload }: { editor: Editor | null; onImageUpload: () => void }) {
   if (!editor) return null;
 
   return (
@@ -146,6 +147,18 @@ function MenuBar({ editor }: { editor: Editor | null }) {
         </button>
         <button
           type="button"
+          onClick={onImageUpload}
+          className="editor-toolbar-btn"
+          title="Insert Image"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <circle cx="8.5" cy="8.5" r="1.5" />
+            <polyline points="21 15 16 10 5 21" />
+          </svg>
+        </button>
+        <button
+          type="button"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
           className="editor-toolbar-btn"
@@ -174,11 +187,19 @@ function MenuBar({ editor }: { editor: Editor | null }) {
 }
 
 export function RichTextEditor({ content, onChange, placeholder }: RichTextEditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
           levels: [2, 3],
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: "chapter-image",
         },
       }),
     ],
@@ -202,9 +223,71 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
     }
   }, [content, editor]);
 
+  const handleImageUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editor) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "chapter");
+
+      const response = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Upload failed");
+      }
+
+      const { url } = await response.json();
+      editor.chain().focus().setImage({ src: url }).run();
+    } catch (error) {
+      console.error("Image upload error:", error);
+      alert(error instanceof Error ? error.message : "Failed to upload image");
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   return (
     <div className="rich-text-editor">
-      <MenuBar editor={editor} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+      <MenuBar editor={editor} onImageUpload={handleImageUpload} />
+      {uploading && (
+        <div className="editor-upload-indicator">
+          <span className="animate-pulse">Uploading image...</span>
+        </div>
+      )}
       <EditorContent editor={editor} />
     </div>
   );

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import { LibraryContent } from "./library-content";
 
@@ -23,7 +23,7 @@ interface LibraryBook {
 }
 
 async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Get user's purchased books with reading progress
   const { data: purchases, error: purchaseError } = await supabase

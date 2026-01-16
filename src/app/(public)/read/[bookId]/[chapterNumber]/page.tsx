@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import type { Book, Chapter } from "@/types";
 import { ReaderView } from "./reader-view";
@@ -45,7 +46,7 @@ async function getChapter(
 async function getUserHasAccess(userId: string | null, bookId: string): Promise<boolean> {
   if (!userId) return false;
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Check if user has purchased the book
   const { data } = await supabase

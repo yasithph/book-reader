@@ -22,8 +22,8 @@ interface ReaderViewProps {
 }
 
 // Allowed HTML tags for chapter content (safe subset)
-const ALLOWED_TAGS = ["p", "br", "strong", "em", "s", "h2", "h3", "blockquote", "ul", "ol", "li", "hr"];
-const ALLOWED_ATTR = ["style"];
+const ALLOWED_TAGS = ["p", "br", "strong", "em", "s", "h2", "h3", "blockquote", "ul", "ol", "li", "hr", "img"];
+const ALLOWED_ATTR = ["style", "src", "alt", "width", "height", "class"];
 
 // Helper function to format and sanitize chapter content
 // Handles both HTML (from rich text editor) and plain text (legacy content)

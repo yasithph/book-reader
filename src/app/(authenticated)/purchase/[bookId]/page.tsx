@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import type { Book } from "@/types";
 import { PurchaseForm } from "./purchase-form";
@@ -23,7 +24,7 @@ async function getBook(bookId: string): Promise<Book | null> {
 }
 
 async function checkExistingPurchase(userId: string, bookId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data } = await supabase
     .from("purchases")

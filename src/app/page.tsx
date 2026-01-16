@@ -218,19 +218,20 @@ export default function HomePage() {
           <p className="hero-author-name-en">Kashvi Amarasooriya</p>
           <p className="hero-tagline">Kerala Dark Romance</p>
         </div>
+
+        {/* Login Button */}
+        <Link href="/auth" className="hero-login-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
+          </svg>
+          Login
+        </Link>
       </header>
 
       {/* Books Section */}
       <section className="books-section">
-        <div className="books-section-header">
-          <div className="section-title-wrapper">
-            <span className="section-accent-line" />
-            <h2 className="books-section-author">කශ්වි අමරසූරියගේ පොත්</h2>
-            <span className="section-accent-line" />
-          </div>
-          <p className="books-section-subtitle">Books by Kashvi Amarasooriya</p>
-        </div>
-
         <Suspense fallback={<BooksSkeleton />}>
           <BooksContent />
         </Suspense>

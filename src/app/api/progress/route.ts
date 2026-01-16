@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 
 // GET reading progress for a book
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("reading_progress")
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const now = new Date().toISOString();
 
   // Check if progress exists

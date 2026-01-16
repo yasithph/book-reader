@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ interface UserWithBooks {
 }
 
 async function getUsers(): Promise<UserWithBooks[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("users")
@@ -30,7 +30,7 @@ async function getUsers(): Promise<UserWithBooks[]> {
       display_name,
       created_at,
       last_active_at,
-      purchases (
+      purchases:purchases!purchases_user_id_fkey (
         amount_lkr,
         book:books (
           id,

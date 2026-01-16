@@ -250,6 +250,20 @@ body {
   width: 30%;
 }
 
+/* Chapter images */
+.reader-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.5em auto;
+  display: block;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.reader-content img.chapter-image {
+  max-width: 100%;
+}
+
 /* Utilities */
 .reader-scroll {
   scroll-behavior: smooth;
