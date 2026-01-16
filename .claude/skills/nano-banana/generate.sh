@@ -40,25 +40,30 @@ RESPONSE=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/${MO
     }
   }")
 
-# Check for errors
-ERROR=$(echo "$RESPONSE" | grep -o '"message":"[^"]*"' | head -1 | cut -d'"' -f4)
-if [ -n "$ERROR" ]; then
-  echo "❌ API Error: $ERROR"
-  exit 1
-fi
-
-# Extract base64 image data
-IMAGE_DATA=$(echo "$RESPONSE" | grep -o '"data":"[^"]*"' | head -1 | cut -d'"' -f4)
-
-if [ -z "$IMAGE_DATA" ]; then
-  echo "❌ No image generated. Response:"
-  echo "$RESPONSE" | head -c 500
-  exit 1
-fi
-
-# Save image
+# Parse response and save image using Python
 OUTPUT_PATH="${OUTPUT_DIR}/${FILENAME}.png"
-echo "$IMAGE_DATA" | base64 -d > "$OUTPUT_PATH"
 
-echo "✅ Image saved to: $OUTPUT_PATH"
-echo "   Public URL: /images/generated/${FILENAME}.png"
+echo "$RESPONSE" | python3 -c "
+import sys, json, base64
+try:
+    d = json.load(sys.stdin)
+    if 'error' in d:
+        print(f\"❌ API Error: {d['error'].get('message', 'Unknown error')}\")
+        sys.exit(1)
+    for part in d.get('candidates', [{}])[0].get('content', {}).get('parts', []):
+        if 'inlineData' in part:
+            img_data = part['inlineData']['data']
+            with open('$OUTPUT_PATH', 'wb') as f:
+                f.write(base64.b64decode(img_data))
+            print('✅ Image saved to: $OUTPUT_PATH')
+            print('   Public URL: /images/generated/${FILENAME}.png')
+            sys.exit(0)
+    print('❌ No image generated in response')
+    sys.exit(1)
+except json.JSONDecodeError as e:
+    print(f'❌ Failed to parse response: {e}')
+    sys.exit(1)
+except Exception as e:
+    print(f'❌ Error: {e}')
+    sys.exit(1)
+"

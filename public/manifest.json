@@ -1,14 +1,20 @@
 {
-  "name": "Book Reader - Sinhala Novels",
-  "short_name": "Book Reader",
-  "description": "Read Sinhala novels online and offline - Your personal library of Sri Lankan literature",
+  "name": "Kashvi Amarasooriya - Dark Romance Novels",
+  "short_name": "Kashvi Books",
+  "description": "Read dark romance novels by Kashvi Amarasooriya - Kerala-inspired Sinhala fiction",
   "start_url": "/library",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#FAF7F2",
-  "theme_color": "#722F37",
+  "background_color": "#FAF9F6",
+  "theme_color": "#C9A227",
   "scope": "/",
   "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",

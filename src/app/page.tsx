@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import type { Book } from "@/types";
 
 export const metadata = {
-  title: "සමන්ති විජේසිංහ - මගේ පොත් එකතුව",
-  description: "සමන්ති විජේසිංහගේ සිංහල නවකතා එකතුව. Read Sinhala novels by Samanthi Wijesinghe.",
+  title: "කශ්වි අමරසූරිය - Kashvi Amarasooriya",
+  description: "කශ්වි අමරසූරියගේ සිංහල නවකතා එකතුව. Read Sinhala dark romance novels by Kashvi Amarasooriya.",
 };
 
 async function getBooks(): Promise<Book[]> {
@@ -25,17 +25,12 @@ async function getBooks(): Promise<Book[]> {
   return data || [];
 }
 
-// Decorative flourish SVG
-function Flourish() {
+// Gold lotus flower icon
+function LotusIcon({ className }: { className?: string }) {
   return (
-    <svg
-      className="author-flourish-icon"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path d="M12 2L9.5 9.5L2 12L9.5 14.5L12 22L14.5 14.5L22 12L14.5 9.5L12 2Z" opacity="0.6" />
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2C12 2 9 6 9 10C9 11.5 9.5 12.8 10.3 13.8C8.5 13.3 6.5 12 5 10C5 10 4 14 7 17C8.5 18.5 10.3 19 12 19C13.7 19 15.5 18.5 17 17C20 14 19 10 19 10C17.5 12 15.5 13.3 13.7 13.8C14.5 12.8 15 11.5 15 10C15 6 12 2 12 2Z" />
+      <path d="M12 19C12 19 12 22 12 22" strokeWidth="2" stroke="currentColor" fill="none" />
     </svg>
   );
 }
@@ -111,12 +106,12 @@ function PersonalBookCard({ book, index }: { book: Book; index: number }) {
   );
 }
 
-// Featured book component
+// Featured book component - compact design
 function FeaturedBook({ book }: { book: Book }) {
   return (
-    <Link href={`/books/${book.id}`} className="block">
-      <div className="featured-book">
-        <div className="featured-book-cover">
+    <Link href={`/books/${book.id}`} className="featured-book-link">
+      <article className="featured-book-compact">
+        <div className="featured-book-cover-compact">
           {book.cover_image_url ? (
             <img src={book.cover_image_url} alt={book.title_en} />
           ) : (
@@ -124,26 +119,26 @@ function FeaturedBook({ book }: { book: Book }) {
               <BookIcon className="book-cover-placeholder-icon" />
             </div>
           )}
+          <span className="featured-badge">නවතම</span>
         </div>
-        <div className="featured-book-content">
-          <span className="featured-book-label">නවතම පොත</span>
-          <h2 className="featured-book-title">{book.title_si}</h2>
-          <p className="featured-book-subtitle">{book.title_en}</p>
+        <div className="featured-book-info">
+          <h2 className="featured-book-title-compact">{book.title_si}</h2>
+          <p className="featured-book-subtitle-compact">{book.title_en}</p>
           {book.description_si && (
-            <p className="featured-book-description">
-              {book.description_si.length > 150
-                ? book.description_si.substring(0, 150) + "..."
+            <p className="featured-book-desc-compact">
+              {book.description_si.length > 120
+                ? book.description_si.substring(0, 120) + "..."
                 : book.description_si}
             </p>
           )}
-          <span className="featured-book-cta">
+          <span className="featured-book-cta-compact">
             කියවන්න
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
             </svg>
           </span>
         </div>
-      </div>
+      </article>
     </Link>
   );
 }
@@ -205,43 +200,35 @@ async function BooksContent() {
 
 export default function HomePage() {
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--color-cream)' }}>
-      {/* Author Welcome Section */}
-      <section className="author-section">
-        {/* Decorative flourish */}
-        <div className="author-flourish">
-          <div className="author-flourish-line" />
-          <Flourish />
-          <div className="author-flourish-line" />
+    <main className="home-page">
+      {/* Hero Header with Background Image */}
+      <header className="hero-header">
+        <div className="hero-bg">
+          <img
+            src="/images/generated/kerala-romance-header.png"
+            alt=""
+            className="hero-bg-image"
+          />
+          <div className="hero-overlay" />
         </div>
 
-        {/* Author avatar placeholder */}
-        <div className="author-avatar">
-          <span className="author-avatar-placeholder">ස</span>
+        <div className="hero-content">
+          <LotusIcon className="hero-lotus" />
+          <h1 className="hero-author-name">කශ්වි අමරසූරිය</h1>
+          <p className="hero-author-name-en">Kashvi Amarasooriya</p>
+          <p className="hero-tagline">Kerala Dark Romance</p>
         </div>
-
-        {/* Author name */}
-        <h1 className="author-name-sinhala">සමන්ති විජේසිංහ</h1>
-
-        {/* Welcome message */}
-        <p className="author-welcome">
-          මගේ නවකතා එකතුවට සාදරයෙන් පිළිගනිමු. මෙහි ඔබට මගේ කතා කියවා
-          භුක්ති විඳිය හැකිය.
-        </p>
-      </section>
-
-      {/* Decorative divider */}
-      <div className="books-divider">
-        <div className="books-divider-line" />
-        <div className="books-divider-dot" />
-        <div className="books-divider-line" />
-      </div>
+      </header>
 
       {/* Books Section */}
       <section className="books-section">
         <div className="books-section-header">
-          <h2 className="books-section-title">මගේ පොත්</h2>
-          <p className="books-section-subtitle">My Collection</p>
+          <div className="section-title-wrapper">
+            <span className="section-accent-line" />
+            <h2 className="books-section-author">කශ්වි අමරසූරියගේ පොත්</h2>
+            <span className="section-accent-line" />
+          </div>
+          <p className="books-section-subtitle">Books by Kashvi Amarasooriya</p>
         </div>
 
         <Suspense fallback={<BooksSkeleton />}>

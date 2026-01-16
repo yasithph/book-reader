@@ -42,17 +42,36 @@ Commits all changes and pushes to remote without any AI attribution. Creates a c
 
 ### Nano Banana (Image Generation)
 
-Generate images using Google's Nano Banana (Gemini Image) API.
+Generate images using Google's Gemini Image API.
 
-**Usage:**
+**Environment:** Requires `GEMINI_API_KEY` environment variable.
+
+**Recommended Usage (Direct API call with proper parsing):**
 ```bash
-# Using the shell script
-./.claude/skills/nano-banana/generate.sh "A cozy reading nook with warm lighting" "reading-nook"
-
-# Using TypeScript
-npx ts-node .claude/skills/nano-banana/generate.ts "prompt" "filename"
+cd "/Users/yasith/Dev/Book Reader" && mkdir -p public/images/generated && curl -s "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$GEMINI_API_KEY" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "contents": [{
+      "parts": [{"text": "Generate an image: YOUR_PROMPT_HERE"}]
+    }],
+    "generationConfig": {
+      "responseModalities": ["TEXT", "IMAGE"]
+    }
+  }' | python3 -c "
+import sys, json, base64
+d = json.load(sys.stdin)
+for part in d.get('candidates', [{}])[0].get('content', {}).get('parts', []):
+    if 'inlineData' in part:
+        img_data = part['inlineData']['data']
+        with open('public/images/generated/FILENAME.jpg', 'wb') as f:
+            f.write(base64.b64decode(img_data))
+        print('Image saved!')
+        break
+"
 ```
 
-**Output:** Images are saved to `/public/images/generated/` and can be referenced as `/images/generated/filename.png`
+**Note:** The shell script at `.claude/skills/nano-banana/generate.sh` has JSON parsing issues with the API response format. Use the direct curl + python approach above for reliable image generation.
+
+**Output:** Images are saved to `/public/images/generated/` and can be referenced as `/images/generated/filename.jpg`
 
 **When to use:** When the user asks for an image to be generated for book covers, illustrations, UI elements, etc.

@@ -52,8 +52,8 @@ export async function generateMetadata({ params }: BookPageProps) {
   }
 
   return {
-    title: `${book.title_si} | සමන්ති විජේසිංහ`,
-    description: book.description_en || `Read ${book.title_en} by Samanthi Wijesinghe`,
+    title: `${book.title_si} | කශ්වි අමරසූරිය`,
+    description: book.description_en || `Read ${book.title_en} by Kashvi Amarasooriya`,
   };
 }
 
@@ -129,7 +129,7 @@ export default async function BookPage({ params }: BookPageProps) {
             {/* Author */}
             <div className="book-detail-author">
               <span className="book-detail-author-label">ලියන්නා:</span>
-              <span className="book-detail-author-name">සමන්ති විජේසිංහ</span>
+              <span className="book-detail-author-name">කශ්වි අමරසූරිය</span>
             </div>
 
             {/* Stats */}

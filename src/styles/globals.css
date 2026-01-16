@@ -81,6 +81,12 @@
   --color-accent-warm-light: #d4917a;
   --color-accent-warm-dark: #a8624a;
 
+  /* Gold accent - for decorative elements */
+  --color-gold: #C9A227;
+  --color-gold-light: #D4B84A;
+  --color-gold-dark: #A8871E;
+  --color-gold-muted: rgba(201, 162, 39, 0.15);
+
   /* Legacy compatibility */
   --auth-burgundy: #c4785a;
   --auth-burgundy-light: #d4917a;
