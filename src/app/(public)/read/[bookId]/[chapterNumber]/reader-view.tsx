@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import DOMPurify from "dompurify";
 import type { Book, Chapter, ReaderTheme } from "@/types";
 import { SettingsSheet } from "@/components/reader";
 import { useReadingProgress, useReaderSettings } from "@/hooks";
@@ -18,6 +19,39 @@ interface ReaderViewProps {
   isPreviewMode: boolean;
   previewChaptersRemaining: number;
   isLoggedIn?: boolean;
+}
+
+// Allowed HTML tags for chapter content (safe subset)
+const ALLOWED_TAGS = ["p", "br", "strong", "em", "s", "h2", "h3", "blockquote", "ul", "ol", "li", "hr"];
+const ALLOWED_ATTR = ["style"];
+
+// Helper function to format and sanitize chapter content
+// Handles both HTML (from rich text editor) and plain text (legacy content)
+function formatChapterContent(content: string): string {
+  // Check if content appears to be HTML (contains common HTML tags)
+  const isHtml = /<(p|div|h[1-6]|ul|ol|li|blockquote|br|strong|em|s)[^>]*>/i.test(content);
+
+  let html: string;
+  if (isHtml) {
+    // Content is already HTML
+    html = content;
+  } else {
+    // Plain text content - convert to paragraphs (escape HTML first)
+    const escaped = content
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    html = escaped
+      .split("\n\n")
+      .map((p) => `<p style="margin-bottom: 1.5em; text-indent: 2em;">${p.replace(/\n/g, "<br>")}</p>`)
+      .join("");
+  }
+
+  // Sanitize HTML to prevent XSS
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS,
+    ALLOWED_ATTR,
+  });
 }
 
 export function ReaderView({
@@ -258,10 +292,7 @@ export function ReaderView({
             lineHeight: settings.lineSpacing,
           }}
           dangerouslySetInnerHTML={{
-            __html: chapter.content
-              .split("\n\n")
-              .map((p) => `<p style="margin-bottom: 1.5em; text-indent: 2em;">${p.replace(/\n/g, "<br>")}</p>`)
-              .join(""),
+            __html: formatChapterContent(chapter.content),
           }}
         />
 

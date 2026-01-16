@@ -3,7 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface Book {
+// Database shape (allows null)
+interface BookData {
+  id?: string;
+  title_en: string | null;
+  title_si: string | null;
+  description_en: string | null;
+  description_si: string | null;
+  author_en: string | null;
+  author_si: string | null;
+  cover_image_url: string | null;
+  price_lkr: number | null;
+  is_free: boolean | null;
+  free_preview_chapters: number | null;
+  is_published: boolean | null;
+}
+
+// Form state shape (no nulls - used by controlled inputs)
+interface BookFormData {
   id?: string;
   title_en: string;
   title_si: string;
@@ -19,11 +36,11 @@ interface Book {
 }
 
 interface BookFormProps {
-  book?: Book;
+  book?: BookData;
   isEdit?: boolean;
 }
 
-const emptyBook: Book = {
+const emptyBook: BookFormData = {
   title_en: "",
   title_si: "",
   description_en: "",
@@ -37,9 +54,23 @@ const emptyBook: Book = {
   is_published: false,
 };
 
-export function BookForm({ book = emptyBook, isEdit = false }: BookFormProps) {
+export function BookForm({ book, isEdit = false }: BookFormProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<Book>(book);
+  // Ensure no null values - convert to empty strings for controlled inputs
+  const [formData, setFormData] = useState<BookFormData>(() => ({
+    id: book?.id,
+    title_en: book?.title_en ?? "",
+    title_si: book?.title_si ?? "",
+    description_en: book?.description_en ?? "",
+    description_si: book?.description_si ?? "",
+    author_en: book?.author_en ?? "",
+    author_si: book?.author_si ?? "",
+    cover_image_url: book?.cover_image_url ?? "",
+    price_lkr: book?.price_lkr ?? 0,
+    is_free: book?.is_free ?? false,
+    free_preview_chapters: book?.free_preview_chapters ?? 2,
+    is_published: book?.is_published ?? false,
+  }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,7 +96,7 @@ export function BookForm({ book = emptyBook, isEdit = false }: BookFormProps) {
 
     try {
       const url = isEdit
-        ? `/api/admin/books/${book.id}`
+        ? `/api/admin/books/${formData.id}`
         : "/api/admin/books";
 
       const res = await fetch(url, {

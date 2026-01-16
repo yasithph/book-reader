@@ -28,6 +28,20 @@ export function useServiceWorker(): UseServiceWorkerReturn {
 
     setIsSupported(true);
 
+    // Skip service worker in development to avoid caching issues
+    if (process.env.NODE_ENV !== "production") {
+      // Unregister any existing SW in development
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => {
+          registrations.forEach((reg) => reg.unregister());
+        })
+        .catch(() => {
+          // Silently ignore errors - SW may not exist
+        });
+      return;
+    }
+
     const registerSW = async () => {
       try {
         const reg = await navigator.serviceWorker.register("/sw.js", {

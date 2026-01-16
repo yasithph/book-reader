@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
 interface Chapter {
   id?: string;
@@ -47,6 +48,10 @@ export function ChapterForm({
     }
   };
 
+  const handleContentChange = (content: string) => {
+    setFormData((prev) => ({ ...prev, content }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -81,17 +86,15 @@ export function ChapterForm({
     }
   };
 
-  // Word count for preview
-  const wordCount = formData.content
-    .trim()
-    .split(/\s+/)
-    .filter((w) => w.length > 0).length;
+  // Word count - strip HTML tags for accurate count
+  const plainText = formData.content.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const wordCount = plainText ? plainText.split(/\s+/).filter((w) => w.length > 0).length : 0;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="chapter-form">
       {error && (
-        <div className="admin-error-banner" style={{ marginBottom: "1.5rem" }}>
+        <div className="admin-error-banner">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 8v4M12 16h.01" />
@@ -100,81 +103,79 @@ export function ChapterForm({
         </div>
       )}
 
-      <div className="admin-card" style={{ marginBottom: "1.5rem" }}>
+      <div className="admin-card chapter-details-card">
         <div className="admin-card-header">
           <h2 className="admin-card-title">Chapter Details</h2>
         </div>
         <div className="admin-card-body">
-          <div className="admin-form">
-            <div className="admin-form-row">
-              <div className="admin-form-group" style={{ maxWidth: "120px" }}>
-                <label className="admin-label">Chapter #</label>
-                <input
-                  type="number"
-                  name="chapter_number"
-                  value={formData.chapter_number}
-                  onChange={handleChange}
-                  className="admin-input"
-                  min="1"
-                  required
-                />
-              </div>
-              <div className="admin-form-group" style={{ flex: 1 }}>
-                <label className="admin-label">Title (English)</label>
-                <input
-                  type="text"
-                  name="title_en"
-                  value={formData.title_en}
-                  onChange={handleChange}
-                  className="admin-input"
-                  placeholder="Chapter title in English"
-                />
-              </div>
-              <div className="admin-form-group" style={{ flex: 1 }}>
-                <label className="admin-label">Title (Sinhala)</label>
-                <input
-                  type="text"
-                  name="title_si"
-                  value={formData.title_si}
-                  onChange={handleChange}
-                  className="admin-input"
-                  placeholder="පරිච්ඡේද මාතෘකාව"
-                  style={{ fontFamily: "var(--font-sinhala)" }}
-                />
-              </div>
+          <div className="chapter-form-grid">
+            <div className="admin-form-group chapter-number-field">
+              <label className="admin-label">Chapter #</label>
+              <input
+                type="number"
+                name="chapter_number"
+                value={formData.chapter_number}
+                onChange={handleChange}
+                className="admin-input"
+                min="1"
+                required
+              />
+            </div>
+            <div className="admin-form-group">
+              <label className="admin-label">Title (English)</label>
+              <input
+                type="text"
+                name="title_en"
+                value={formData.title_en}
+                onChange={handleChange}
+                className="admin-input"
+                placeholder="Chapter title in English"
+              />
+            </div>
+            <div className="admin-form-group">
+              <label className="admin-label">Title (Sinhala)</label>
+              <input
+                type="text"
+                name="title_si"
+                value={formData.title_si}
+                onChange={handleChange}
+                className="admin-input"
+                placeholder="පරිච්ඡේද මාතෘකාව"
+                style={{ fontFamily: "var(--font-sinhala)" }}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="admin-card" style={{ marginBottom: "1.5rem" }}>
+      <div className="admin-card chapter-content-card">
         <div className="admin-card-header">
           <h2 className="admin-card-title">Content</h2>
-          <div style={{ display: "flex", gap: "1rem", fontSize: "0.8125rem", color: "var(--muted-foreground)" }}>
-            <span>{wordCount.toLocaleString()} words</span>
-            <span>~{readingTime} min read</span>
+          <div className="chapter-stats">
+            <span className="chapter-stat">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="chapter-stat-icon">
+                <path d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z" />
+              </svg>
+              {wordCount.toLocaleString()} words
+            </span>
+            <span className="chapter-stat">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="chapter-stat-icon">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
+              </svg>
+              ~{readingTime} min read
+            </span>
           </div>
         </div>
-        <div className="admin-card-body">
-          <textarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            className="admin-input chapter-content-editor"
-            placeholder="Enter chapter content here... (Sinhala text supported)"
-            required
-            rows={20}
-            style={{
-              fontFamily: "var(--font-sinhala)",
-              fontSize: "1.0625rem",
-              lineHeight: 1.8,
-              minHeight: "400px",
-            }}
+        <div className="chapter-editor-wrapper">
+          <RichTextEditor
+            content={formData.content}
+            onChange={handleContentChange}
+            placeholder="Start writing your chapter here... (Sinhala text supported)"
           />
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
+      <div className="chapter-form-actions">
         <button
           type="button"
           onClick={() => router.push(`/admin/books/${bookId}`)}
@@ -190,7 +191,7 @@ export function ChapterForm({
         >
           {isSubmitting ? (
             <>
-              <span className="admin-btn-spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+              <span className="admin-btn-spinner" />
               Saving...
             </>
           ) : (
