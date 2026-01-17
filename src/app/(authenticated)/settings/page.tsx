@@ -5,9 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LanguagePreference, ReaderTheme } from "@/types";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { usePWAInstall } from "@/hooks/use-pwa-install";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
   const [phone, setPhone] = React.useState<string | null>(null);
   const [language, setLanguage] = React.useState<LanguagePreference>("si");
   const [theme, setTheme] = React.useState<ReaderTheme>("light");
@@ -16,6 +18,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
   const [hasChanges, setHasChanges] = React.useState(false);
+  const [isInstalling, setIsInstalling] = React.useState(false);
 
   // Track initial values for change detection
   const initialValues = React.useRef({ language: "si", theme: "light", fontSize: 18 });
@@ -133,6 +136,15 @@ export default function SettingsPage() {
     { id: "sepia", name: "Sepia", nameSi: "සේපියා", bg: "#f4ecd8", text: "#433422" },
     { id: "dark", name: "Dark", nameSi: "අඳුරු", bg: "#1a1a1a", text: "#E8E8E8" },
   ];
+
+  const handleInstallApp = async () => {
+    setIsInstalling(true);
+    try {
+      await promptInstall();
+    } finally {
+      setIsInstalling(false);
+    }
+  };
 
   return (
     <>
@@ -326,6 +338,69 @@ export default function SettingsPage() {
               </div>
             </div>
           </section>
+
+          {/* Install App Section */}
+          {!isInstalled && (
+            <section className="kindle-settings-section">
+              <h2 className="kindle-settings-section-title">
+                Install App <span className="kindle-settings-section-title-si">යෙදුම ස්ථාපනය</span>
+              </h2>
+              <div className="kindle-settings-card">
+                {isInstallable ? (
+                  <button
+                    onClick={handleInstallApp}
+                    disabled={isInstalling}
+                    className="kindle-settings-install-btn"
+                  >
+                    {isInstalling ? (
+                      <span className="kindle-settings-save-loading">
+                        <svg className="kindle-settings-spinner" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+                          <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                        </svg>
+                        Installing...
+                      </span>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                          <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                        </svg>
+                        Install App
+                      </>
+                    )}
+                  </button>
+                ) : isIOS ? (
+                  <div className="kindle-settings-ios-install">
+                    <p className="kindle-settings-ios-text">
+                      To install on iOS:
+                    </p>
+                    <ol className="kindle-settings-ios-steps">
+                      <li>Tap the Share button <span className="kindle-settings-ios-icon">⎋</span></li>
+                      <li>Select &quot;Add to Home Screen&quot;</li>
+                    </ol>
+                  </div>
+                ) : (
+                  <p className="kindle-settings-install-unavailable">
+                    Use Chrome or Safari to install this app on your device
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
+
+          {isInstalled && (
+            <section className="kindle-settings-section">
+              <div className="kindle-settings-card">
+                <div className="kindle-settings-installed">
+                  <svg viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                  </svg>
+                  <span>App installed</span>
+                </div>
+              </div>
+            </section>
+          )}
 
           {/* Logout */}
           <section className="kindle-settings-section">
