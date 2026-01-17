@@ -43,7 +43,12 @@ export function LibraryContent({ books }: LibraryContentProps) {
 
   const getProgressPercent = (book: LibraryBook) => {
     if (book.total_chapters === 0) return 0;
-    return Math.round((book.completed_chapters.length / book.total_chapters) * 100);
+    // Use the highest completed chapter as the actual progress
+    // (if you're on chapter 3, you've read chapters 1 and 2)
+    const highestCompleted = book.completed_chapters.length > 0
+      ? Math.max(...book.completed_chapters)
+      : 0;
+    return Math.round((highestCompleted / book.total_chapters) * 100);
   };
 
   const isCompleted = (book: LibraryBook) => {
