@@ -123,7 +123,7 @@ export function ReaderView({
         if (showSettings) {
           setShowSettings(false);
         } else {
-          router.push(`/books/${book.id}`);
+          router.push("/library");
         }
       } else if (e.key === "s" || e.key === "S") {
         setShowSettings((prev) => !prev);
@@ -203,9 +203,9 @@ export function ReaderView({
         <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center justify-between">
           {/* Back button */}
           <Link
-            href={`/books/${book.id}`}
+            href="/library"
             className="p-1.5 -ml-1.5 transition-opacity hover:opacity-60"
-            aria-label="Back to book"
+            aria-label="Back to library"
           >
             <svg
               className="w-5 h-5"
@@ -427,11 +427,11 @@ export function ReaderView({
               )
             ) : (
               <Link
-                href={`/books/${book.id}`}
+                href="/library"
                 className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
                 style={{ color: `${currentTheme.text}70` }}
               >
-                <span>Back to book</span>
+                <span>Back to library</span>
               </Link>
             )}
           </div>

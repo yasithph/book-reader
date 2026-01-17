@@ -6,9 +6,31 @@ import type { Book } from "@/types";
 
 interface KindleHomeContentProps {
   books: Book[];
+  purchasedIds?: string[];
+  progressData?: Record<string, number[]>;
 }
 
-export function KindleHomeContent({ books }: KindleHomeContentProps) {
+export function KindleHomeContent({
+  books,
+  purchasedIds = [],
+  progressData = {},
+}: KindleHomeContentProps) {
+  // Convert to Sets/Maps for efficient lookup
+  const purchasedBookIds = React.useMemo(() => new Set(purchasedIds), [purchasedIds]);
+  const progressMap = React.useMemo(() => new Map(Object.entries(progressData)), [progressData]);
+
+  // Helper to get the link for a book
+  const getBookLink = (book: Book) => {
+    const hasAccess = book.is_free || purchasedBookIds.has(book.id);
+    if (hasAccess) {
+      const completedChapters = progressMap.get(book.id) || [];
+      const currentChapter = completedChapters.length > 0
+        ? Math.min(Math.max(...completedChapters) + 1, book.total_chapters)
+        : 1;
+      return `/read/${book.id}/${currentChapter}`;
+    }
+    return `/books/${book.id}`;
+  };
   if (books.length === 0) {
     return (
       <main className="kindle-home">
@@ -54,7 +76,7 @@ export function KindleHomeContent({ books }: KindleHomeContentProps) {
       {featuredBook && (
         <section className="kindle-home-section">
           <div className="kindle-home-inner">
-            <Link href={`/books/${featuredBook.id}`} className="kindle-featured-banner">
+            <Link href={getBookLink(featuredBook)} className="kindle-featured-banner">
               <span className="kindle-featured-badge">New</span>
               <div className="kindle-featured-cover">
                 {featuredBook.cover_image_url ? (
@@ -75,7 +97,9 @@ export function KindleHomeContent({ books }: KindleHomeContentProps) {
                   <p className="kindle-featured-desc">{featuredBook.description_si}</p>
                 )}
                 <span className="kindle-featured-cta">
-                  {featuredBook.is_free ? "Read Free" : formatPrice(featuredBook.price_lkr)}
+                  {(featuredBook.is_free || purchasedBookIds.has(featuredBook.id))
+                    ? (progressMap.get(featuredBook.id)?.length ? "Continue" : "Read")
+                    : formatPrice(featuredBook.price_lkr)}
                   <svg viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                   </svg>
@@ -95,7 +119,7 @@ export function KindleHomeContent({ books }: KindleHomeContentProps) {
               {otherBooks.map((book) => (
                 <Link
                   key={book.id}
-                  href={`/books/${book.id}`}
+                  href={getBookLink(book)}
                   className="kindle-book-card"
                 >
                   <div className="kindle-book-cover">

@@ -103,7 +103,7 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
         cover_image_url: book.cover_image_url,
         total_chapters: book.total_chapters,
         current_chapter: bookProgress?.completed_chapters?.length
-          ? Math.max(...bookProgress.completed_chapters) + 1
+          ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, book.total_chapters)
           : 1,
         completed_chapters: bookProgress?.completed_chapters || [],
         last_read_at: bookProgress?.last_read_at || null,
@@ -125,7 +125,7 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
           cover_image_url: book.cover_image_url,
           total_chapters: book.total_chapters,
           current_chapter: bookProgress.completed_chapters?.length
-            ? Math.max(...bookProgress.completed_chapters) + 1
+            ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, book.total_chapters)
             : 1,
           completed_chapters: bookProgress.completed_chapters || [],
           last_read_at: bookProgress.last_read_at,

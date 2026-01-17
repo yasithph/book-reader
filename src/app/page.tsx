@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import type { Book } from "@/types";
 import { KindleHomeContent } from "@/components/home/kindle-home-content";
@@ -201,13 +202,52 @@ async function PublicBooksContent() {
   );
 }
 
+// Get user's purchased books and reading progress
+async function getUserPurchasesAndProgress(userId: string) {
+  const supabase = createAdminClient();
+
+  // Get purchased book IDs
+  const { data: purchases } = await supabase
+    .from("purchases")
+    .select("book_id")
+    .eq("user_id", userId)
+    .eq("status", "approved");
+
+  // Get reading progress
+  const { data: progress } = await supabase
+    .from("reading_progress")
+    .select("book_id, completed_chapters")
+    .eq("user_id", userId);
+
+  const purchasedBookIds = new Set((purchases || []).map((p) => p.book_id));
+  const progressMap = new Map(
+    (progress || []).map((p) => [p.book_id, p.completed_chapters || []])
+  );
+
+  return { purchasedBookIds, progressMap };
+}
+
 // Logged-in home content with Kindle design
 async function LoggedInHomeContent() {
+  const session = await getSession();
   const books = await getBooks();
+
+  // Get user's purchases and progress
+  const { purchasedBookIds, progressMap } = session
+    ? await getUserPurchasesAndProgress(session.userId)
+    : { purchasedBookIds: new Set<string>(), progressMap: new Map<string, number[]>() };
+
+  // Convert to serializable formats for client component
+  const purchasedIds = Array.from(purchasedBookIds);
+  const progressData = Object.fromEntries(progressMap);
 
   return (
     <>
-      <KindleHomeContent books={books} />
+      <KindleHomeContent
+        books={books}
+        purchasedIds={purchasedIds}
+        progressData={progressData}
+      />
       <BottomNav isLoggedIn={true} />
     </>
   );
