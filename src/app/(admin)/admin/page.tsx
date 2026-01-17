@@ -1,17 +1,23 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { PurchaseActions } from "./purchase-actions";
 
 export const dynamic = "force-dynamic";
 
 async function getStats() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
-  const [usersRes, booksRes, purchasesRes, recentUsersRes] = await Promise.all([
+  const [usersRes, booksRes, purchasesRes, pendingPurchasesRes, recentUsersRes] = await Promise.all([
     supabase.from("users").select("id", { count: "exact", head: true }),
     supabase.from("books").select("id", { count: "exact", head: true }),
     supabase
       .from("purchases")
       .select("id", { count: "exact", head: true })
       .eq("status", "approved"),
+    supabase
+      .from("purchases")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
     supabase
       .from("users")
       .select("id, phone, display_name, created_at")
@@ -23,6 +29,7 @@ async function getStats() {
     totalUsers: usersRes.count || 0,
     totalBooks: booksRes.count || 0,
     totalPurchases: purchasesRes.count || 0,
+    pendingPurchases: pendingPurchasesRes.data || [],
     recentUsers: recentUsersRes.data || [],
   };
 }
@@ -58,6 +65,79 @@ export default async function AdminDashboard() {
           <div className="admin-stat-value">{stats.totalPurchases}</div>
           <div className="admin-stat-label">Active Purchases</div>
         </div>
+
+        {stats.pendingPurchases.length > 0 && (
+          <div className="admin-stat-card" style={{ borderColor: "#f59e0b", background: "rgba(245, 158, 11, 0.1)" }}>
+            <div className="admin-stat-icon">⏳</div>
+            <div className="admin-stat-value" style={{ color: "#f59e0b" }}>{stats.pendingPurchases.length}</div>
+            <div className="admin-stat-label">Pending Approval</div>
+          </div>
+        )}
+      </div>
+
+      {/* Pending Purchases */}
+      <div className="admin-card" style={{ marginBottom: "1.5rem", borderColor: stats.pendingPurchases.length > 0 ? "#f59e0b" : undefined }}>
+        <div className="admin-card-header">
+          <h2 className="admin-card-title">
+            ⏳ Pending Purchase Approvals
+            {stats.pendingPurchases.length > 0 && (
+              <span style={{
+                marginLeft: "8px",
+                background: "#f59e0b",
+                color: "white",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontSize: "0.75rem"
+              }}>
+                {stats.pendingPurchases.length}
+              </span>
+            )}
+          </h2>
+        </div>
+        {stats.pendingPurchases.length > 0 ? (
+          <div className="admin-card-body">
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {stats.pendingPurchases.map((purchase: any) => (
+                <div
+                  key={purchase.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "1rem",
+                    padding: "1rem",
+                    background: "rgba(0,0,0,0.02)",
+                    borderRadius: "8px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <div style={{ fontWeight: 600, marginBottom: "4px" }}>
+                      Purchase Request
+                    </div>
+                    <div style={{ fontSize: "0.875rem", color: "#666" }}>
+                      LKR {purchase.amount_lkr} • {new Date(purchase.created_at).toLocaleDateString()}
+                    </div>
+                    {purchase.payment_reference && (
+                      <div style={{ fontSize: "0.75rem", color: "#999" }}>
+                        Ref: {purchase.payment_reference}
+                      </div>
+                    )}
+                  </div>
+                  <PurchaseActions
+                    purchaseId={purchase.id}
+                    paymentProofUrl={purchase.payment_proof_url}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="admin-card-body">
+            <p style={{ color: "#666", textAlign: "center", padding: "1rem 0" }}>
+              No pending approvals
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}

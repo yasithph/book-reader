@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         .eq("id", otpRecord.id);
     }
 
-    // Check if user exists
+    // Check if user exists in public.users table
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
@@ -79,55 +79,75 @@ export async function POST(request: NextRequest) {
     let isNewUser = false;
 
     if (existingUser) {
-      // Existing user - get their auth user
+      // Existing user - use their ID
       userId = existingUser.id;
     } else {
-      // New user - create auth user and profile
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        phone: formattedPhone,
-        phone_confirm: true,
-      });
+      // Check if auth user exists (might exist without public.users record)
+      const { data: authUsers } = await supabase.auth.admin.listUsers();
+      const existingAuthUser = authUsers?.users?.find(
+        (u) => u.phone === formattedPhone
+      );
 
-      if (authError || !authUser.user) {
-        console.error("Failed to create auth user:", authError);
-        return NextResponse.json(
-          { error: "Failed to create account" },
-          { status: 500 }
-        );
-      }
+      if (existingAuthUser) {
+        // Auth user exists but public.users record is missing - create it
+        userId = existingAuthUser.id;
+        isNewUser = true;
 
-      userId = authUser.user.id;
-      isNewUser = true;
+        const { error: profileError } = await supabase.from("users").insert({
+          id: userId,
+          phone: formattedPhone,
+          language_preference: "si",
+        });
 
-      // Create user profile
-      const { error: profileError } = await supabase.from("users").insert({
-        id: userId,
-        phone: formattedPhone,
-        language: "si", // Default to Sinhala
-      });
+        if (profileError) {
+          console.error("Failed to create user profile for existing auth user:", profileError);
+          return NextResponse.json(
+            { error: "Failed to create user profile" },
+            { status: 500 }
+          );
+        }
+      } else {
+        // Truly new user - create auth user and profile
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+          phone: formattedPhone,
+          phone_confirm: true,
+        });
 
-      if (profileError) {
-        console.error("Failed to create user profile:", profileError);
-        // Continue anyway - profile can be created later
+        if (authError || !authUser.user) {
+          console.error("Failed to create auth user:", authError);
+          return NextResponse.json(
+            { error: "Failed to create account" },
+            { status: 500 }
+          );
+        }
+
+        userId = authUser.user.id;
+        isNewUser = true;
+
+        // Create user profile
+        const { error: profileError } = await supabase.from("users").insert({
+          id: userId,
+          phone: formattedPhone,
+          language_preference: "si",
+        });
+
+        if (profileError) {
+          console.error("Failed to create user profile:", profileError);
+
+          // Rollback: delete the auth user we just created
+          const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+          if (deleteError) {
+            console.error("Failed to rollback auth user:", deleteError);
+          }
+
+          return NextResponse.json(
+            { error: "Failed to create user profile" },
+            { status: 500 }
+          );
+        }
       }
     }
 
-    // Create a session for the user
-    // Since we're using phone OTP (not Supabase's built-in), we need to use admin API
-    // to generate a session token
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: "magiclink",
-      email: `${formattedPhone}@phone.local`, // Placeholder email for phone users
-    });
-
-    // Alternative: Use a custom JWT or session approach
-    // For now, we'll use Supabase's session management with a workaround
-
-    // Generate session using signInWithPassword (we'll set a secure random password)
-    // Actually, let's use a simpler approach with custom session handling
-
-    // Create a simple session token
-    const sessionToken = crypto.randomUUID();
     const sessionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
     // Store session (we'll use cookies for this)

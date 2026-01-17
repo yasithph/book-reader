@@ -27,6 +27,7 @@ interface ReaderViewProps {
   isPreviewMode: boolean;
   previewChaptersRemaining: number;
   isLoggedIn?: boolean;
+  hasPendingPurchase?: boolean;
 }
 
 // Allowed HTML tags for chapter content (safe subset)
@@ -75,6 +76,7 @@ export function ReaderView({
   isPreviewMode,
   previewChaptersRemaining,
   isLoggedIn = false,
+  hasPendingPurchase = false,
 }: ReaderViewProps) {
   const router = useRouter();
   const [showControls, setShowControls] = React.useState(true);
@@ -179,7 +181,8 @@ export function ReaderView({
   };
 
   const currentTheme = themeStyles[settings.theme];
-  const chapterTitle = chapter.title_si || chapter.title_en || `Chapter ${chapterNumber}`;
+  const chapterTitle = chapter.title_si || chapter.title_en || null;
+  const hasCustomTitle = !!chapterTitle;
 
   // Don't render until settings are loaded to avoid flash
   if (!settingsLoaded) {
@@ -362,8 +365,22 @@ export function ReaderView({
         </div>
       </header>
 
+      {/* Pending purchase banner */}
+      {hasPendingPurchase && (
+        <div
+          className={`
+            fixed top-0 left-0 right-0 z-40 transition-all duration-300
+            ${showControls ? "translate-y-[60px]" : "translate-y-0"}
+          `}
+        >
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-center py-2 px-4 text-sm">
+            <span>⏳ ඔබගේ මිලදී ගැනීම අනුමත කිරීමට බලා සිටී — Your purchase is pending approval</span>
+          </div>
+        </div>
+      )}
+
       {/* Preview mode banner */}
-      {isPreviewMode && previewChaptersRemaining >= 0 && (
+      {isPreviewMode && !hasPendingPurchase && previewChaptersRemaining >= 0 && (
         <div
           className={`
             fixed top-0 left-0 right-0 z-40 transition-all duration-300
@@ -389,15 +406,26 @@ export function ReaderView({
       >
         {/* Chapter header */}
         <header className="mb-12 text-center">
-          <p className="font-serif text-sm mb-2" style={{ color: currentTheme.secondary }}>
-            Chapter {chapterNumber}
-          </p>
-          <h1
-            className="sinhala font-serif text-2xl sm:text-3xl font-medium leading-relaxed"
-            style={{ color: currentTheme.text }}
-          >
-            {chapterTitle}
-          </h1>
+          {hasCustomTitle ? (
+            <>
+              <p className="font-serif text-sm mb-2" style={{ color: currentTheme.secondary }}>
+                Chapter {chapterNumber}
+              </p>
+              <h1
+                className="sinhala font-serif text-2xl sm:text-3xl font-medium leading-relaxed"
+                style={{ color: currentTheme.text }}
+              >
+                {chapterTitle}
+              </h1>
+            </>
+          ) : (
+            <h1
+              className="font-serif text-2xl sm:text-3xl font-medium leading-relaxed"
+              style={{ color: currentTheme.text }}
+            >
+              Chapter {chapterNumber}
+            </h1>
+          )}
         </header>
 
         {/* Chapter content */}

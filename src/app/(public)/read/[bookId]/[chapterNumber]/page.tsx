@@ -62,21 +62,20 @@ async function getAllChapters(bookId: string): Promise<ChapterInfo[]> {
   return data || [];
 }
 
-async function getUserHasAccess(userId: string | null, bookId: string): Promise<boolean> {
-  if (!userId) return false;
+async function getUserPurchaseStatus(userId: string | null, bookId: string): Promise<"approved" | "pending" | "rejected" | null> {
+  if (!userId) return null;
 
   const supabase = createAdminClient();
 
   // Check if user has purchased the book
   const { data } = await supabase
     .from("purchases")
-    .select("id")
+    .select("status")
     .eq("user_id", userId)
     .eq("book_id", bookId)
-    .eq("status", "approved")
     .single();
 
-  return !!data;
+  return data?.status || null;
 }
 
 export async function generateMetadata({ params }: ReaderPageProps) {
@@ -120,11 +119,15 @@ export default async function ReaderPage({ params }: ReaderPageProps) {
 
   // Check access
   const isPreviewChapter = chapterNum <= book.free_preview_chapters;
-  const hasFullAccess = book.is_free || await getUserHasAccess(session?.userId || null, bookId);
+  const purchaseStatus = await getUserPurchaseStatus(session?.userId || null, bookId);
+  const hasFullAccess = book.is_free || purchaseStatus === "approved";
+  const hasPendingPurchase = purchaseStatus === "pending";
 
   if (!isPreviewChapter && !hasFullAccess) {
-    // Redirect to book page if trying to access locked chapter
-    redirect(`/books/${bookId}`);
+    // Redirect to book page if trying to access locked chapter (unless pending)
+    if (!hasPendingPurchase) {
+      redirect(`/books/${bookId}`);
+    }
   }
 
   // Get all chapters for navigation
@@ -155,6 +158,7 @@ export default async function ReaderPage({ params }: ReaderPageProps) {
       isPreviewMode={!hasFullAccess && !book.is_free}
       previewChaptersRemaining={book.free_preview_chapters - chapterNum}
       isLoggedIn={!!session}
+      hasPendingPurchase={hasPendingPurchase}
     />
   );
 }

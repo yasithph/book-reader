@@ -5,18 +5,19 @@ import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-type AuthStep = "phone" | "otp";
+type AuthStep = "phone" | "otp" | "name";
 
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/library";
+  const redirectTo = searchParams.get("redirect") || "/";
 
   const [step, setStep] = React.useState<AuthStep>("phone");
   const [phone, setPhone] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [expiresIn, setExpiresIn] = React.useState(300);
+  const [userId, setUserId] = React.useState<string | null>(null);
 
   const handleSendOTP = async (phoneNumber: string) => {
     setLoading(true);
@@ -65,10 +66,38 @@ function AuthContent() {
       }
 
       if (data.isNewUser) {
-        router.push("/welcome");
+        // Show name input step for new users
+        setUserId(data.userId);
+        setStep("name");
       } else {
         router.push(redirectTo);
       }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveName = async (name: string) => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ display_name: name }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setError(data.error || "Failed to save name");
+        return;
+      }
+
+      // Redirect to welcome page for PWA install prompt
+      router.push("/welcome");
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -123,10 +152,15 @@ function AuthContent() {
               <h1 className="kindle-auth-title">Sign in</h1>
               <p className="kindle-auth-subtitle sinhala">ලොග් වන්න</p>
             </>
-          ) : (
+          ) : step === "otp" ? (
             <>
               <h1 className="kindle-auth-title">Verify</h1>
               <p className="kindle-auth-subtitle sinhala">සත්‍යාපනය</p>
+            </>
+          ) : (
+            <>
+              <h1 className="kindle-auth-title">Welcome</h1>
+              <p className="kindle-auth-subtitle sinhala">සාදරයෙන් පිළිගනිමු</p>
             </>
           )}
         </div>
@@ -139,7 +173,7 @@ function AuthContent() {
               loading={loading}
               error={error}
             />
-          ) : (
+          ) : step === "otp" ? (
             <OTPStep
               phone={phone}
               onSubmit={handleVerifyOTP}
@@ -148,6 +182,12 @@ function AuthContent() {
               loading={loading}
               error={error}
               expiresIn={expiresIn}
+            />
+          ) : (
+            <NameStep
+              onSubmit={handleSaveName}
+              loading={loading}
+              error={error}
             />
           )}
         </div>
@@ -463,6 +503,114 @@ function OTPStep({
             Verify
             <svg viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+            </svg>
+          </>
+        )}
+      </button>
+    </form>
+  );
+}
+
+// Name Input Step (for new users)
+function NameStep({
+  onSubmit,
+  loading,
+  error,
+}: {
+  onSubmit: (name: string) => void;
+  loading: boolean;
+  error: string;
+}) {
+  const [name, setName] = React.useState("");
+  const [isFocused, setIsFocused] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (name.trim().length >= 2) {
+      onSubmit(name.trim());
+    }
+  };
+
+  const isValid = name.trim().length >= 2;
+
+  return (
+    <form onSubmit={handleSubmit} className="kindle-auth-form">
+      <div className="kindle-auth-field">
+        <label className="kindle-auth-label">
+          What should we call you?
+          <span className="kindle-auth-label-si sinhala">ඔබව අමතන්නේ කෙසේද?</span>
+        </label>
+
+        <div
+          className={`kindle-auth-name-input ${isFocused ? "kindle-auth-name-input-focused" : ""}`}
+          onClick={() => inputRef.current?.focus()}
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="kindle-auth-name-icon"
+          >
+            <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            disabled={loading}
+            autoComplete="name"
+            className="kindle-auth-input"
+            maxLength={50}
+          />
+          {name.length > 0 && isValid && (
+            <span className="kindle-auth-input-status">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="kindle-auth-check">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+              </svg>
+            </span>
+          )}
+        </div>
+
+        {error && (
+          <div className="kindle-auth-error">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <p className="kindle-auth-hint sinhala">
+          මෙම නම ඔබගේ පැතිකඩෙහි පෙන්වනු ඇත
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        disabled={!isValid || loading}
+        className="kindle-auth-submit"
+      >
+        {loading ? (
+          <span className="kindle-auth-loading">
+            <svg className="kindle-auth-spinner" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+            Saving...
+          </span>
+        ) : (
+          <>
+            Continue
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
             </svg>
           </>
         )}
