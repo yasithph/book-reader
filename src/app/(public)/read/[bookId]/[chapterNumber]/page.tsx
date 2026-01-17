@@ -43,6 +43,25 @@ async function getChapter(
   return data;
 }
 
+interface ChapterInfo {
+  chapter_number: number;
+  title_en: string | null;
+  title_si: string | null;
+}
+
+async function getAllChapters(bookId: string): Promise<ChapterInfo[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("chapters")
+    .select("chapter_number, title_en, title_si")
+    .eq("book_id", bookId)
+    .order("chapter_number", { ascending: true });
+
+  if (error) return [];
+  return data || [];
+}
+
 async function getUserHasAccess(userId: string | null, bookId: string): Promise<boolean> {
   if (!userId) return false;
 
@@ -108,15 +127,12 @@ export default async function ReaderPage({ params }: ReaderPageProps) {
     redirect(`/books/${bookId}`);
   }
 
-  // Get chapter count for navigation
-  const supabase = await createClient();
-  const { count: totalChapters } = await supabase
-    .from("chapters")
-    .select("*", { count: "exact", head: true })
-    .eq("book_id", bookId);
+  // Get all chapters for navigation
+  const allChapters = await getAllChapters(bookId);
+  const totalChapters = allChapters.length;
 
   const hasPreviousChapter = chapterNum > 1;
-  const hasNextChapter = chapterNum < (totalChapters || 0);
+  const hasNextChapter = chapterNum < totalChapters;
 
   // Check if next chapter is accessible
   const nextChapterAccessible = hasNextChapter && (
@@ -130,10 +146,12 @@ export default async function ReaderPage({ params }: ReaderPageProps) {
       book={book}
       chapter={chapter}
       chapterNumber={chapterNum}
-      totalChapters={totalChapters || 0}
+      totalChapters={totalChapters}
+      allChapters={allChapters}
       hasPreviousChapter={hasPreviousChapter}
       hasNextChapter={hasNextChapter}
       nextChapterAccessible={nextChapterAccessible}
+      hasFullAccess={hasFullAccess}
       isPreviewMode={!hasFullAccess && !book.is_free}
       previewChaptersRemaining={book.free_preview_chapters - chapterNum}
       isLoggedIn={!!session}

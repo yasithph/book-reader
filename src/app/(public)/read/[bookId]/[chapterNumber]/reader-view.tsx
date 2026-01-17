@@ -5,17 +5,25 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import type { Book, Chapter, ReaderTheme } from "@/types";
-import { SettingsSheet } from "@/components/reader";
+import { SettingsSheet, ChaptersSheet } from "@/components/reader";
 import { useReadingProgress, useReaderSettings } from "@/hooks";
+
+interface ChapterInfo {
+  chapter_number: number;
+  title_en: string | null;
+  title_si: string | null;
+}
 
 interface ReaderViewProps {
   book: Book;
   chapter: Chapter;
   chapterNumber: number;
   totalChapters: number;
+  allChapters: ChapterInfo[];
   hasPreviousChapter: boolean;
   hasNextChapter: boolean;
   nextChapterAccessible: boolean;
+  hasFullAccess: boolean;
   isPreviewMode: boolean;
   previewChaptersRemaining: number;
   isLoggedIn?: boolean;
@@ -59,9 +67,11 @@ export function ReaderView({
   chapter,
   chapterNumber,
   totalChapters,
+  allChapters,
   hasPreviousChapter,
   hasNextChapter,
   nextChapterAccessible,
+  hasFullAccess,
   isPreviewMode,
   previewChaptersRemaining,
   isLoggedIn = false,
@@ -69,6 +79,7 @@ export function ReaderView({
   const router = useRouter();
   const [showControls, setShowControls] = React.useState(true);
   const [showSettings, setShowSettings] = React.useState(false);
+  const [showChapters, setShowChapters] = React.useState(false);
   const controlsTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Reader settings hook
@@ -96,11 +107,11 @@ export function ReaderView({
     }
     setShowControls(true);
     controlsTimeoutRef.current = setTimeout(() => {
-      if (!showSettings) {
+      if (!showSettings && !showChapters) {
         setShowControls(false);
       }
     }, 3000);
-  }, [showSettings]);
+  }, [showSettings, showChapters]);
 
   // Show controls on tap/click
   const handleContentClick = () => {
@@ -113,7 +124,7 @@ export function ReaderView({
   // Handle keyboard navigation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showSettings) return; // Don't navigate when settings open
+      if (showSettings || showChapters) return; // Don't navigate when sheets are open
 
       if (e.key === "ArrowLeft" && hasPreviousChapter) {
         router.push(`/read/${book.id}/${chapterNumber - 1}`);
@@ -122,17 +133,21 @@ export function ReaderView({
       } else if (e.key === "Escape") {
         if (showSettings) {
           setShowSettings(false);
+        } else if (showChapters) {
+          setShowChapters(false);
         } else {
           router.push("/library");
         }
       } else if (e.key === "s" || e.key === "S") {
         setShowSettings((prev) => !prev);
+      } else if (e.key === "c" || e.key === "C") {
+        setShowChapters((prev) => !prev);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [book.id, chapterNumber, hasPreviousChapter, hasNextChapter, nextChapterAccessible, router, showSettings]);
+  }, [book.id, chapterNumber, hasPreviousChapter, hasNextChapter, nextChapterAccessible, router, showSettings, showChapters]);
 
   // Mark chapter complete when reaching end
   React.useEffect(() => {
@@ -219,13 +234,35 @@ export function ReaderView({
             </svg>
           </Link>
 
-          {/* Chapter indicator - center */}
-          <span
-            className="text-[11px] tracking-widest uppercase"
-            style={{ color: `${currentTheme.text}60` }}
+          {/* Chapter indicator - clickable to open chapters list */}
+          <button
+            onClick={() => setShowChapters(true)}
+            className="flex items-center gap-1.5 px-2 py-1 -mx-2 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            aria-label="View all chapters"
           >
-            {chapterNumber} of {totalChapters}
-          </span>
+            <svg
+              className="w-4 h-4"
+              style={{ color: `${currentTheme.text}60` }}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M10.75 16.82A7.462 7.462 0 0115 15.5c.71 0 1.396.098 2.046.282A.75.75 0 0018 15.06v-11a.75.75 0 00-.546-.721A9.006 9.006 0 0015 3a8.963 8.963 0 00-4.25 1.065V16.82zM9.25 4.065A8.963 8.963 0 005 3c-.85 0-1.673.118-2.454.339A.75.75 0 002 4.06v11a.75.75 0 00.954.721A7.506 7.506 0 015 15.5c1.579 0 3.042.487 4.25 1.32V4.065z" />
+            </svg>
+            <span
+              className="text-[11px] tracking-widest uppercase"
+              style={{ color: `${currentTheme.text}60` }}
+            >
+              {chapterNumber} of {totalChapters}
+            </span>
+            <svg
+              className="w-3 h-3"
+              style={{ color: `${currentTheme.text}40` }}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+            </svg>
+          </button>
 
           {/* Quick controls */}
           <div className="flex items-center">
@@ -516,6 +553,19 @@ export function ReaderView({
         onFontSizeChange={setFontSize}
         onLineSpacingChange={setLineSpacing}
         onReset={resetSettings}
+      />
+
+      {/* Chapters Bottom Sheet */}
+      <ChaptersSheet
+        isOpen={showChapters}
+        onClose={() => setShowChapters(false)}
+        bookId={book.id}
+        bookTitle={book.title_si || book.title_en}
+        chapters={allChapters}
+        currentChapter={chapterNumber}
+        freePreviewChapters={book.free_preview_chapters}
+        hasFullAccess={hasFullAccess}
+        theme={settings.theme}
       />
     </div>
   );
