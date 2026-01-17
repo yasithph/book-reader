@@ -148,7 +148,7 @@ function FeaturedBook({ book }: { book: Book }) {
   );
 }
 
-// Loading skeleton
+// Loading skeleton for public view
 function BooksSkeleton() {
   return (
     <div className="book-collection">
@@ -163,6 +163,53 @@ function BooksSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+// Loading skeleton for Kindle home (logged-in users)
+function KindleHomeSkeleton() {
+  return (
+    <>
+      <main className="kindle-home">
+        {/* Featured Book Skeleton */}
+        <section className="kindle-home-section">
+          <div className="kindle-home-inner">
+            <div className="kindle-featured-banner kindle-skeleton-featured">
+              <div className="kindle-skeleton-badge" />
+              <div className="kindle-featured-cover">
+                <div className="kindle-skeleton-cover" />
+              </div>
+              <div className="kindle-featured-info">
+                <div className="kindle-skeleton-title" />
+                <div className="kindle-skeleton-subtitle" />
+                <div className="kindle-skeleton-cta" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* All Books Grid Skeleton */}
+        <section className="kindle-books-section">
+          <div className="kindle-books-inner">
+            <div className="kindle-skeleton-label" />
+            <div className="kindle-book-grid">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="kindle-book-card kindle-skeleton-card">
+                  <div className="kindle-book-cover">
+                    <div className="kindle-skeleton-book-cover" />
+                  </div>
+                  <div className="kindle-book-info">
+                    <div className="kindle-skeleton-book-title" />
+                    <div className="kindle-skeleton-book-author" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+      <BottomNav isLoggedIn={true} />
+    </>
   );
 }
 
@@ -324,7 +371,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     }
 
     return (
-      <Suspense fallback={<BooksSkeleton />}>
+      <Suspense fallback={<KindleHomeSkeleton />}>
         <LoggedInHomeContent />
       </Suspense>
     );

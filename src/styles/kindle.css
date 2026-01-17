@@ -175,9 +175,20 @@
   height: calc(70px + env(safe-area-inset-bottom));
 }
 
+/* Desktop: Convert to left sidebar */
 @media (min-width: 768px) {
   .kindle-bottom-nav {
-    display: none;
+    top: 0;
+    bottom: 0;
+    right: auto;
+    width: 72px;
+    height: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 20px 0;
+    gap: 8px;
+    border-top: none;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
   }
 }
 
@@ -185,6 +196,12 @@
   .kindle-bottom-nav {
     background: #1a1a1a;
     border-top-color: rgba(255, 255, 255, 0.1);
+  }
+
+  @media (min-width: 768px) {
+    .kindle-bottom-nav {
+      border-right-color: rgba(255, 255, 255, 0.1);
+    }
   }
 }
 
@@ -198,8 +215,27 @@
   padding: 8px 12px;
   color: #9a9a9a;
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.2s;
   -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 768px) {
+  .kindle-nav-tab {
+    flex: 0;
+    padding: 12px 8px;
+    border-radius: 12px;
+    margin: 0 8px;
+  }
+
+  .kindle-nav-tab:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+}
+
+@media (min-width: 768px) and (prefers-color-scheme: dark) {
+  .kindle-nav-tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .kindle-nav-tab:active {
@@ -210,6 +246,12 @@
   color: #1a1a1a;
 }
 
+@media (min-width: 768px) {
+  .kindle-nav-tab-active {
+    background: rgba(0, 0, 0, 0.06);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .kindle-nav-tab {
     color: #6b6b6b;
@@ -217,6 +259,12 @@
 
   .kindle-nav-tab-active {
     color: #E8E8E8;
+  }
+
+  @media (min-width: 768px) {
+    .kindle-nav-tab-active {
+      background: rgba(255, 255, 255, 0.1);
+    }
   }
 }
 
@@ -244,6 +292,12 @@
 .kindle-library {
   min-height: 100vh;
   background: #FAFAFA;
+}
+
+@media (min-width: 768px) {
+  .kindle-library {
+    margin-left: 72px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -909,6 +963,12 @@
   background: #FAFAFA;
 }
 
+@media (min-width: 768px) {
+  .kindle-home {
+    margin-left: 72px;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .kindle-home {
     background: #121212;
@@ -1085,6 +1145,145 @@
 .kindle-book-card:nth-child(12) { animation-delay: 0.24s; }
 
 /* ===========================================
+   KINDLE HOME SKELETON
+   =========================================== */
+
+@keyframes kindle-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.kindle-skeleton-featured {
+  pointer-events: none;
+}
+
+.kindle-skeleton-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 20px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.kindle-skeleton-cover {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+
+.kindle-skeleton-title {
+  width: 70%;
+  height: 22px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.kindle-skeleton-subtitle {
+  width: 50%;
+  height: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.kindle-skeleton-cta {
+  width: 80px;
+  height: 16px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.1) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.kindle-skeleton-label {
+  width: 80px;
+  height: 12px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.05) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-skeleton-label {
+    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%;
+  }
+}
+
+.kindle-skeleton-card {
+  pointer-events: none;
+  animation: none !important;
+}
+
+.kindle-skeleton-book-cover {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.06) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 8px;
+  aspect-ratio: 2 / 3;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-skeleton-book-cover {
+    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%;
+  }
+}
+
+.kindle-skeleton-book-title {
+  width: 80%;
+  height: 16px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.06) 25%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.06) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-skeleton-book-title {
+    background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+    background-size: 200% 100%;
+  }
+}
+
+.kindle-skeleton-book-author {
+  width: 60%;
+  height: 12px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.04) 75%);
+  background-size: 200% 100%;
+  animation: kindle-shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-skeleton-book-author {
+    background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+    background-size: 200% 100%;
+  }
+}
+
+/* ===========================================
    KINDLE SETTINGS PAGE
    =========================================== */
 
@@ -1096,6 +1295,7 @@
 
 @media (min-width: 768px) {
   .kindle-settings {
+    margin-left: 72px;
     padding-bottom: 40px;
   }
 }
