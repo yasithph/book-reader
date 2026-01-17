@@ -18,7 +18,7 @@ interface SettingsSheetProps {
 const THEMES: { id: ReaderTheme; name: string; bg: string; text: string }[] = [
   { id: "light", name: "Light", bg: "#FFFFFF", text: "#1a1a1a" },
   { id: "sepia", name: "Sepia", bg: "#f4ecd8", text: "#433422" },
-  { id: "dark", name: "Dark", bg: "#1a1a1a", text: "#E8E8E8" },
+  { id: "dark", name: "Dark", bg: "#000000", text: "#E8E8E8" },
 ];
 
 const SAMPLE_TEXT = "කතාවේ ආරම්භය...";

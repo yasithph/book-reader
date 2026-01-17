@@ -125,10 +125,10 @@
 }
 
 [data-reader-theme="dark"] {
-  --reader-bg: #1a1a1a;
-  --reader-text: #FAF9F6;
-  --reader-secondary: #9a9a9a;
-  --reader-border: rgba(250, 249, 246, 0.1);
+  --reader-bg: #000000;
+  --reader-text: #E8E8E8;
+  --reader-secondary: #888888;
+  --reader-border: rgba(232, 232, 232, 0.1);
 }
 
 [data-reader-theme="sepia"] {

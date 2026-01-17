@@ -134,7 +134,7 @@ export default function SettingsPage() {
   const THEMES: { id: ReaderTheme; name: string; nameSi: string; bg: string; text: string }[] = [
     { id: "light", name: "Light", nameSi: "සුදු", bg: "#FFFEF9", text: "#1a1a1a" },
     { id: "sepia", name: "Sepia", nameSi: "සේපියා", bg: "#f4ecd8", text: "#433422" },
-    { id: "dark", name: "Dark", nameSi: "අඳුරු", bg: "#1a1a1a", text: "#E8E8E8" },
+    { id: "dark", name: "Dark", nameSi: "අඳුරු", bg: "#000000", text: "#E8E8E8" },
   ];
 
   const handleInstallApp = async () => {

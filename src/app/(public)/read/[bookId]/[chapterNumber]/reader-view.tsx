@@ -167,9 +167,9 @@ export function ReaderView({
       accent: "#722F37",
     },
     dark: {
-      bg: "#1a1512",
-      text: "#F0EBE3",
-      secondary: "#a0a0a0",
+      bg: "#000000",
+      text: "#E8E8E8",
+      secondary: "#888888",
       accent: "#C9A227",
     },
     sepia: {
