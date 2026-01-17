@@ -24,7 +24,7 @@ export function BottomNav({ isLoggedIn }: BottomNavProps) {
   return (
     <nav className="kindle-bottom-nav">
       <Link
-        href="/"
+        href="/?browse=true"
         className={`kindle-nav-tab ${isActive("/") || isActive("/books") ? "kindle-nav-tab-active" : ""}`}
       >
         <svg className="kindle-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

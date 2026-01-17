@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
@@ -202,6 +203,53 @@ async function PublicBooksContent() {
   );
 }
 
+// Get user's most recent reading session to continue where they left off
+async function getLastReadingSession(userId: string) {
+  const supabase = createAdminClient();
+
+  // Get the most recent reading progress
+  const { data: progress } = await supabase
+    .from("reading_progress")
+    .select(`
+      book_id,
+      completed_chapters,
+      last_read_at,
+      books!inner (
+        id,
+        total_chapters,
+        is_published
+      )
+    `)
+    .eq("user_id", userId)
+    .order("last_read_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!progress || !progress.last_read_at) return null;
+
+  // Check if the book is still published
+  // Handle both single object and array responses from Supabase
+  const booksData = progress.books;
+  const book = (Array.isArray(booksData) ? booksData[0] : booksData) as {
+    id: string;
+    total_chapters: number;
+    is_published: boolean;
+  } | undefined;
+  if (!book?.is_published) return null;
+
+  // Calculate the current chapter
+  const completedChapters = progress.completed_chapters || [];
+  const currentChapter = completedChapters.length > 0
+    ? Math.min(Math.max(...completedChapters) + 1, book.total_chapters)
+    : 1;
+
+  return {
+    bookId: progress.book_id,
+    chapterNumber: currentChapter,
+    lastReadAt: progress.last_read_at,
+  };
+}
+
 // Get user's purchased books and reading progress
 async function getUserPurchasesAndProgress(userId: string) {
   const supabase = createAdminClient();
@@ -253,11 +301,28 @@ async function LoggedInHomeContent() {
   );
 }
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ browse?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
   const session = await getSession();
+  const params = await searchParams;
 
   // Show Kindle-style interface for logged-in users
   if (session) {
+    // Check if user wants to browse (explicit navigation to home)
+    const wantsToBrowse = params.browse === "true";
+
+    // If not explicitly browsing, check for active reading session
+    if (!wantsToBrowse) {
+      const lastSession = await getLastReadingSession(session.userId);
+      if (lastSession) {
+        // Redirect to continue reading
+        redirect(`/read/${lastSession.bookId}/${lastSession.chapterNumber}`);
+      }
+    }
+
     return (
       <Suspense fallback={<BooksSkeleton />}>
         <LoggedInHomeContent />
