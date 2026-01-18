@@ -852,22 +852,20 @@ function PurchaseHistory({
 
   // Get date boundaries
   const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
   const startOfWeek = new Date(now);
   const daysSinceMonday = (now.getDay() + 6) % 7; // Monday = 0, Sunday = 6
   startOfWeek.setDate(now.getDate() - daysSinceMonday);
   startOfWeek.setHours(0, 0, 0, 0);
 
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
   // Filter approved purchases
   const approvedPurchases = purchases.filter((p) => p.status === "approved");
 
   // Calculate income totals
-  const totalIncome = approvedPurchases.reduce((sum, p) => sum + p.amount_lkr, 0);
-
-  const thisMonthIncome = approvedPurchases
-    .filter((p) => new Date(p.created_at) >= startOfMonth)
+  const todayIncome = approvedPurchases
+    .filter((p) => new Date(p.created_at) >= startOfToday)
     .reduce((sum, p) => sum + p.amount_lkr, 0);
 
   const thisWeekIncome = approvedPurchases
@@ -931,16 +929,12 @@ function PurchaseHistory({
       {/* Income Summary - Using admin-stats pattern */}
       <div className="admin-stats" style={{ marginBottom: '1.5rem' }}>
         <div className="admin-stat">
+          <div className="admin-stat-value">Rs. {todayIncome.toLocaleString()}</div>
+          <div className="admin-stat-label">Today</div>
+        </div>
+        <div className="admin-stat">
           <div className="admin-stat-value">Rs. {thisWeekIncome.toLocaleString()}</div>
           <div className="admin-stat-label">This Week</div>
-        </div>
-        <div className="admin-stat">
-          <div className="admin-stat-value">Rs. {thisMonthIncome.toLocaleString()}</div>
-          <div className="admin-stat-label">This Month</div>
-        </div>
-        <div className="admin-stat">
-          <div className="admin-stat-value">Rs. {totalIncome.toLocaleString()}</div>
-          <div className="admin-stat-label">All Time</div>
         </div>
       </div>
 

@@ -388,6 +388,102 @@
   gap: 0.5rem;
 }
 
+/* Mobile Header Action Buttons */
+.admin-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-action-btn:hover {
+  background: var(--admin-surface);
+  color: var(--admin-text);
+}
+
+.admin-action-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Profile Menu */
+.admin-profile-menu-container {
+  position: relative;
+}
+
+.admin-profile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: var(--admin-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  z-index: 100;
+  animation: adminMenuFadeIn 0.15s ease-out;
+}
+
+@keyframes adminMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--admin-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.admin-profile-menu-item:hover {
+  background: var(--admin-surface);
+}
+
+.admin-profile-menu-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-profile-menu-item svg {
+  width: 18px;
+  height: 18px;
+  color: var(--admin-text-muted);
+}
+
+/* Sidebar Logout Button */
+.admin-sidebar-logout {
+  color: var(--admin-text-muted);
+}
+
+.admin-sidebar-logout:hover {
+  color: var(--admin-danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* ===========================================
    PAGE HEADER
    =========================================== */
@@ -3407,7 +3503,7 @@
   padding: 0.25rem;
   background: var(--admin-surface);
   border-radius: 8px;
-  margin: 0 1.25rem 0.5rem;
+  margin: 1rem 1.25rem 0.5rem;
 }
 
 .sales-mode-btn {
