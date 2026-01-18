@@ -77,6 +77,32 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
     console.error("Error fetching free books:", freeBooksError);
   }
 
+  // Get published chapter counts for all books
+  const bookIds = [
+    ...(purchases || []).map((p) => {
+      const book = Array.isArray(p.books) ? p.books[0] : p.books;
+      return book?.id;
+    }).filter(Boolean),
+    ...(freeBooks || []).map((b) => b.id),
+  ];
+
+  const publishedChapterCounts = new Map<string, number>();
+  if (bookIds.length > 0) {
+    const { data: chapters } = await supabase
+      .from("chapters")
+      .select("book_id")
+      .in("book_id", bookIds)
+      .eq("is_published", true);
+
+    // Count published chapters per book
+    for (const ch of chapters || []) {
+      publishedChapterCounts.set(
+        ch.book_id,
+        (publishedChapterCounts.get(ch.book_id) || 0) + 1
+      );
+    }
+  }
+
   // Combine purchased books
   const libraryBooks: LibraryBook[] = (purchases || [])
     .filter((p) => p.books)
@@ -93,6 +119,11 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
         total_chapters: number;
       };
       const bookProgress = progressMap.get(book.id);
+      // Use published chapter count instead of total_chapters
+      // If we have the count (even if 0), use it; otherwise fall back to total_chapters
+      const totalPublished = publishedChapterCounts.has(book.id)
+        ? publishedChapterCounts.get(book.id)!
+        : book.total_chapters;
 
       return {
         book_id: book.id,
@@ -101,9 +132,9 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
         author_en: book.author_en,
         author_si: book.author_si,
         cover_image_url: book.cover_image_url,
-        total_chapters: book.total_chapters,
+        total_chapters: totalPublished,
         current_chapter: bookProgress?.completed_chapters?.length
-          ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, book.total_chapters)
+          ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
           : 1,
         completed_chapters: bookProgress?.completed_chapters || [],
         last_read_at: bookProgress?.last_read_at || null,
@@ -116,6 +147,11 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
     for (const book of freeBooks) {
       const bookProgress = progressMap.get(book.id);
       if (bookProgress && !libraryBooks.find((lb) => lb.book_id === book.id)) {
+        // Use published chapter count instead of total_chapters
+        const totalPublished = publishedChapterCounts.has(book.id)
+          ? publishedChapterCounts.get(book.id)!
+          : book.total_chapters;
+
         libraryBooks.push({
           book_id: book.id,
           title_en: book.title_en,
@@ -123,9 +159,9 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
           author_en: book.author_en,
           author_si: book.author_si,
           cover_image_url: book.cover_image_url,
-          total_chapters: book.total_chapters,
+          total_chapters: totalPublished,
           current_chapter: bookProgress.completed_chapters?.length
-            ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, book.total_chapters)
+            ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
             : 1,
           completed_chapters: bookProgress.completed_chapters || [],
           last_read_at: bookProgress.last_read_at,

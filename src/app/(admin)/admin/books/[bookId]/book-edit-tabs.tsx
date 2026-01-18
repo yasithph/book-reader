@@ -99,7 +99,7 @@ export function BookEditTabs({ book, chapters, bookId }: BookEditTabsProps) {
                 </p>
               </div>
               <Link
-                href={`/admin/books/${bookId}/chapters/new`}
+                href={`/admin?bookId=${bookId}&newChapter=true`}
                 className="chapters-add-btn"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -132,7 +132,7 @@ export function BookEditTabs({ book, chapters, bookId }: BookEditTabsProps) {
                     Every great story begins with a first chapter. Add one to get started.
                   </p>
                   <Link
-                    href={`/admin/books/${bookId}/chapters/new`}
+                    href={`/admin?bookId=${bookId}&newChapter=true`}
                     className="chapters-empty-btn"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -146,7 +146,7 @@ export function BookEditTabs({ book, chapters, bookId }: BookEditTabsProps) {
                   {chapters.map((chapter, index) => (
                     <Link
                       key={chapter.id}
-                      href={`/admin/books/${bookId}/chapters/${chapter.id}`}
+                      href={`/admin?bookId=${bookId}&chapterId=${chapter.id}`}
                       className="chapter-card"
                       style={{ animationDelay: `${index * 0.05}s` }}
                     >
@@ -155,7 +155,7 @@ export function BookEditTabs({ book, chapters, bookId }: BookEditTabsProps) {
                       </div>
                       <div className="chapter-card-content">
                         <h4 className="chapter-card-title">
-                          {chapter.title_en || "Untitled Chapter"}
+                          {chapter.title_en || `Chapter ${chapter.chapter_number}`}
                         </h4>
                         {chapter.title_si && (
                           <p className="chapter-card-title-si">{chapter.title_si}</p>

@@ -45,6 +45,8 @@ export interface Chapter {
   title_en: string | null;
   title_si: string | null;
   content: string;
+  draft_content?: string | null;  // Only present in admin context
+  is_published?: boolean;          // Only present in admin context
   word_count: number;
   estimated_reading_time: number;
   created_at: string;

@@ -88,13 +88,24 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ chapter });
+    // For editing: use draft_content if it exists, otherwise use published content
+    const editableContent = chapter.draft_content || chapter.content;
+
+    return NextResponse.json({
+      chapter: {
+        ...chapter,
+        // Provide the editable content for the editor
+        editable_content: editableContent,
+        has_draft: chapter.draft_content !== null && chapter.draft_content !== "",
+      }
+    });
   } catch (error) {
     console.error("Error in admin chapters GET:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
+// PUT - Save draft (auto-save, does not publish)
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const auth = await checkAdmin();
@@ -160,15 +171,18 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const readingTime = estimateReadingTime(wordCount);
 
     const supabase = createAdminClient();
+
+    // Save to draft_content, not content (content stays as published version)
+    // NOTE: word_count and estimated_reading_time are NOT updated here
+    // because those should reflect the published content, not draft
     const { data: chapter, error } = await supabase
       .from("chapters")
       .update({
         chapter_number: chapterNum,
         title_en: title_en?.trim() || null,
         title_si: title_si?.trim() || null,
-        content,
-        word_count: wordCount,
-        estimated_reading_time: readingTime,
+        draft_content: content,
+        // Don't update word_count/reading_time - they should reflect published content
       })
       .eq("id", chapterId)
       .select()
@@ -188,6 +202,86 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ chapter });
   } catch (error) {
     console.error("Error in admin chapters PUT:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// POST - Publish chapter (copy draft to content, make visible to readers)
+export async function POST(request: NextRequest, { params }: RouteParams) {
+  try {
+    const auth = await checkAdmin();
+    if ("error" in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const { chapterId } = await params;
+
+    // Validate chapterId format
+    if (!isValidUUID(chapterId)) {
+      return NextResponse.json({ error: "Invalid chapter ID" }, { status: 400 });
+    }
+
+    const supabase = createAdminClient();
+
+    // First get the current chapter to access draft_content and current state
+    const { data: currentChapter, error: fetchError } = await supabase
+      .from("chapters")
+      .select("draft_content, content, is_published, title_en, title_si")
+      .eq("id", chapterId)
+      .single();
+
+    if (fetchError || !currentChapter) {
+      return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
+    }
+
+    // If no draft and already published, nothing to do - return success
+    const hasDraft = currentChapter.draft_content &&
+                     currentChapter.draft_content.trim() !== "" &&
+                     currentChapter.draft_content !== "<p></p>";
+
+    if (!hasDraft && currentChapter.is_published) {
+      // Already published with no pending changes
+      return NextResponse.json({
+        chapter: currentChapter,
+        message: "Chapter is already published with no pending changes"
+      });
+    }
+
+    // Get content to publish: use draft if exists, otherwise use existing content
+    const contentToPublish = hasDraft ? currentChapter.draft_content : currentChapter.content;
+
+    if (!contentToPublish || contentToPublish.trim() === "" || contentToPublish === "<p></p>") {
+      return NextResponse.json(
+        { error: "Cannot publish empty chapter. Write some content first." },
+        { status: 400 }
+      );
+    }
+
+    const wordCount = countWords(contentToPublish);
+    const readingTime = estimateReadingTime(wordCount);
+
+    // Publish: copy draft_content to content, clear draft, set published
+    const { data: chapter, error } = await supabase
+      .from("chapters")
+      .update({
+        content: contentToPublish,
+        draft_content: null,  // Clear draft after publishing
+        is_published: true,
+        word_count: wordCount,
+        estimated_reading_time: readingTime,
+      })
+      .eq("id", chapterId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error publishing chapter:", error);
+      return NextResponse.json({ error: "Failed to publish chapter" }, { status: 500 });
+    }
+
+    return NextResponse.json({ chapter, message: "Chapter published successfully" });
+  } catch (error) {
+    console.error("Error in admin chapters POST (publish):", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

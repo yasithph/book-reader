@@ -65,10 +65,29 @@ interface BookReaderDB extends DBSchema {
       updated_at: string;
     };
   };
+  admin_drafts: {
+    key: string; // chapter_id (UUID or temp_xxx)
+    value: {
+      chapter_id: string;
+      book_id: string;
+      chapter_number: number;
+      title_en: string | null;
+      title_si: string | null;
+      content: string;
+      updated_at: string;
+      synced: boolean;
+      pending_create: boolean; // true if chapter doesn't exist on server yet
+    };
+    indexes: {
+      "by-book": string;
+      "by-synced": number;
+      "by-pending-create": number;
+    };
+  };
 }
 
 const DB_NAME = "book-reader-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 2; // v2: Added admin_drafts store
 
 let dbInstance: IDBPDatabase<BookReaderDB> | null = null;
 
@@ -110,6 +129,16 @@ export async function getDB(): Promise<IDBPDatabase<BookReaderDB>> {
       // Settings store
       if (!db.objectStoreNames.contains("settings")) {
         db.createObjectStore("settings", { keyPath: "key" });
+      }
+
+      // Admin drafts store (v2)
+      if (!db.objectStoreNames.contains("admin_drafts")) {
+        const adminDraftsStore = db.createObjectStore("admin_drafts", {
+          keyPath: "chapter_id",
+        });
+        adminDraftsStore.createIndex("by-book", "book_id");
+        adminDraftsStore.createIndex("by-synced", "synced");
+        adminDraftsStore.createIndex("by-pending-create", "pending_create");
       }
     },
   });
@@ -306,4 +335,76 @@ export async function getStorageEstimate(): Promise<{
     };
   }
   return { usage: 0, quota: 0, percentage: 0 };
+}
+
+// Admin draft operations
+export type AdminDraft = BookReaderDB["admin_drafts"]["value"];
+
+export async function saveAdminDraft(
+  draft: AdminDraft
+): Promise<void> {
+  const db = await getDB();
+  await db.put("admin_drafts", draft);
+}
+
+export async function getAdminDraft(
+  chapterId: string
+): Promise<AdminDraft | undefined> {
+  const db = await getDB();
+  return db.get("admin_drafts", chapterId);
+}
+
+export async function getAdminDraftsByBook(
+  bookId: string
+): Promise<AdminDraft[]> {
+  const db = await getDB();
+  return db.getAllFromIndex("admin_drafts", "by-book", bookId);
+}
+
+export async function getUnsyncedAdminDrafts(): Promise<AdminDraft[]> {
+  const db = await getDB();
+  // Get all drafts where synced is false
+  const allDrafts = await db.getAll("admin_drafts");
+  return allDrafts.filter(d => !d.synced);
+}
+
+export async function getPendingCreateDrafts(): Promise<AdminDraft[]> {
+  const db = await getDB();
+  const allDrafts = await db.getAll("admin_drafts");
+  return allDrafts.filter(d => d.pending_create);
+}
+
+export async function markAdminDraftSynced(chapterId: string): Promise<void> {
+  const db = await getDB();
+  const draft = await db.get("admin_drafts", chapterId);
+  if (draft) {
+    draft.synced = true;
+    await db.put("admin_drafts", draft);
+  }
+}
+
+export async function updateAdminDraftChapterId(
+  oldChapterId: string,
+  newChapterId: string
+): Promise<void> {
+  const db = await getDB();
+  const draft = await db.get("admin_drafts", oldChapterId);
+  if (draft) {
+    // Delete old entry
+    await db.delete("admin_drafts", oldChapterId);
+    // Insert with new chapter ID
+    draft.chapter_id = newChapterId;
+    draft.pending_create = false;
+    await db.put("admin_drafts", draft);
+  }
+}
+
+export async function deleteAdminDraft(chapterId: string): Promise<void> {
+  const db = await getDB();
+  await db.delete("admin_drafts", chapterId);
+}
+
+export async function clearAllAdminDrafts(): Promise<void> {
+  const db = await getDB();
+  await db.clear("admin_drafts");
 }

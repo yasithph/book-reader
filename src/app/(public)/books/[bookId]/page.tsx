@@ -36,6 +36,7 @@ async function getChapters(bookId: string): Promise<Chapter[]> {
     .from("chapters")
     .select("id, book_id, chapter_number, title_en, title_si, word_count, estimated_reading_time, created_at, updated_at")
     .eq("book_id", bookId)
+    .eq("is_published", true)  // Only show published chapters to readers
     .order("chapter_number", { ascending: true });
 
   if (error) {

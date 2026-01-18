@@ -37,6 +37,7 @@ async function getChapter(
     .select("*")
     .eq("book_id", bookId)
     .eq("chapter_number", chapterNumber)
+    .eq("is_published", true)  // Only show published chapters
     .single();
 
   if (error) return null;
@@ -56,6 +57,7 @@ async function getAllChapters(bookId: string): Promise<ChapterInfo[]> {
     .from("chapters")
     .select("chapter_number, title_en, title_si")
     .eq("book_id", bookId)
+    .eq("is_published", true)  // Only show published chapters
     .order("chapter_number", { ascending: true });
 
   if (error) return [];

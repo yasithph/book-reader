@@ -21,9 +21,14 @@ export async function GET() {
     }
 
     const supabase = createAdminClient();
+
+    // Fetch books with chapter count
     const { data: books, error } = await supabase
       .from("books")
-      .select("id, title_en, title_si, author_en, author_si, cover_image_url, price_lkr")
+      .select(`
+        id, title_en, title_si, author_en, author_si, cover_image_url, price_lkr,
+        chapters(count)
+      `)
       .order("title_en");
 
     if (error) {
@@ -31,7 +36,19 @@ export async function GET() {
       return NextResponse.json({ error: "Failed to fetch books" }, { status: 500 });
     }
 
-    return NextResponse.json({ books });
+    // Transform to include total_chapters
+    const booksWithCount = (books || []).map((book) => ({
+      id: book.id,
+      title_en: book.title_en,
+      title_si: book.title_si,
+      author_en: book.author_en,
+      author_si: book.author_si,
+      cover_image_url: book.cover_image_url,
+      price_lkr: book.price_lkr,
+      total_chapters: book.chapters?.[0]?.count || 0,
+    }));
+
+    return NextResponse.json({ books: booksWithCount });
   } catch (error) {
     console.error("Error in admin books GET:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

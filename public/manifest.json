@@ -91,6 +91,12 @@
       "short_name": "Browse",
       "description": "Discover new books",
       "url": "/books"
+    },
+    {
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Manage books and users",
+      "url": "/admin"
     }
   ],
   "prefer_related_applications": false

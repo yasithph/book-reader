@@ -5,6 +5,9 @@ import {
   deletePendingSync,
   incrementSyncAttempts,
   saveProgressOffline,
+  getUnsyncedAdminDrafts,
+  markAdminDraftSynced,
+  updateAdminDraftChapterId,
 } from "./indexed-db";
 
 const MAX_SYNC_ATTEMPTS = 5;
@@ -105,6 +108,9 @@ class SyncManager {
       // Process pending syncs
       await this.processPendingSyncs();
 
+      // Sync admin drafts
+      await this.syncAdminDrafts();
+
       this.updateState({
         status: "idle",
         lastSyncedAt: new Date().toISOString(),
@@ -121,8 +127,9 @@ class SyncManager {
     // Update pending count
     const pending = await getPendingSyncs();
     const unsynced = await getUnsyncedProgress();
+    const unsyncedDrafts = await getUnsyncedAdminDrafts();
     this.updateState({
-      pendingCount: pending.length + unsynced.length,
+      pendingCount: pending.length + unsynced.length + unsyncedDrafts.length,
     });
   }
 
@@ -186,6 +193,60 @@ class SyncManager {
       } catch (error) {
         console.error("Failed to process pending sync:", sync.id, error);
         await incrementSyncAttempts(sync.id!);
+      }
+    }
+  }
+
+  private async syncAdminDrafts(): Promise<void> {
+    const unsyncedDrafts = await getUnsyncedAdminDrafts();
+
+    for (const draft of unsyncedDrafts) {
+      try {
+        if (draft.pending_create) {
+          // Create new chapter on server
+          const res = await fetch(`/api/admin/books/${draft.book_id}/chapters`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chapter_number: draft.chapter_number,
+              title_en: draft.title_en,
+              title_si: draft.title_si,
+              content_html: draft.content,
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            // Update local draft with real chapter ID
+            await updateAdminDraftChapterId(draft.chapter_id, data.chapter.id);
+            await markAdminDraftSynced(data.chapter.id);
+          } else if (res.status === 401) {
+            // Not authenticated, skip admin draft sync
+            console.log("Not authenticated, skipping admin draft sync");
+            break;
+          }
+        } else {
+          // Update existing chapter draft
+          const res = await fetch(`/api/admin/chapters/${draft.chapter_id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chapter_number: draft.chapter_number,
+              title_en: draft.title_en,
+              title_si: draft.title_si,
+              content: draft.content,
+            }),
+          });
+
+          if (res.ok) {
+            await markAdminDraftSynced(draft.chapter_id);
+          } else if (res.status === 401) {
+            console.log("Not authenticated, skipping admin draft sync");
+            break;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to sync admin draft:", draft.chapter_id, error);
       }
     }
   }

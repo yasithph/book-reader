@@ -36,21 +36,13 @@ export default async function EditChapterPage({ params }: PageProps) {
   }
 
   return (
-    <div className="admin-animate-in">
-      <div className="admin-page-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-          <Link
-            href={`/admin/books/${bookId}`}
-            className="admin-btn admin-btn-ghost admin-btn-sm"
-            style={{ padding: "0.25rem 0.5rem" }}
-          >
-            ← Back to Book
-          </Link>
-        </div>
-        <h1 className="admin-page-title">Edit Chapter {data.chapter.chapter_number}</h1>
-        <p className="admin-page-subtitle">{data.book.title_en}</p>
-      </div>
-
+    <div className="chapter-page-wrapper">
+      <Link href={`/admin/books/${bookId}`} className="chapter-back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        {data.book.title_en}
+      </Link>
       <ChapterForm bookId={bookId} chapter={data.chapter} isEdit />
     </div>
   );
