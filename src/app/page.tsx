@@ -13,6 +13,26 @@ export const metadata = {
   description: "කශ්වි අමරසූරියගේ සිංහල නවකතා එකතුව. Read Sinhala dark romance novels by Kashvi Amarasooriya.",
 };
 
+interface BundleBook {
+  id: string;
+  title_en: string;
+  title_si: string;
+  cover_image_url: string | null;
+  price_lkr: number;
+}
+
+interface Bundle {
+  id: string;
+  name_en: string;
+  name_si: string | null;
+  description_en: string | null;
+  price_lkr: number;
+  books: BundleBook[];
+  original_price: number;
+  savings: number;
+  book_count: number;
+}
+
 async function getBooks(): Promise<Book[]> {
   const supabase = await createClient();
 
@@ -28,6 +48,66 @@ async function getBooks(): Promise<Book[]> {
   }
 
   return data || [];
+}
+
+async function getBundles(): Promise<Bundle[]> {
+  const supabase = await createClient();
+
+  const { data: bundles, error } = await supabase
+    .from("bundles")
+    .select(`
+      id,
+      name_en,
+      name_si,
+      description_en,
+      description_si,
+      price_lkr,
+      bundle_books (
+        book_id,
+        books (
+          id,
+          title_en,
+          title_si,
+          cover_image_url,
+          price_lkr,
+          is_published
+        )
+      )
+    `)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching bundles:", error);
+    return [];
+  }
+
+  // Transform and filter bundles
+  return (bundles || []).map((bundle: any) => {
+    const books = bundle.bundle_books
+      ?.map((bb: any) => bb.books)
+      .filter((book: any) => book && book.is_published) || [];
+
+    const originalPrice = books.reduce((sum: number, book: any) => sum + (book?.price_lkr || 0), 0);
+
+    return {
+      id: bundle.id,
+      name_en: bundle.name_en,
+      name_si: bundle.name_si,
+      description_en: bundle.description_en,
+      price_lkr: bundle.price_lkr,
+      books: books.map((book: any) => ({
+        id: book.id,
+        title_en: book.title_en,
+        title_si: book.title_si,
+        cover_image_url: book.cover_image_url,
+        price_lkr: book.price_lkr,
+      })),
+      original_price: originalPrice,
+      savings: originalPrice - bundle.price_lkr,
+      book_count: books.length,
+    };
+  }).filter((bundle: Bundle) => bundle.book_count >= 2);
 }
 
 // Gold lotus flower icon
@@ -325,7 +405,7 @@ async function getUserPurchasesAndProgress(userId: string) {
 // Logged-in home content with Kindle design
 async function LoggedInHomeContent() {
   const session = await getSession();
-  const books = await getBooks();
+  const [books, bundles] = await Promise.all([getBooks(), getBundles()]);
 
   // Get user's purchases and progress
   const { purchasedBookIds, progressMap } = session
@@ -340,6 +420,7 @@ async function LoggedInHomeContent() {
     <>
       <KindleHomeContent
         books={books}
+        bundles={bundles}
         purchasedIds={purchasedIds}
         progressData={progressData}
       />

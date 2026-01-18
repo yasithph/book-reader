@@ -4977,3 +4977,978 @@
   display: flex;
   gap: 12px;
 }
+
+/* ===========================================
+   KINDLE BUNDLES SECTION
+   =========================================== */
+
+.kindle-bundles-section {
+  padding: 0 16px 24px;
+}
+
+@media (min-width: 640px) {
+  .kindle-bundles-section {
+    padding: 0 24px 32px;
+  }
+}
+
+.kindle-bundles-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.kindle-bundle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .kindle-bundle-list {
+    flex-direction: row;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .kindle-bundle-list::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.kindle-bundle-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 640px) {
+  .kindle-bundle-card {
+    flex-shrink: 0;
+    width: 320px;
+    scroll-snap-align: start;
+  }
+}
+
+.kindle-bundle-card:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-card {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .kindle-bundle-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Stacked book covers */
+.kindle-bundle-covers {
+  position: relative;
+  width: 80px;
+  height: 100px;
+  flex-shrink: 0;
+}
+
+.kindle-bundle-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 56px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #E8E4DC 0%, #D8D4CC 100%);
+}
+
+.kindle-bundle-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kindle-bundle-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sinhala);
+  font-size: 1.25rem;
+  color: #9a9a9a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-cover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .kindle-bundle-cover-placeholder {
+    color: #6b6b6b;
+  }
+}
+
+/* Bundle info */
+.kindle-bundle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kindle-bundle-name {
+  font-family: var(--font-sinhala);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-name {
+    color: #F5F5F5;
+  }
+}
+
+.kindle-bundle-count {
+  font-family: var(--font-sinhala);
+  font-size: 0.8125rem;
+  color: #9a9a9a;
+  margin-bottom: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-count {
+    color: #6b6b6b;
+  }
+}
+
+/* Bundle pricing */
+.kindle-bundle-pricing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kindle-bundle-original {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: #9a9a9a;
+  text-decoration: line-through;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-original {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-price {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #FF9900;
+}
+
+.kindle-bundle-savings {
+  font-family: var(--font-sinhala);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: #22C55E;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-savings {
+    background: rgba(34, 197, 94, 0.15);
+  }
+}
+
+/* ===========================================
+   KINDLE BUNDLE DETAIL PAGE
+   =========================================== */
+
+.kindle-bundle-detail {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #FAFAFA;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail {
+    background: #000;
+  }
+}
+
+.kindle-bundle-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 12px 16px;
+  background: #FAFAFA;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-header {
+    background: #000;
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.kindle-bundle-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sinhala);
+  font-size: 0.9375rem;
+  color: #1a1a1a;
+  transition: opacity 0.2s;
+}
+
+.kindle-bundle-detail-back:hover {
+  opacity: 0.7;
+}
+
+.kindle-bundle-detail-back svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-back {
+    color: #E8E8E8;
+  }
+}
+
+.kindle-bundle-detail-content {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px 16px 100px;
+}
+
+/* Bundle Hero */
+.kindle-bundle-hero {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+  margin-bottom: 24px;
+}
+
+.kindle-bundle-hero-covers {
+  position: relative;
+  width: 180px;
+  height: 200px;
+}
+
+.kindle-bundle-hero-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100px;
+  height: 140px;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #E8E4DC 0%, #D8D4CC 100%);
+}
+
+.kindle-bundle-hero-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kindle-bundle-hero-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9a9a9a;
+}
+
+.kindle-bundle-hero-cover-placeholder svg {
+  width: 32px;
+  height: 32px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-hero-cover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .kindle-bundle-hero-cover-placeholder {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-hero-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: var(--font-sinhala);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  background: #22C55E;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* Bundle Info */
+.kindle-bundle-detail-info {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.kindle-bundle-detail-title {
+  font-family: var(--font-sinhala);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-title {
+    color: #F5F5F5;
+  }
+}
+
+.kindle-bundle-detail-subtitle {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: #9a9a9a;
+  margin-bottom: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-subtitle {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-detail-count {
+  font-family: var(--font-sinhala);
+  font-size: 0.9375rem;
+  color: #6b6b6b;
+  margin-bottom: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-count {
+    color: #9a9a9a;
+  }
+}
+
+.kindle-bundle-detail-desc {
+  max-width: 400px;
+  margin: 0 auto 24px;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #6b6b6b;
+}
+
+.kindle-bundle-detail-desc .text-muted {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: #9a9a9a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-desc {
+    color: #9a9a9a;
+  }
+
+  .kindle-bundle-detail-desc .text-muted {
+    color: #6b6b6b;
+  }
+}
+
+/* Pricing */
+.kindle-bundle-detail-pricing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.kindle-bundle-detail-original {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: #9a9a9a;
+  text-decoration: line-through;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-original {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-detail-price {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #FF9900;
+}
+
+.kindle-bundle-detail-savings {
+  font-family: var(--font-sinhala);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #22C55E;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-savings {
+    background: rgba(34, 197, 94, 0.15);
+  }
+}
+
+/* Actions */
+.kindle-bundle-detail-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.kindle-bundle-detail-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: #FF9900;
+  color: white;
+  font-family: var(--font-sinhala);
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+.kindle-bundle-detail-btn-primary:hover {
+  background: #E68A00;
+  transform: translateY(-1px);
+}
+
+.kindle-bundle-detail-btn-primary svg {
+  width: 20px;
+  height: 20px;
+}
+
+.kindle-bundle-detail-owned {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 24px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #22C55E;
+  font-family: var(--font-sinhala);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: 10px;
+}
+
+.kindle-bundle-detail-owned svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-owned {
+    background: rgba(34, 197, 94, 0.15);
+  }
+}
+
+/* Books List */
+.kindle-bundle-detail-books {
+  margin-top: 40px;
+}
+
+.kindle-bundle-detail-books-title {
+  font-family: var(--font-sinhala);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.kindle-bundle-detail-books-title span {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: #9a9a9a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-books-title {
+    color: #F5F5F5;
+  }
+
+  .kindle-bundle-detail-books-title span {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-detail-books-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kindle-bundle-detail-book {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.kindle-bundle-detail-book:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-book {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .kindle-bundle-detail-book:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.kindle-bundle-detail-book-cover {
+  width: 56px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #E8E4DC 0%, #D8D4CC 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kindle-bundle-detail-book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kindle-bundle-detail-book-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9a9a9a;
+}
+
+.kindle-bundle-detail-book-placeholder svg {
+  width: 24px;
+  height: 24px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-book-cover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  }
+
+  .kindle-bundle-detail-book-placeholder {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-detail-book-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kindle-bundle-detail-book-title {
+  font-family: var(--font-sinhala);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-book-title {
+    color: #F5F5F5;
+  }
+}
+
+.kindle-bundle-detail-book-subtitle {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: #9a9a9a;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-book-subtitle {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-bundle-detail-book-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-sinhala);
+  font-size: 0.8125rem;
+  color: #9a9a9a;
+}
+
+.kindle-bundle-detail-book-price {
+  color: #6b6b6b;
+  text-decoration: line-through;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-bundle-detail-book-meta {
+    color: #6b6b6b;
+  }
+
+  .kindle-bundle-detail-book-price {
+    color: #4a4a4a;
+  }
+}
+
+/* ===========================================
+   KINDLE BUNDLE PURCHASE
+   =========================================== */
+
+/* Bundle card in purchase flow */
+.kindle-purchase-bundle {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Stacked covers in purchase */
+.kindle-purchase-bundle-covers {
+  position: relative;
+  width: 90px;
+  height: 110px;
+  flex-shrink: 0;
+}
+
+.kindle-purchase-bundle-cover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 85px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #E8E4DC 0%, #D8D4CC 100%);
+}
+
+.kindle-purchase-bundle-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kindle-purchase-bundle-cover-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: #8B7355;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-cover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #333 100%);
+  }
+
+  .kindle-purchase-bundle-cover-placeholder {
+    color: #9B8365;
+  }
+}
+
+/* Bundle info in purchase */
+.kindle-purchase-bundle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kindle-purchase-bundle-info h2 {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 4px;
+  line-height: 1.3;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-info h2 {
+    color: #E8E8E8;
+  }
+}
+
+.kindle-purchase-bundle-count {
+  font-size: 0.8125rem;
+  color: #666;
+  margin: 0 0 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-count {
+    color: #999;
+  }
+}
+
+.kindle-purchase-bundle-pricing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.kindle-purchase-bundle-original {
+  font-size: 0.875rem;
+  color: #999;
+  text-decoration: line-through;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-original {
+    color: #666;
+  }
+}
+
+.kindle-purchase-bundle-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-price {
+    color: #E8E8E8;
+  }
+}
+
+.kindle-purchase-bundle-savings {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-savings {
+    color: #34D399;
+    background: rgba(52, 211, 153, 0.15);
+  }
+}
+
+/* Books list in purchase */
+.kindle-purchase-bundle-books {
+  margin-bottom: 20px;
+}
+
+.kindle-purchase-bundle-books h3 {
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-books h3 {
+    color: #E8E8E8;
+  }
+}
+
+.kindle-purchase-bundle-books-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kindle-purchase-bundle-book-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #FAFAFA;
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-book-item {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.kindle-purchase-bundle-book-cover {
+  width: 36px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #E8E4DC 0%, #D8D4CC 100%);
+}
+
+.kindle-purchase-bundle-book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kindle-purchase-bundle-book-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 0.875rem;
+  color: #8B7355;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-book-cover {
+    background: linear-gradient(135deg, #2a2a2a 0%, #333 100%);
+  }
+
+  .kindle-purchase-bundle-book-placeholder {
+    color: #9B8365;
+  }
+}
+
+.kindle-purchase-bundle-book-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.kindle-purchase-bundle-book-title {
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-book-title {
+    color: #E8E8E8;
+  }
+}
+
+.kindle-purchase-bundle-book-price {
+  font-size: 0.75rem;
+  color: #999;
+  text-decoration: line-through;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-bundle-book-price {
+    color: #666;
+  }
+}
+
+/* Success state bundle info */
+.kindle-purchase-success-bundle-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+}
+
+.kindle-purchase-success-bundle-info strong {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  color: #1a1a1a;
+}
+
+.kindle-purchase-success-bundle-info span {
+  font-size: 0.8125rem;
+  color: #666;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-success-bundle-info {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .kindle-purchase-success-bundle-info strong {
+    color: #E8E8E8;
+  }
+
+  .kindle-purchase-success-bundle-info span {
+    color: #999;
+  }
+}

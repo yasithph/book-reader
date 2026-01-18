@@ -10,21 +10,19 @@ const navItems = [
     href: "/admin",
     label: "Write",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
         <path d="m15 5 4 4" />
       </svg>
     ),
   },
   {
-    href: "/admin/register",
-    label: "Register",
+    href: "/admin/sales",
+    label: "Sales",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <line x1="19" y1="8" x2="19" y2="14" />
-        <line x1="22" y1="11" x2="16" y2="11" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
       </svg>
     ),
   },
@@ -32,7 +30,7 @@ const navItems = [
     href: "/admin/users",
     label: "Users",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
@@ -44,7 +42,7 @@ const navItems = [
     href: "/admin/books",
     label: "Books",
     icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
       </svg>
     ),
@@ -53,7 +51,7 @@ const navItems = [
 
 // Sun icon for light mode
 const SunIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="4" />
     <path d="M12 2v2" />
     <path d="M12 20v2" />
@@ -68,14 +66,14 @@ const SunIcon = () => (
 
 // Moon icon for dark mode
 const MoonIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
   </svg>
 );
 
 // Arrow/Back icon
 const BackIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="m12 19-7-7 7-7" />
     <path d="M19 12H5" />
   </svg>
@@ -144,7 +142,7 @@ export function AdminNav({ isDark, onToggleDark }: AdminNavProps) {
           >
             {isDark ? <SunIcon /> : <MoonIcon />}
           </button>
-          <Link href="/" className="admin-sidebar-link" style={{ margin: 0 }}>
+          <Link href="/" className="admin-sidebar-link">
             <span className="admin-sidebar-icon">
               <BackIcon />
             </span>

@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { DeleteBookButton } from "./delete-button";
 import { PurchaseActions } from "../purchase-actions";
+import { BundlesSection } from "./bundles-section";
 
 export const dynamic = "force-dynamic";
 
@@ -20,11 +21,33 @@ interface Book {
   created_at: string;
 }
 
+interface BundleBook {
+  id: string;
+  title_en: string;
+  title_si: string;
+  cover_image_url: string | null;
+  price_lkr: number;
+}
+
+interface Bundle {
+  id: string;
+  name_en: string;
+  name_si: string | null;
+  description_en: string | null;
+  description_si: string | null;
+  price_lkr: number;
+  is_active: boolean;
+  books: BundleBook[];
+  original_price: number;
+  savings: number;
+  book_count: number;
+}
+
 async function getStats() {
   const supabase = createAdminClient();
 
   const [usersRes, booksRes, purchasesRes, pendingPurchasesRes] = await Promise.all([
-    supabase.from("users").select("id", { count: "exact", head: true }),
+    supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "user"),
     supabase.from("books").select("id", { count: "exact", head: true }),
     supabase
       .from("purchases")
@@ -61,8 +84,48 @@ async function getBooks(): Promise<Book[]> {
   return data || [];
 }
 
+async function getBundles(): Promise<Bundle[]> {
+  const supabase = createAdminClient();
+
+  const { data: bundles, error } = await supabase
+    .from("bundles")
+    .select(`
+      *,
+      bundle_books (
+        book_id,
+        books (
+          id,
+          title_en,
+          title_si,
+          cover_image_url,
+          price_lkr
+        )
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching bundles:", error);
+    return [];
+  }
+
+  // Transform the data to include calculated fields
+  return (bundles || []).map((bundle: any) => {
+    const books = bundle.bundle_books?.map((bb: any) => bb.books).filter(Boolean) || [];
+    const originalPrice = books.reduce((sum: number, book: any) => sum + (book?.price_lkr || 0), 0);
+
+    return {
+      ...bundle,
+      books,
+      original_price: originalPrice,
+      savings: originalPrice - bundle.price_lkr,
+      book_count: books.length,
+    };
+  });
+}
+
 export default async function AdminBooksPage() {
-  const [books, stats] = await Promise.all([getBooks(), getStats()]);
+  const [books, stats, bundles] = await Promise.all([getBooks(), getStats(), getBundles()]);
 
   return (
     <div className="admin-animate-in">
@@ -312,6 +375,18 @@ export default async function AdminBooksPage() {
           </div>
         </div>
       )}
+
+      {/* Bundles Section */}
+      <BundlesSection
+        initialBundles={bundles}
+        allBooks={books.filter((b) => !b.is_free).map((b) => ({
+          id: b.id,
+          title_en: b.title_en,
+          title_si: b.title_si,
+          cover_image_url: b.cover_image_url,
+          price_lkr: b.price_lkr,
+        }))}
+      />
     </div>
   );
 }

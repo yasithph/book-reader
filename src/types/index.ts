@@ -57,6 +57,8 @@ export interface Purchase {
   id: string;
   user_id: string;
   book_id: string;
+  bundle_id: string | null;
+  purchase_group_id: string | null;
   amount_lkr: number;
   payment_reference: string | null;
   payment_proof_url: string | null;
@@ -66,6 +68,31 @@ export interface Purchase {
   rejection_reason: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Bundle {
+  id: string;
+  name_en: string;
+  name_si: string | null;
+  description_en: string | null;
+  description_si: string | null;
+  price_lkr: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BundleBook {
+  id: string;
+  bundle_id: string;
+  book_id: string;
+  created_at: string;
+}
+
+export interface BundleWithBooks extends Bundle {
+  books: Book[];
+  original_price: number;
+  savings: number;
 }
 
 export interface ReadingProgress {

@@ -4,14 +4,36 @@ import * as React from "react";
 import Link from "next/link";
 import type { Book } from "@/types";
 
+interface BundleBook {
+  id: string;
+  title_en: string;
+  title_si: string;
+  cover_image_url: string | null;
+  price_lkr: number;
+}
+
+interface Bundle {
+  id: string;
+  name_en: string;
+  name_si: string | null;
+  description_en: string | null;
+  price_lkr: number;
+  books: BundleBook[];
+  original_price: number;
+  savings: number;
+  book_count: number;
+}
+
 interface KindleHomeContentProps {
   books: Book[];
+  bundles?: Bundle[];
   purchasedIds?: string[];
   progressData?: Record<string, number[]>;
 }
 
 export function KindleHomeContent({
   books,
+  bundles = [],
   purchasedIds = [],
   progressData = {},
 }: KindleHomeContentProps) {
@@ -106,6 +128,65 @@ export function KindleHomeContent({
                 </span>
               </div>
             </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Bundles Section */}
+      {bundles.length > 0 && (
+        <section className="kindle-bundles-section">
+          <div className="kindle-bundles-inner">
+            <p className="kindle-section-label">Bundle Deals</p>
+            <div className="kindle-bundle-list">
+              {bundles.map((bundle) => (
+                <Link
+                  key={bundle.id}
+                  href={`/bundles/${bundle.id}`}
+                  className="kindle-bundle-card"
+                >
+                  {/* Stacked book covers */}
+                  <div className="kindle-bundle-covers">
+                    {bundle.books.slice(0, 3).map((book, index) => (
+                      <div
+                        key={book.id}
+                        className="kindle-bundle-cover"
+                        style={{
+                          zIndex: 3 - index,
+                          transform: `translateX(${index * 16}px) rotate(${index * 4 - 4}deg)`,
+                        }}
+                      >
+                        {book.cover_image_url ? (
+                          <img src={book.cover_image_url} alt={book.title_en} />
+                        ) : (
+                          <div className="kindle-bundle-cover-placeholder">
+                            {book.title_si?.charAt(0) || "B"}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bundle info */}
+                  <div className="kindle-bundle-info">
+                    <h3 className="kindle-bundle-name">{bundle.name_si || bundle.name_en}</h3>
+                    <p className="kindle-bundle-count">{bundle.book_count} පොත්</p>
+                    <div className="kindle-bundle-pricing">
+                      <span className="kindle-bundle-original">
+                        Rs. {bundle.original_price.toLocaleString()}
+                      </span>
+                      <span className="kindle-bundle-price">
+                        Rs. {bundle.price_lkr.toLocaleString()}
+                      </span>
+                      {bundle.savings > 0 && (
+                        <span className="kindle-bundle-savings">
+                          Rs. {bundle.savings.toLocaleString()} ඉතිරි
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       )}

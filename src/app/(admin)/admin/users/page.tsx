@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -55,22 +54,11 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="admin-animate-in">
-      <div className="admin-page-header-actions">
-        <div>
-          <h1 className="admin-page-title">Users</h1>
-          <p className="admin-page-subtitle">
-            {users.length} registered {users.length === 1 ? "reader" : "readers"}
-          </p>
-        </div>
-        <Link href="/admin/register" className="admin-btn admin-btn-primary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 18, height: 18 }}>
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <line x1="19" y1="8" x2="19" y2="14" />
-            <line x1="22" y1="11" x2="16" y2="11" />
-          </svg>
-          Register User
-        </Link>
+      <div className="admin-page-header">
+        <h1 className="admin-page-title">Users</h1>
+        <p className="admin-page-subtitle">
+          {users.length} registered {users.length === 1 ? "reader" : "readers"}
+        </p>
       </div>
 
       {users.length > 0 ? (
@@ -252,15 +240,8 @@ export default async function AdminUsersPage() {
             </div>
             <h3 className="admin-card-empty-title">No users registered</h3>
             <p className="admin-card-empty-text">
-              Register your first user to get started
+              Users will appear here after their first purchase
             </p>
-            <Link
-              href="/admin/register"
-              className="admin-btn admin-btn-primary"
-              style={{ marginTop: "1.5rem" }}
-            >
-              Register User
-            </Link>
           </div>
         </div>
       )}
