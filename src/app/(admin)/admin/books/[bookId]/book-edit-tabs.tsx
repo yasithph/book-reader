@@ -93,21 +93,11 @@ export function BookEditTabs({ book, chapters, bookId }: BookEditTabsProps) {
                 <h2 className="chapters-title">Chapter Management</h2>
                 <p className="chapters-subtitle">
                   {chapters.length === 0
-                    ? "Start adding chapters to bring your story to life"
+                    ? "No chapters yet"
                     : `${chapters.length} chapter${chapters.length !== 1 ? "s" : ""} · ${chapters.reduce((acc, c) => acc + c.word_count, 0).toLocaleString()} words total`
                   }
                 </p>
               </div>
-              <Link
-                href={`/admin?bookId=${bookId}&newChapter=true`}
-                className="chapters-add-btn"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Add Chapter
-              </Link>
             </div>
 
             {/* Chapters List */}

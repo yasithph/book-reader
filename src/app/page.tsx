@@ -110,139 +110,163 @@ async function getBundles(): Promise<Bundle[]> {
   }).filter((bundle: Bundle) => bundle.book_count >= 2);
 }
 
-// Gold lotus flower icon
-function LotusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C12 2 9 6 9 10C9 11.5 9.5 12.8 10.3 13.8C8.5 13.3 6.5 12 5 10C5 10 4 14 7 17C8.5 18.5 10.3 19 12 19C13.7 19 15.5 18.5 17 17C20 14 19 10 19 10C17.5 12 15.5 13.3 13.7 13.8C14.5 12.8 15 11.5 15 10C15 6 12 2 12 2Z" />
-      <path d="M12 19C12 19 12 22 12 22" strokeWidth="2" stroke="currentColor" fill="none" />
-    </svg>
-  );
+// Format price helper
+function formatPrice(price: number) {
+  return `Rs. ${price.toLocaleString()}`;
 }
 
-// Book icon for placeholder
-function BookIcon({ className }: { className?: string }) {
+// Public book card - minimal Kindle style
+function PublicBookCard({ book, index }: { book: Book; index: number }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-    </svg>
-  );
-}
-
-// Personal book card component (for public view)
-function PersonalBookCard({ book, index }: { book: Book; index: number }) {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-LK", {
-      style: "currency",
-      currency: "LKR",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const estimatedReadingTime = Math.ceil(book.total_words / 200);
-
-  return (
-    <Link href={`/books/${book.id}`} className="block">
-      <article className="book-card-personal">
-        {/* Book Cover */}
-        <div className="book-cover-wrapper">
-          {book.cover_image_url ? (
-            <img
-              src={book.cover_image_url}
-              alt={book.title_en}
-              className="book-cover-image"
-              loading={index < 4 ? "eager" : "lazy"}
-            />
-          ) : (
-            <div className="book-cover-placeholder">
-              <BookIcon className="book-cover-placeholder-icon" />
-              <p className="book-cover-placeholder-title">{book.title_si}</p>
-            </div>
-          )}
-
-          {/* Price badge */}
-          <div className={`book-price-badge ${book.is_free ? "book-price-badge-free" : "book-price-badge-paid"}`}>
-            {book.is_free ? "නොමිලේ" : formatPrice(book.price_lkr)}
+    <Link
+      href={`/books/${book.id}`}
+      className="landing-book-card"
+      style={{ animationDelay: `${0.02 * index}s` }}
+    >
+      <div className="landing-book-cover">
+        {book.cover_image_url ? (
+          <img
+            src={book.cover_image_url}
+            alt={book.title_en}
+            loading={index < 4 ? "eager" : "lazy"}
+          />
+        ) : (
+          <div className="landing-book-cover-placeholder">
+            {book.title_si.charAt(0)}
           </div>
-        </div>
-
-        {/* Book Info */}
-        <div className="book-info">
-          <h3 className="book-title-sinhala">{book.title_si}</h3>
-          <p className="book-title-english">{book.title_en}</p>
-
-          <div className="book-meta">
-            <span className="book-meta-item">
-              <svg className="book-meta-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10.75 16.82A7.462 7.462 0 0115 15.5c.71 0 1.396.098 2.046.282A.75.75 0 0018 15.06v-11a.75.75 0 00-.546-.721A9.006 9.006 0 0015 3a8.963 8.963 0 00-4.25 1.065V16.82zM9.25 4.065A8.963 8.963 0 005 3c-.85 0-1.673.118-2.454.339A.75.75 0 002 4.06v11a.75.75 0 00.954.721A7.506 7.506 0 015 15.5c1.579 0 3.042.487 4.25 1.32V4.065z" />
-              </svg>
-              {book.total_chapters} පරිච්ඡේද
-            </span>
-            <span className="book-meta-item">
-              <svg className="book-meta-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" />
-              </svg>
-              {estimatedReadingTime} min
-            </span>
-          </div>
-        </div>
-      </article>
+        )}
+        {book.is_free && <div className="landing-book-free-badge">Free</div>}
+      </div>
+      <div className="landing-book-info">
+        <h3 className="landing-book-title">{book.title_si}</h3>
+        <p className="landing-book-price">
+          {book.is_free ? "නොමිලේ" : formatPrice(book.price_lkr)}
+        </p>
+      </div>
     </Link>
   );
 }
 
-// Featured book component - compact design (for public view)
-function FeaturedBook({ book }: { book: Book }) {
+// Public bundle card - minimal Kindle style
+function PublicBundleCard({ bundle, index }: { bundle: Bundle; index: number }) {
   return (
-    <Link href={`/books/${book.id}`} className="featured-book-link">
-      <article className="featured-book-compact">
-        <div className="featured-book-cover-compact">
-          {book.cover_image_url ? (
-            <img src={book.cover_image_url} alt={book.title_en} />
-          ) : (
-            <div className="book-cover-placeholder">
-              <BookIcon className="book-cover-placeholder-icon" />
-            </div>
-          )}
-          <span className="featured-badge">නවතම</span>
+    <Link
+      href={`/bundles/${bundle.id}`}
+      className="landing-bundle-card"
+      style={{ animationDelay: `${0.05 * index}s` }}
+    >
+      {/* Stacked covers */}
+      <div className="landing-bundle-covers">
+        {bundle.books.slice(0, 3).map((book, i) => (
+          <div
+            key={book.id}
+            className="landing-bundle-cover"
+            style={{
+              zIndex: 3 - i,
+              transform: `translateX(${i * 12}px) rotate(${i * 3 - 3}deg)`,
+            }}
+          >
+            {book.cover_image_url ? (
+              <img src={book.cover_image_url} alt={book.title_en} />
+            ) : (
+              <div className="landing-bundle-cover-placeholder">
+                {book.title_si?.charAt(0) || "B"}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Bundle info */}
+      <div className="landing-bundle-info">
+        <h3 className="landing-bundle-name">{bundle.name_si || bundle.name_en}</h3>
+        <p className="landing-bundle-count">{bundle.book_count} පොත්</p>
+        <div className="landing-bundle-pricing">
+          <span className="landing-bundle-original">{formatPrice(bundle.original_price)}</span>
+          <span className="landing-bundle-price">{formatPrice(bundle.price_lkr)}</span>
         </div>
-        <div className="featured-book-info">
-          <h2 className="featured-book-title-compact">{book.title_si}</h2>
-          <p className="featured-book-subtitle-compact">{book.title_en}</p>
-          {book.description_si && (
-            <p className="featured-book-desc-compact">
-              {book.description_si.length > 120
-                ? book.description_si.substring(0, 120) + "..."
-                : book.description_si}
-            </p>
-          )}
-          <span className="featured-book-cta-compact">
-            කියවන්න
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
-            </svg>
-          </span>
-        </div>
-      </article>
+        {bundle.savings > 0 && (
+          <span className="landing-bundle-savings">Save {formatPrice(bundle.savings)}</span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+// Featured book banner - dark gradient style
+function FeaturedBookBanner({ book }: { book: Book }) {
+  return (
+    <Link href={`/books/${book.id}`} className="landing-featured-banner">
+      <span className="landing-featured-badge">New</span>
+      <div className="landing-featured-cover">
+        {book.cover_image_url ? (
+          <img src={book.cover_image_url} alt={book.title_en} />
+        ) : (
+          <div className="landing-featured-cover-placeholder">
+            {book.title_si.charAt(0)}
+          </div>
+        )}
+      </div>
+      <div className="landing-featured-info">
+        <h2 className="landing-featured-title">{book.title_si}</h2>
+        <p className="landing-featured-subtitle">{book.title_en}</p>
+        {book.description_si && (
+          <p className="landing-featured-desc">
+            {book.description_si.length > 100
+              ? book.description_si.substring(0, 100) + "..."
+              : book.description_si}
+          </p>
+        )}
+        <span className="landing-featured-cta">
+          {book.is_free ? "Read Now" : formatPrice(book.price_lkr)}
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+          </svg>
+        </span>
+      </div>
     </Link>
   );
 }
 
 // Loading skeleton for public view
-function BooksSkeleton() {
+function LandingSkeleton() {
   return (
-    <div className="book-collection">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="book-card-personal" style={{ opacity: 1, animation: 'none' }}>
-          <div className="book-cover-wrapper skeleton" />
-          <div className="book-info">
-            <div className="skeleton" style={{ height: '1.25rem', width: '80%', marginBottom: '0.5rem', borderRadius: '4px' }} />
-            <div className="skeleton" style={{ height: '1rem', width: '60%', marginBottom: '0.75rem', borderRadius: '4px' }} />
-            <div className="skeleton" style={{ height: '0.75rem', width: '40%', borderRadius: '4px' }} />
-          </div>
+    <main className="landing-page">
+      <header className="landing-header">
+        <div className="landing-header-inner">
+          <div className="landing-skeleton-text" style={{ width: '180px', height: '32px' }} />
+          <div className="landing-skeleton-text" style={{ width: '120px', height: '16px', marginTop: '4px' }} />
         </div>
-      ))}
-    </div>
+      </header>
+      <div className="landing-content">
+        <section className="landing-section">
+          <div className="landing-featured-banner landing-skeleton-featured">
+            <div className="landing-featured-cover">
+              <div className="landing-skeleton-cover" />
+            </div>
+            <div className="landing-featured-info">
+              <div className="landing-skeleton-text" style={{ width: '70%', height: '24px' }} />
+              <div className="landing-skeleton-text" style={{ width: '50%', height: '14px', marginTop: '8px' }} />
+            </div>
+          </div>
+        </section>
+        <section className="landing-section">
+          <div className="landing-book-grid">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="landing-book-card landing-skeleton-card">
+                <div className="landing-book-cover">
+                  <div className="landing-skeleton-cover" />
+                </div>
+                <div className="landing-book-info">
+                  <div className="landing-skeleton-text" style={{ width: '80%', height: '16px' }} />
+                  <div className="landing-skeleton-text" style={{ width: '50%', height: '12px', marginTop: '6px' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </main>
   );
 }
 
@@ -293,40 +317,70 @@ function KindleHomeSkeleton() {
   );
 }
 
-// Public books content component (for non-logged-in users)
-async function PublicBooksContent() {
-  const books = await getBooks();
+// Public landing content
+async function PublicLandingContent() {
+  const [books, bundles] = await Promise.all([getBooks(), getBundles()]);
 
-  if (books.length === 0) {
+  if (books.length === 0 && bundles.length === 0) {
     return (
-      <div className="books-empty">
-        <div className="books-empty-icon">
-          <BookIcon />
-        </div>
-        <p className="books-empty-text">පොත් ඉක්මනින් එකතු වේ...</p>
+      <div className="landing-empty">
+        <svg className="landing-empty-icon" viewBox="0 0 48 48" fill="none">
+          <path
+            d="M8 12C8 10.9 8.9 10 10 10H20C22.2 10 24 11.8 24 14V38C24 36.9 23.1 36 22 36H10C8.9 36 8 35.1 8 34V12Z"
+            fill="currentColor"
+            fillOpacity="0.3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M40 12C40 10.9 39.1 10 38 10H28C25.8 10 24 11.8 24 14V38C24 36.9 24.9 36 26 36H38C39.1 36 40 35.1 40 34V12Z"
+            fill="currentColor"
+            fillOpacity="0.15"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+        </svg>
+        <h2 className="landing-empty-title">Coming Soon</h2>
+        <p className="landing-empty-text">New books will be available shortly</p>
       </div>
     );
   }
 
-  // Get the most recent book as featured
   const [featuredBook, ...otherBooks] = books;
 
   return (
-    <>
+    <div className="landing-content">
       {/* Featured Book */}
       {featuredBook && (
-        <FeaturedBook book={featuredBook} />
+        <section className="landing-section">
+          <FeaturedBookBanner book={featuredBook} />
+        </section>
       )}
 
-      {/* Other Books Grid */}
-      {otherBooks.length > 0 && (
-        <div className="book-collection">
-          {otherBooks.map((book, index) => (
-            <PersonalBookCard key={book.id} book={book} index={index} />
-          ))}
-        </div>
+      {/* Bundle Deals */}
+      {bundles.length > 0 && (
+        <section className="landing-section">
+          <p className="landing-section-label">Bundle Deals</p>
+          <div className="landing-bundle-grid">
+            {bundles.map((bundle, index) => (
+              <PublicBundleCard key={bundle.id} bundle={bundle} index={index} />
+            ))}
+          </div>
+        </section>
       )}
-    </>
+
+      {/* All Books */}
+      {otherBooks.length > 0 && (
+        <section className="landing-section">
+          <p className="landing-section-label">All Books</p>
+          <div className="landing-book-grid">
+            {otherBooks.map((book, index) => (
+              <PublicBookCard key={book.id} book={book} index={index} />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -460,42 +514,26 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   // Show public landing page for non-logged-in users
   return (
-    <main className="home-page">
-      {/* Hero Header with Background Image */}
-      <header className="hero-header">
-        <div className="hero-bg">
-          <img
-            src="/images/generated/kerala-romance-header.png"
-            alt=""
-            className="hero-bg-image"
-          />
-          <div className="hero-overlay" />
+    <main className="landing-page">
+      {/* Header */}
+      <header className="landing-header">
+        <div className="landing-header-inner">
+          <h1 className="landing-title">කශ්වි අමරසූරිය</h1>
+          <p className="landing-subtitle">Kashvi Amarasooriya</p>
         </div>
-
-        <div className="hero-content">
-          <LotusIcon className="hero-lotus" />
-          <h1 className="hero-author-name">කශ්වි අමරසූරිය</h1>
-          <p className="hero-author-name-en">Kashvi Amarasooriya</p>
-          <p className="hero-tagline">Books by Kashvi Amarasooriya</p>
-        </div>
-
-        {/* Login Button */}
-        <Link href="/auth" className="hero-login-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-            <polyline points="10 17 15 12 10 7" />
-            <line x1="15" y1="12" x2="3" y2="12" />
+        <Link href="/auth" className="landing-login-btn">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z" clipRule="evenodd" />
+            <path fillRule="evenodd" d="M6 10a.75.75 0 01.75-.75h9.546l-1.048-.943a.75.75 0 111.004-1.114l2.5 2.25a.75.75 0 010 1.114l-2.5 2.25a.75.75 0 11-1.004-1.114l1.048-.943H6.75A.75.75 0 016 10z" clipRule="evenodd" />
           </svg>
-          Login
+          Sign In
         </Link>
       </header>
 
-      {/* Books Section */}
-      <section className="books-section">
-        <Suspense fallback={<BooksSkeleton />}>
-          <PublicBooksContent />
-        </Suspense>
-      </section>
+      {/* Content */}
+      <Suspense fallback={<LandingSkeleton />}>
+        <PublicLandingContent />
+      </Suspense>
     </main>
   );
 }

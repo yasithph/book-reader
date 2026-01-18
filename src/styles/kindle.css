@@ -4748,6 +4748,40 @@
   object-fit: contain;
 }
 
+.kindle-purchase-upload-pdf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  padding: 24px;
+}
+
+.kindle-purchase-upload-pdf svg {
+  width: 48px;
+  height: 48px;
+  color: #dc2626;
+}
+
+.kindle-purchase-upload-pdf span {
+  font-size: 0.875rem;
+  color: #6b6b6b;
+  text-align: center;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-purchase-upload-pdf svg {
+    color: #f87171;
+  }
+
+  .kindle-purchase-upload-pdf span {
+    color: #9a9a9a;
+  }
+}
+
 .kindle-purchase-upload-remove {
   position: absolute;
   top: 12px;

@@ -30,6 +30,8 @@ export async function GET() {
         status,
         created_at,
         purchase_group_id,
+        payment_proof_url,
+        payment_reference,
         users!purchases_user_id_fkey (
           phone,
           display_name
@@ -79,6 +81,8 @@ export async function GET() {
       amount_lkr: p.amount_lkr,
       status: p.status,
       created_at: p.created_at,
+      payment_proof_url: p.payment_proof_url,
+      payment_reference: p.payment_reference,
       user: p.users ? {
         phone: p.users.phone,
         display_name: p.users.display_name,
@@ -98,6 +102,8 @@ export async function GET() {
       amount_lkr: p.amount_lkr,
       status: p.status,
       created_at: p.created_at,
+      payment_proof_url: p.payment_proof_url,
+      payment_reference: p.payment_reference,
       user: p.users ? {
         phone: p.users.phone,
         display_name: p.users.display_name,

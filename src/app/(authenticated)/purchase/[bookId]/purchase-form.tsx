@@ -45,8 +45,11 @@ export function PurchaseForm({ book, existingPurchase }: PurchaseFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/")) {
-        setError("Please upload an image file");
+      const isImage = file.type.startsWith("image/");
+      const isPDF = file.type === "application/pdf";
+
+      if (!isImage && !isPDF) {
+        setError("Please upload an image or PDF file");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
@@ -55,11 +58,17 @@ export function PurchaseForm({ book, existingPurchase }: PurchaseFormProps) {
       }
       setProofFile(file);
       setError(null);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setProofPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+
+      if (isImage) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setProofPreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // For PDF, just show the filename
+        setProofPreview("pdf:" + file.name);
+      }
     }
   };
 
@@ -297,17 +306,27 @@ export function PurchaseForm({ book, existingPurchase }: PurchaseFormProps) {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.pdf,application/pdf"
                   onChange={handleFileChange}
                   className="hidden"
                 />
 
                 {proofPreview ? (
                   <div className="kindle-purchase-upload-preview">
-                    <img
-                      src={proofPreview}
-                      alt="Payment proof"
-                    />
+                    {proofPreview.startsWith("pdf:") ? (
+                      <div className="kindle-purchase-upload-pdf">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z" />
+                          <path d="M9 7h6M9 11h6M9 15h4" strokeLinecap="round" />
+                        </svg>
+                        <span>{proofPreview.slice(4)}</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={proofPreview}
+                        alt="Payment proof"
+                      />
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -327,7 +346,7 @@ export function PurchaseForm({ book, existingPurchase }: PurchaseFormProps) {
                       <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <span>Click to upload</span>
-                    <span className="kindle-purchase-upload-hint">PNG, JPG up to 5MB</span>
+                    <span className="kindle-purchase-upload-hint">PNG, JPG, PDF up to 5MB</span>
                   </div>
                 )}
               </div>

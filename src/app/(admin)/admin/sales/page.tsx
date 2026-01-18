@@ -39,6 +39,8 @@ interface Purchase {
   amount_lkr: number;
   status: "pending" | "approved" | "rejected";
   created_at: string;
+  payment_proof_url?: string | null;
+  payment_reference?: string | null;
   user?: { phone: string; display_name: string | null };
   book?: { title_en: string };
   bundle?: { name_en: string };
@@ -844,6 +846,10 @@ function PurchaseHistory({
   loading: boolean;
   onRefresh: () => void;
 }) {
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
   // Get date boundaries
   const now = new Date();
   const startOfWeek = new Date(now);
@@ -869,6 +875,41 @@ function PurchaseHistory({
     .reduce((sum, p) => sum + p.amount_lkr, 0);
 
   const approvedCount = approvedPurchases.length;
+
+  // Handle approve/reject
+  const handleAction = async (action: "approve" | "reject") => {
+    if (!selectedPurchase) return;
+
+    setActionLoading(true);
+    setActionError(null);
+
+    try {
+      const res = await fetch(`/api/admin/purchases/${selectedPurchase.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update purchase");
+      }
+
+      // Close modal and refresh list
+      setSelectedPurchase(null);
+      onRefresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Check if payment proof is a PDF
+  const isPDF = (url: string | null | undefined) => {
+    if (!url) return false;
+    return url.toLowerCase().endsWith(".pdf");
+  };
 
   return (
     <div className="sales-history">
@@ -923,7 +964,11 @@ function PurchaseHistory({
       ) : (
         <div className="sales-purchase-list">
           {purchases.map((purchase) => (
-            <div key={purchase.id} className="sales-purchase-item">
+            <div
+              key={purchase.id}
+              className={`sales-purchase-item ${purchase.status === "pending" ? "sales-purchase-item--clickable" : ""}`}
+              onClick={() => purchase.status === "pending" && setSelectedPurchase(purchase)}
+            >
               <div className="sales-purchase-main">
                 <div className="sales-purchase-product">
                   {purchase.bundle?.name_en || purchase.book?.title_en || "Unknown"}
@@ -945,6 +990,156 @@ function PurchaseHistory({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Purchase Detail Modal */}
+      {selectedPurchase && (
+        <div className="sales-modal-overlay" onClick={() => !actionLoading && setSelectedPurchase(null)}>
+          <div className="sales-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sales-modal-header">
+              <h2 className="sales-modal-title">Review Purchase</h2>
+              <button
+                className="sales-modal-close"
+                onClick={() => !actionLoading && setSelectedPurchase(null)}
+                disabled={actionLoading}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="sales-modal-body">
+              {/* Purchase Info */}
+              <div className="sales-modal-info">
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Product</span>
+                  <span className="sales-modal-info-value">
+                    {selectedPurchase.bundle?.name_en || selectedPurchase.book?.title_en || "Unknown"}
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Customer</span>
+                  <span className="sales-modal-info-value">
+                    {selectedPurchase.user?.display_name || "No name"}
+                    <span className="sales-modal-info-phone">+{selectedPurchase.user?.phone}</span>
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Amount</span>
+                  <span className="sales-modal-info-value sales-modal-info-amount">
+                    Rs. {selectedPurchase.amount_lkr.toLocaleString()}
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Date</span>
+                  <span className="sales-modal-info-value">
+                    {new Date(selectedPurchase.created_at).toLocaleString()}
+                  </span>
+                </div>
+                {selectedPurchase.payment_reference && (
+                  <div className="sales-modal-info-row">
+                    <span className="sales-modal-info-label">Reference</span>
+                    <span className="sales-modal-info-value">{selectedPurchase.payment_reference}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Proof */}
+              <div className="sales-modal-proof">
+                <h3 className="sales-modal-proof-title">Payment Proof</h3>
+                {selectedPurchase.payment_proof_url ? (
+                  isPDF(selectedPurchase.payment_proof_url) ? (
+                    <div className="sales-modal-proof-pdf">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14,2 14,8 20,8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <line x1="10" y1="9" x2="8" y2="9" />
+                      </svg>
+                      <span>PDF Document</span>
+                      <a
+                        href={selectedPurchase.payment_proof_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="sales-modal-proof-link"
+                      >
+                        Open PDF
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                          <polyline points="15,3 21,3 21,9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="sales-modal-proof-image">
+                      <img
+                        src={selectedPurchase.payment_proof_url}
+                        alt="Payment proof"
+                        onClick={() => window.open(selectedPurchase.payment_proof_url!, "_blank")}
+                      />
+                      <p className="sales-modal-proof-hint">Click to view full size</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="sales-modal-proof-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21,15 16,10 5,21" />
+                    </svg>
+                    <span>No payment proof uploaded</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Error Message */}
+              {actionError && (
+                <div className="sales-modal-error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <span>{actionError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="sales-modal-actions">
+              <button
+                className="sales-modal-btn sales-modal-btn-reject"
+                onClick={() => handleAction("reject")}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <span className="sales-btn-spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                )}
+                Reject
+              </button>
+              <button
+                className="sales-modal-btn sales-modal-btn-approve"
+                onClick={() => handleAction("approve")}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <span className="sales-btn-spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+                Approve
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

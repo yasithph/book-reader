@@ -44,16 +44,32 @@ export async function PATCH(
     );
   }
 
-  // Update the purchase
-  const { error: updateError } = await supabase
-    .from("purchases")
-    .update({
-      status: action === "approve" ? "approved" : "rejected",
-      rejection_reason: action === "reject" ? rejection_reason : null,
-      reviewed_by: session.userId,
-      reviewed_at: new Date().toISOString(),
-    })
-    .eq("id", purchaseId);
+  // For bundle purchases, update all purchases with the same purchase_group_id
+  // For single book purchases, update just the one record
+  const updateData = {
+    status: action === "approve" ? "approved" : "rejected",
+    rejection_reason: action === "reject" ? rejection_reason : null,
+    reviewed_by: session.userId,
+    reviewed_at: new Date().toISOString(),
+  };
+
+  let updateError;
+
+  if (purchase.purchase_group_id) {
+    // Bundle purchase - update all records in the group
+    const { error } = await supabase
+      .from("purchases")
+      .update(updateData)
+      .eq("purchase_group_id", purchase.purchase_group_id);
+    updateError = error;
+  } else {
+    // Single book purchase - update just this record
+    const { error } = await supabase
+      .from("purchases")
+      .update(updateData)
+      .eq("id", purchaseId);
+    updateError = error;
+  }
 
   if (updateError) {
     console.error("Failed to update purchase:", updateError);

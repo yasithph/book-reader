@@ -96,8 +96,8 @@ function AuthContent() {
         return;
       }
 
-      // Redirect to welcome page for PWA install prompt
-      router.push("/welcome");
+      // Redirect to original destination (e.g., purchase page) or welcome for fresh signups
+      router.push(redirectTo === "/" ? "/welcome" : redirectTo);
     } catch {
       setError("Network error. Please try again.");
     } finally {
