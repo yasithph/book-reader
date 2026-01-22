@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useServiceWorker } from "@/hooks/use-service-worker";
 import { OfflineBanner } from "./offline-banner";
 import { InstallPrompt } from "./install-prompt";
+import { PushNotificationPrompt } from "./push-notification-prompt";
 
 interface PWAProviderProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
       <OfflineBanner />
       {children}
       <InstallPrompt />
+      <PushNotificationPrompt delay={15000} />
 
       {/* Update available banner */}
       {isUpdateAvailable && (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { sendChapterNotificationToBookPurchasers } from "@/lib/push-notifications";
 
 // Maximum content size (1MB)
 const MAX_CONTENT_SIZE = 1024 * 1024;
@@ -226,7 +227,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // First get the current chapter to access draft_content and current state
     const { data: currentChapter, error: fetchError } = await supabase
       .from("chapters")
-      .select("draft_content, content, is_published, title_en, title_si")
+      .select("draft_content, content, is_published, title_en, title_si, book_id, chapter_number")
       .eq("id", chapterId)
       .single();
 
@@ -277,6 +278,34 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (error) {
       console.error("Error publishing chapter:", error);
       return NextResponse.json({ error: "Failed to publish chapter" }, { status: 500 });
+    }
+
+    // Send push notifications if this is a newly published chapter (not previously published)
+    // Or if there were significant changes (draft content exists)
+    const shouldNotify = !currentChapter.is_published || hasDraft;
+
+    if (shouldNotify) {
+      // Get book details for notification
+      const { data: bookData } = await supabase
+        .from("books")
+        .select("title_en, title_si")
+        .eq("id", currentChapter.book_id)
+        .single();
+
+      if (bookData) {
+        // Send notifications in background
+        sendChapterNotificationToBookPurchasers(currentChapter.book_id, {
+          bookId: currentChapter.book_id,
+          bookTitleEn: bookData.title_en,
+          bookTitleSi: bookData.title_si,
+          chapterNumber: currentChapter.chapter_number,
+          chapterTitleEn: currentChapter.title_en || undefined,
+          chapterTitleSi: currentChapter.title_si || undefined,
+        }).catch((err) => {
+          console.error("Failed to send push notifications:", err);
+          // Don't fail the API call if notifications fail
+        });
+      }
     }
 
     return NextResponse.json({ chapter, message: "Chapter published successfully" });

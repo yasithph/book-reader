@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
+import { sendChapterNotificationToBookPurchasers } from "@/lib/push-notifications";
 
 // Maximum content size (1MB)
 const MAX_CONTENT_SIZE = 1024 * 1024;
@@ -158,6 +159,28 @@ export async function POST(request: NextRequest) {
         );
       }
       return NextResponse.json({ error: "Failed to create chapter" }, { status: 500 });
+    }
+
+    // Send push notifications to all users who purchased this book
+    // Run in background to not delay the API response
+    const { data: bookData } = await supabase
+      .from("books")
+      .select("title_en, title_si")
+      .eq("id", book_id)
+      .single();
+
+    if (bookData) {
+      sendChapterNotificationToBookPurchasers(book_id, {
+        bookId: book_id,
+        bookTitleEn: bookData.title_en,
+        bookTitleSi: bookData.title_si,
+        chapterNumber: chapterNum,
+        chapterTitleEn: title_en?.trim() || undefined,
+        chapterTitleSi: title_si?.trim() || undefined,
+      }).catch((err) => {
+        console.error("Failed to send push notifications:", err);
+        // Don't fail the API call if notifications fail
+      });
     }
 
     return NextResponse.json({ chapter });

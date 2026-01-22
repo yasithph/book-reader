@@ -200,34 +200,73 @@ async function syncReadingProgress() {
   });
 }
 
-// Push notification support (for future use)
+// Push notification handler
 self.addEventListener("push", (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    const options = {
-      body: data.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/badge-72.png",
-      vibrate: [100, 50, 100],
-      data: {
-        url: data.url || "/",
-      },
-    };
-    event.waitUntil(self.registration.showNotification(data.title, options));
+  if (!event.data) {
+    return;
   }
+
+  const data = event.data.json();
+
+  // Data structure from server:
+  // {
+  //   title: "New Chapter",
+  //   body: "Chapter 5: The Beginning",
+  //   bookId: "uuid",
+  //   chapterNumber: 5,
+  //   url: "/read/uuid/5"
+  // }
+
+  const options = {
+    body: data.body,
+    icon: "/icons/icon-192.png",
+    badge: "/icons/badge-72.png",
+    vibrate: [200, 100, 200],
+    tag: `chapter-${data.bookId}-${data.chapterNumber}`, // Prevent duplicate notifications
+    requireInteraction: false,
+    data: {
+      url: data.url || "/library",
+      bookId: data.bookId,
+      chapterNumber: data.chapterNumber,
+    },
+    actions: [
+      {
+        action: "read",
+        title: "Read Now",
+      },
+      {
+        action: "close",
+        title: "Dismiss",
+      },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
 });
 
 // Notification click handler
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+
+  // Handle action buttons
+  if (event.action === "close") {
+    return;
+  }
+
   const url = event.notification.data.url;
+
   event.waitUntil(
-    self.clients.matchAll({ type: "window" }).then((clientList) => {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // Check if there's already a window open with the URL
       for (const client of clientList) {
         if (client.url === url && "focus" in client) {
           return client.focus();
         }
       }
+
+      // If no matching window, open a new one
       if (self.clients.openWindow) {
         return self.clients.openWindow(url);
       }
