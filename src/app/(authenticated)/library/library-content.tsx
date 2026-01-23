@@ -144,7 +144,6 @@ export function LibraryContent({ books }: LibraryContentProps) {
                   </div>
                   <div className="kindle-continue-info">
                     <h3 className="kindle-continue-title">{mostRecentBook.title_si}</h3>
-                    <p className="kindle-continue-author">{mostRecentBook.author_si}</p>
                     <div className="kindle-progress-bar">
                       <div
                         className="kindle-progress-fill"
@@ -199,7 +198,6 @@ export function LibraryContent({ books }: LibraryContentProps) {
 
                     <div className="kindle-book-info">
                       <h3 className="kindle-book-title">{book.title_si}</h3>
-                      <p className="kindle-book-author">{book.author_si}</p>
                     </div>
                   </Link>
                 ))}
