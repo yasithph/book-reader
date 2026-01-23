@@ -652,27 +652,27 @@
 
 .kindle-book-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 }
 
 @media (min-width: 480px) {
   .kindle-book-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
 }
 
 @media (min-width: 768px) {
   .kindle-book-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
   }
 }
 
 @media (min-width: 1024px) {
   .kindle-book-grid {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 28px;
   }
 }

@@ -171,12 +171,17 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
     }
   }
 
-  // Sort by last_read_at (most recent first)
+  // Sort by: recently read books first, then unread books by purchase date
   return libraryBooks.sort((a, b) => {
-    if (!a.last_read_at && !b.last_read_at) return 0;
-    if (!a.last_read_at) return 1;
-    if (!b.last_read_at) return -1;
-    return new Date(b.last_read_at).getTime() - new Date(a.last_read_at).getTime();
+    // If both have been read, sort by last_read_at
+    if (a.last_read_at && b.last_read_at) {
+      return new Date(b.last_read_at).getTime() - new Date(a.last_read_at).getTime();
+    }
+    // Read books come before unread books
+    if (a.last_read_at && !b.last_read_at) return -1;
+    if (!a.last_read_at && b.last_read_at) return 1;
+    // Both unread: sort by purchased_at
+    return new Date(b.purchased_at).getTime() - new Date(a.purchased_at).getTime();
   });
 }
 
