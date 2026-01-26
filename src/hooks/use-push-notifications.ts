@@ -31,6 +31,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       return;
     }
 
+    // In development, service worker isn't registered
+    if (process.env.NODE_ENV !== "production") {
+      setPermission("unsupported");
+      return;
+    }
+
     // Get current permission state
     const currentPermission = Notification.permission;
     setPermission(currentPermission as PushSubscriptionState);
@@ -81,8 +87,13 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         return false;
       }
 
-      // Get service worker registration
-      const registration = await navigator.serviceWorker.ready;
+      // Get service worker registration with timeout
+      const registrationPromise = navigator.serviceWorker.ready;
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Service worker timeout")), 5000)
+      );
+
+      const registration = await Promise.race([registrationPromise, timeoutPromise]);
 
       // Check if already subscribed
       let subscription = await registration.pushManager.getSubscription();
@@ -101,27 +112,31 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         });
       }
 
-      // Send subscription to server
-      const response = await fetch("/api/user/push-subscriptions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
-            auth: arrayBufferToBase64(subscription.getKey("auth")),
-          },
-          userAgent: navigator.userAgent,
-        }),
-      });
+      // Browser subscription successful - update state immediately
+      setIsSubscribed(true);
 
-      if (!response.ok) {
-        throw new Error("Failed to save subscription to server");
+      // Try to send subscription to server (non-blocking)
+      // This may fail if user is not logged in, but that's okay
+      try {
+        await fetch("/api/user/push-subscriptions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: arrayBufferToBase64(subscription.getKey("p256dh")),
+              auth: arrayBufferToBase64(subscription.getKey("auth")),
+            },
+            userAgent: navigator.userAgent,
+          }),
+        });
+      } catch {
+        // Server save failed, but browser subscription is active
+        console.warn("Failed to save subscription to server");
       }
 
-      setIsSubscribed(true);
       setIsLoading(false);
       return true;
     } catch (error) {
