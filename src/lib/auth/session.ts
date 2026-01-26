@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface Session {
   userId: string;
-  phone: string;
+  phone?: string;
+  email?: string;
 }
 
 /**
@@ -15,12 +16,18 @@ export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies();
   const userId = cookieStore.get("session_user_id")?.value;
   const phone = cookieStore.get("session_phone")?.value;
+  const email = cookieStore.get("session_email")?.value;
 
-  if (!userId || !phone) {
+  // User must have userId and at least one identifier (phone or email)
+  if (!userId || (!phone && !email)) {
     return null;
   }
 
-  return { userId, phone };
+  return {
+    userId,
+    ...(phone && { phone }),
+    ...(email && { email }),
+  };
 }
 
 /**

@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPhoneNumber, isValidSriLankanPhone } from "@/lib/textit";
+import { formatEmail, isValidEmail } from "@/lib/email";
 import { cookies } from "next/headers";
+
+type AuthMethod = "phone" | "email";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone, code } = body;
+    const { phone, email, code, method } = body;
 
-    // Validate inputs
-    if (!phone || typeof phone !== "string") {
-      return NextResponse.json(
-        { error: "Phone number is required" },
-        { status: 400 }
-      );
-    }
-
+    // Validate OTP code
     if (!code || typeof code !== "string" || code.length !== 6) {
       return NextResponse.json(
         { error: "Valid 6-digit OTP is required" },
@@ -23,25 +19,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidSriLankanPhone(phone)) {
-      return NextResponse.json(
-        { error: "Invalid phone number" },
-        { status: 400 }
-      );
+    // Determine authentication method
+    const authMethod: AuthMethod = method || (phone ? "phone" : "email");
+
+    // Validate and format identifier based on method
+    let identifier: string;
+    let identifierType: "phone" | "email";
+
+    if (authMethod === "phone") {
+      if (!phone || typeof phone !== "string") {
+        return NextResponse.json(
+          { error: "Phone number is required" },
+          { status: 400 }
+        );
+      }
+
+      if (!isValidSriLankanPhone(phone)) {
+        return NextResponse.json(
+          { error: "Invalid phone number" },
+          { status: 400 }
+        );
+      }
+
+      identifier = formatPhoneNumber(phone);
+      identifierType = "phone";
+    } else {
+      if (!email || typeof email !== "string") {
+        return NextResponse.json(
+          { error: "Email address is required" },
+          { status: 400 }
+        );
+      }
+
+      if (!isValidEmail(email)) {
+        return NextResponse.json(
+          { error: "Invalid email address" },
+          { status: 400 }
+        );
+      }
+
+      identifier = formatEmail(email);
+      identifierType = "email";
     }
 
-    const formattedPhone = formatPhoneNumber(phone);
     const supabase = createAdminClient();
 
     // DEV BYPASS: Accept "123456" as valid OTP in development
     const isDevBypass = process.env.NODE_ENV === "development" && code === "123456";
 
     if (!isDevBypass) {
-      // Find the OTP record
+      // Find the OTP record using new schema
       const { data: otpRecord, error: fetchError } = await supabase
         .from("otp_codes")
         .select("*")
-        .eq("phone", formattedPhone)
+        .eq("identifier", identifier)
+        .eq("identifier_type", identifierType)
         .eq("code", code)
         .eq("verified", false)
         .single();
@@ -69,11 +101,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user exists in public.users table
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("id")
-      .eq("phone", formattedPhone)
-      .single();
+    const userQuery = identifierType === "phone"
+      ? supabase.from("users").select("id").eq("phone", identifier).single()
+      : supabase.from("users").select("id").eq("email", identifier).single();
+
+    const { data: existingUser } = await userQuery;
 
     let userId: string;
     let isNewUser = false;
@@ -84,8 +116,8 @@ export async function POST(request: NextRequest) {
     } else {
       // Check if auth user exists (might exist without public.users record)
       const { data: authUsers } = await supabase.auth.admin.listUsers();
-      const existingAuthUser = authUsers?.users?.find(
-        (u) => u.phone === formattedPhone
+      const existingAuthUser = authUsers?.users?.find((u) =>
+        identifierType === "phone" ? u.phone === identifier : u.email === identifier
       );
 
       if (existingAuthUser) {
@@ -95,7 +127,8 @@ export async function POST(request: NextRequest) {
 
         const { error: profileError } = await supabase.from("users").insert({
           id: userId,
-          phone: formattedPhone,
+          phone: identifierType === "phone" ? identifier : null,
+          email: identifierType === "email" ? identifier : null,
           language_preference: "si",
         });
 
@@ -108,10 +141,13 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Truly new user - create auth user and profile
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-          phone: formattedPhone,
-          phone_confirm: true,
-        });
+        const createUserParams = identifierType === "phone"
+          ? { phone: identifier, phone_confirm: true }
+          : { email: identifier, email_confirm: true };
+
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser(
+          createUserParams
+        );
 
         if (authError || !authUser.user) {
           console.error("Failed to create auth user:", authError);
@@ -127,7 +163,8 @@ export async function POST(request: NextRequest) {
         // Create user profile
         const { error: profileError } = await supabase.from("users").insert({
           id: userId,
-          phone: formattedPhone,
+          phone: identifierType === "phone" ? identifier : null,
+          email: identifierType === "email" ? identifier : null,
           language_preference: "si",
         });
 
@@ -160,18 +197,30 @@ export async function POST(request: NextRequest) {
       path: "/",
     });
 
-    cookieStore.set("session_phone", formattedPhone, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: sessionExpiry,
-      path: "/",
-    });
+    // Set identifier-specific cookie
+    if (identifierType === "phone") {
+      cookieStore.set("session_phone", identifier, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: sessionExpiry,
+        path: "/",
+      });
+    } else {
+      cookieStore.set("session_email", identifier, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        expires: sessionExpiry,
+        path: "/",
+      });
+    }
 
     return NextResponse.json({
       success: true,
       isNewUser,
       userId,
+      method: identifierType,
       message: isNewUser ? "Account created successfully" : "Logged in successfully",
     });
   } catch (error) {

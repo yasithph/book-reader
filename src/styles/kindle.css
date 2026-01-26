@@ -2340,6 +2340,88 @@
   }
 }
 
+/* Email Input */
+.kindle-auth-email-input {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  cursor: text;
+}
+
+.kindle-auth-email-input-focused {
+  border-color: #1a1a1a;
+  box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-auth-email-input {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .kindle-auth-email-input-focused {
+    border-color: #E8E8E8;
+    box-shadow: 0 0 0 3px rgba(232, 232, 232, 0.1);
+  }
+}
+
+.kindle-auth-email-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-left: 14px;
+  color: #9a9a9a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-auth-email-icon {
+    color: #6b6b6b;
+  }
+}
+
+/* Method Toggle Button */
+.kindle-auth-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  margin-top: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b6b6b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.kindle-auth-toggle:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1a1a1a;
+}
+
+.kindle-auth-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-auth-toggle {
+    color: #9a9a9a;
+  }
+
+  .kindle-auth-toggle:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    color: #E8E8E8;
+  }
+}
+
 /* Name Input */
 .kindle-auth-name-input {
   display: flex;

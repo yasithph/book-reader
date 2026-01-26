@@ -8,28 +8,64 @@ import {
   OTP_EXPIRY_MINUTES,
   OTP_RATE_LIMIT,
 } from "@/lib/textit";
+import {
+  sendOTPEmail,
+  generateOTPCode,
+  isValidEmail,
+  formatEmail,
+} from "@/lib/email";
+
+type AuthMethod = "phone" | "email";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone } = body;
+    const { phone, email, method } = body;
 
-    // Validate phone number
-    if (!phone || typeof phone !== "string") {
-      return NextResponse.json(
-        { error: "Phone number is required" },
-        { status: 400 }
-      );
+    // Determine authentication method
+    const authMethod: AuthMethod = method || (phone ? "phone" : "email");
+
+    // Validate based on method
+    let identifier: string;
+    let identifierType: "phone" | "email";
+
+    if (authMethod === "phone") {
+      if (!phone || typeof phone !== "string") {
+        return NextResponse.json(
+          { error: "Phone number is required" },
+          { status: 400 }
+        );
+      }
+
+      if (!isValidSriLankanPhone(phone)) {
+        return NextResponse.json(
+          { error: "Invalid Sri Lankan phone number" },
+          { status: 400 }
+        );
+      }
+
+      identifier = formatPhoneNumber(phone);
+      identifierType = "phone";
+    } else {
+      // Email method
+      if (!email || typeof email !== "string") {
+        return NextResponse.json(
+          { error: "Email address is required" },
+          { status: 400 }
+        );
+      }
+
+      if (!isValidEmail(email)) {
+        return NextResponse.json(
+          { error: "Invalid email address" },
+          { status: 400 }
+        );
+      }
+
+      identifier = formatEmail(email);
+      identifierType = "email";
     }
 
-    if (!isValidSriLankanPhone(phone)) {
-      return NextResponse.json(
-        { error: "Invalid Sri Lankan phone number" },
-        { status: 400 }
-      );
-    }
-
-    const formattedPhone = formatPhoneNumber(phone);
     const supabase = createAdminClient();
 
     // Check rate limit - count OTPs sent in the last hour
@@ -37,7 +73,8 @@ export async function POST(request: NextRequest) {
     const { count: recentAttempts } = await supabase
       .from("otp_codes")
       .select("*", { count: "exact", head: true })
-      .eq("phone", formattedPhone)
+      .eq("identifier", identifier)
+      .eq("identifier_type", identifierType)
       .gte("created_at", oneHourAgo);
 
     if (recentAttempts && recentAttempts >= OTP_RATE_LIMIT) {
@@ -47,22 +84,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Invalidate any existing OTPs for this phone
+    // Invalidate any existing OTPs for this identifier
     await supabase
       .from("otp_codes")
       .update({ verified: true }) // Mark as verified to invalidate
-      .eq("phone", formattedPhone)
+      .eq("identifier", identifier)
+      .eq("identifier_type", identifierType)
       .eq("verified", false);
 
     // Generate new OTP
-    const code = generateOTP();
+    const code = identifierType === "phone" ? generateOTP() : generateOTPCode();
     const expiresAt = new Date(
       Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000
     ).toISOString();
 
-    // Store OTP in database
+    // Store OTP in database with new schema
     const { error: insertError } = await supabase.from("otp_codes").insert({
-      phone: formattedPhone,
+      identifier,
+      identifier_type: identifierType,
+      phone: identifierType === "phone" ? identifier : null,
+      email: identifierType === "email" ? identifier : null,
       code,
       expires_at: expiresAt,
       verified: false,
@@ -76,25 +117,48 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // DEV BYPASS: Skip SMS in development, log to console
+    // DEV BYPASS: Skip sending in development, log to console
     if (process.env.NODE_ENV === "development") {
-      console.log(`\n🔐 DEV OTP for ${formattedPhone}: ${code}\n   (or use bypass code: 123456)\n`);
+      console.log(
+        `\n🔐 DEV OTP for ${identifier} (${identifierType}): ${code}\n   (or use bypass code: 123456)\n`
+      );
     } else {
-      // Send OTP via SMS
-      const result = await sendOTP(formattedPhone, code);
+      // Send OTP via appropriate channel
+      if (identifierType === "phone") {
+        const result = await sendOTP(identifier, code);
 
-      if (!result.success) {
-        // Clean up the OTP record if SMS fails
-        await supabase
-          .from("otp_codes")
-          .delete()
-          .eq("phone", formattedPhone)
-          .eq("code", code);
+        if (!result.success) {
+          // Clean up the OTP record if SMS fails
+          await supabase
+            .from("otp_codes")
+            .delete()
+            .eq("identifier", identifier)
+            .eq("code", code);
 
-        return NextResponse.json(
-          { error: result.error || "Failed to send OTP" },
-          { status: 500 }
-        );
+          return NextResponse.json(
+            { error: result.error || "Failed to send OTP" },
+            { status: 500 }
+          );
+        }
+      } else {
+        // Send via email
+        try {
+          await sendOTPEmail(identifier, code, OTP_EXPIRY_MINUTES);
+        } catch (error) {
+          console.error("Failed to send email OTP:", error);
+
+          // Clean up the OTP record if email fails
+          await supabase
+            .from("otp_codes")
+            .delete()
+            .eq("identifier", identifier)
+            .eq("code", code);
+
+          return NextResponse.json(
+            { error: "Failed to send OTP email" },
+            { status: 500 }
+          );
+        }
       }
     }
 
@@ -102,6 +166,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "OTP sent successfully",
       expiresIn: OTP_EXPIRY_MINUTES * 60, // seconds
+      method: identifierType,
     });
   } catch (error) {
     console.error("Send OTP error:", error);

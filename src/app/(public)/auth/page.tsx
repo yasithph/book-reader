@@ -5,29 +5,35 @@ import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-type AuthStep = "phone" | "otp" | "name";
+type AuthStep = "input" | "otp" | "name";
+type AuthMethod = "phone" | "email";
 
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
 
-  const [step, setStep] = React.useState<AuthStep>("phone");
-  const [phone, setPhone] = React.useState("");
+  const [step, setStep] = React.useState<AuthStep>("input");
+  const [method, setMethod] = React.useState<AuthMethod>("phone");
+  const [identifier, setIdentifier] = React.useState(""); // phone or email
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
   const [expiresIn, setExpiresIn] = React.useState(300);
   const [userId, setUserId] = React.useState<string | null>(null);
 
-  const handleSendOTP = async (phoneNumber: string) => {
+  const handleSendOTP = async (value: string) => {
     setLoading(true);
     setError("");
 
     try {
+      const payload = method === "phone"
+        ? { phone: value, method: "phone" }
+        : { email: value, method: "email" };
+
       const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneNumber }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -37,7 +43,7 @@ function AuthContent() {
         return;
       }
 
-      setPhone(phoneNumber);
+      setIdentifier(value);
       setExpiresIn(data.expiresIn || 300);
       setStep("otp");
     } catch {
@@ -52,10 +58,14 @@ function AuthContent() {
     setError("");
 
     try {
+      const payload = method === "phone"
+        ? { phone: identifier, code, method: "phone" }
+        : { email: identifier, code, method: "email" };
+
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, code }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -107,11 +117,16 @@ function AuthContent() {
 
   const handleResendOTP = async () => {
     setError("");
-    await handleSendOTP(phone);
+    await handleSendOTP(identifier);
   };
 
   const handleBack = () => {
-    setStep("phone");
+    setStep("input");
+    setError("");
+  };
+
+  const handleMethodToggle = () => {
+    setMethod(method === "phone" ? "email" : "phone");
     setError("");
   };
 
@@ -147,7 +162,7 @@ function AuthContent() {
 
         {/* Header */}
         <div className="kindle-auth-header">
-          {step === "phone" ? (
+          {step === "input" ? (
             <>
               <h1 className="kindle-auth-title">Sign in</h1>
               <p className="kindle-auth-subtitle sinhala">ලොග් වන්න</p>
@@ -167,15 +182,26 @@ function AuthContent() {
 
         {/* Content */}
         <div className="kindle-auth-content">
-          {step === "phone" ? (
-            <PhoneStep
-              onSubmit={handleSendOTP}
-              loading={loading}
-              error={error}
-            />
+          {step === "input" ? (
+            method === "phone" ? (
+              <PhoneStep
+                onSubmit={handleSendOTP}
+                onToggleMethod={handleMethodToggle}
+                loading={loading}
+                error={error}
+              />
+            ) : (
+              <EmailStep
+                onSubmit={handleSendOTP}
+                onToggleMethod={handleMethodToggle}
+                loading={loading}
+                error={error}
+              />
+            )
           ) : step === "otp" ? (
             <OTPStep
-              phone={phone}
+              identifier={identifier}
+              method={method}
               onSubmit={handleVerifyOTP}
               onResend={handleResendOTP}
               onBack={handleBack}
@@ -204,10 +230,12 @@ function AuthContent() {
 // Phone Input Step
 function PhoneStep({
   onSubmit,
+  onToggleMethod,
   loading,
   error,
 }: {
   onSubmit: (phone: string) => void;
+  onToggleMethod: () => void;
   loading: boolean;
   error: string;
 }) {
@@ -313,13 +341,139 @@ function PhoneStep({
           </>
         )}
       </button>
+
+      <button
+        type="button"
+        onClick={onToggleMethod}
+        disabled={loading}
+        className="kindle-auth-toggle"
+      >
+        Use email instead
+      </button>
+    </form>
+  );
+}
+
+// Email Input Step
+function EmailStep({
+  onSubmit,
+  onToggleMethod,
+  loading,
+  error,
+}: {
+  onSubmit: (email: string) => void;
+  onToggleMethod: () => void;
+  loading: boolean;
+  error: string;
+}) {
+  const [email, setEmail] = React.useState("");
+  const [isFocused, setIsFocused] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isValid) {
+      onSubmit(email);
+    }
+  };
+
+  const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  return (
+    <form onSubmit={handleSubmit} className="kindle-auth-form">
+      <div className="kindle-auth-field">
+        <label className="kindle-auth-label">
+          Email address
+          <span className="kindle-auth-label-si sinhala">විද්‍යුත් තැපැල් ලිපිනය</span>
+        </label>
+
+        <div
+          className={`kindle-auth-email-input ${isFocused ? "kindle-auth-email-input-focused" : ""}`}
+          onClick={() => inputRef.current?.focus()}
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="kindle-auth-email-icon"
+          >
+            <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
+            <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
+          </svg>
+          <input
+            ref={inputRef}
+            type="email"
+            inputMode="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            disabled={loading}
+            autoComplete="email"
+            className="kindle-auth-input"
+          />
+          {email.length > 0 && isValid && (
+            <span className="kindle-auth-input-status">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="kindle-auth-check">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+              </svg>
+            </span>
+          )}
+        </div>
+
+        {error && (
+          <div className="kindle-auth-error">
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <p className="kindle-auth-hint sinhala">
+          ඔබගේ විද්‍යුත් තැපෑලට සත්‍යාපන කේතයක් යවනු ලැබේ
+        </p>
+      </div>
+
+      <button
+        type="submit"
+        disabled={!isValid || loading}
+        className="kindle-auth-submit"
+      >
+        {loading ? (
+          <span className="kindle-auth-loading">
+            <svg className="kindle-auth-spinner" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeOpacity="0.25" />
+              <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+            </svg>
+            Sending code...
+          </span>
+        ) : (
+          <>
+            Continue
+            <svg viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+            </svg>
+          </>
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={onToggleMethod}
+        disabled={loading}
+        className="kindle-auth-toggle"
+      >
+        Use phone instead
+      </button>
     </form>
   );
 }
 
 // OTP Input Step
 function OTPStep({
-  phone,
+  identifier,
+  method,
   onSubmit,
   onResend,
   onBack,
@@ -327,7 +481,8 @@ function OTPStep({
   error,
   expiresIn,
 }: {
-  phone: string;
+  identifier: string;
+  method: AuthMethod;
   onSubmit: (code: string) => void;
   onResend: () => void;
   onBack: () => void;
@@ -417,7 +572,11 @@ function OTPStep({
     }
   };
 
-  const maskedPhone = phone.replace(/(\d{2})(\d+)(\d{2})/, "$1****$3");
+  const maskedIdentifier = method === "phone"
+    ? identifier.replace(/(\d{2})(\d+)(\d{2})/, "$1****$3")
+    : identifier.replace(/(.{2})(.+)(@.+)/, "$1****$3");
+
+  const displayIdentifier = method === "phone" ? `+94 ${maskedIdentifier}` : maskedIdentifier;
 
   return (
     <form onSubmit={handleSubmit} className="kindle-auth-form">
@@ -426,13 +585,13 @@ function OTPStep({
         <svg viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
         </svg>
-        Change number
+        Change {method}
       </button>
 
-      {/* Phone display */}
+      {/* Identifier display */}
       <div className="kindle-auth-phone-display">
         <p className="kindle-auth-phone-label">Code sent to</p>
-        <p className="kindle-auth-phone-number">+94 {maskedPhone}</p>
+        <p className="kindle-auth-phone-number">{displayIdentifier}</p>
       </div>
 
       {/* OTP Input */}
