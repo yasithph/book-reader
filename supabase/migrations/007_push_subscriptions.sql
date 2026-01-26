@@ -32,7 +32,7 @@ CREATE INDEX idx_push_subscriptions_enabled ON public.push_subscriptions(user_id
 CREATE TRIGGER update_push_subscriptions_updated_at
     BEFORE UPDATE ON public.push_subscriptions
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_updated_at();
 
 -- Row Level Security (RLS) Policies
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
