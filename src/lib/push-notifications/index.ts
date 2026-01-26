@@ -152,7 +152,8 @@ export async function sendChapterNotificationToBookPurchasers(
     // Send notifications to all purchasers
     const results = await Promise.allSettled(
       purchases.map(async (purchase) => {
-        const user = purchase.users as { id: string; language_preference: "en" | "si" };
+        // Supabase returns users as object when using !inner join
+        const user = purchase.users as unknown as { id: string; language_preference: "en" | "si" };
         return sendPushNotificationToUser(
           user.id,
           data,
