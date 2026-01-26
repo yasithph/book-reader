@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import type { LanguagePreference, ReaderTheme } from "@/types";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
+import { usePushNotifications } from "@/hooks/use-push-notifications";
 
 export default function SettingsPage() {
   const router = useRouter();
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
+  const { permission, isSubscribed, isLoading: isNotifLoading, subscribe, unsubscribe } = usePushNotifications();
   const [phone, setPhone] = React.useState<string | null>(null);
   const [language, setLanguage] = React.useState<LanguagePreference>("si");
   const [theme, setTheme] = React.useState<ReaderTheme>("light");
@@ -311,6 +313,47 @@ export default function SettingsPage() {
                 "Save Changes"
               )}
             </button>
+          )}
+
+          {/* Notifications Section */}
+          {permission !== "unsupported" && (
+            <section className="kindle-settings-section kindle-settings-section-spaced">
+              <h2 className="kindle-settings-section-title">
+                Notifications <span className="kindle-settings-section-title-si">දැනුම්දීම්</span>
+              </h2>
+              <div className="kindle-settings-card">
+                <div className="kindle-settings-notification-row">
+                  <div className="kindle-settings-notification-info">
+                    <div className="kindle-settings-notification-title">
+                      New Chapter Alerts
+                    </div>
+                    <div className="kindle-settings-notification-desc">
+                      නව පරිච්ඡේද දැනුම්දීම්
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => (isSubscribed ? unsubscribe() : subscribe())}
+                    disabled={isNotifLoading || permission === "denied"}
+                    className={`kindle-settings-toggle ${isSubscribed ? "kindle-settings-toggle-on" : ""}`}
+                  >
+                    <span className="kindle-settings-toggle-slider" />
+                  </button>
+                </div>
+                {permission === "denied" && (
+                  <p className="kindle-settings-notification-blocked">
+                    Notifications are blocked. Please enable them in your browser settings.
+                  </p>
+                )}
+                {isSubscribed && (
+                  <p className="kindle-settings-notification-enabled">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                    </svg>
+                    You&apos;ll receive notifications when new chapters are published
+                  </p>
+                )}
+              </div>
+            </section>
           )}
 
           {saveMessage && (

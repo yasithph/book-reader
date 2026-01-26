@@ -436,3 +436,133 @@
     transform: rotate(360deg);
   }
 }
+
+/* ========================================
+   PUSH NOTIFICATION PROMPT (Minimalist)
+   ======================================== */
+
+.push-notification-prompt {
+  position: fixed;
+  bottom: 5rem;
+  left: 1rem;
+  right: 1rem;
+  max-width: 320px;
+  margin: 0 auto;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 90;
+  animation: slideUp 0.3s ease-out;
+}
+
+.push-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+
+.push-notification-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--auth-cream, #FDF8F3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--auth-burgundy, #722F37);
+  flex-shrink: 0;
+}
+
+.push-notification-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.push-notification-text h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--auth-ink, #1a1a1a);
+  margin-bottom: 0.125rem;
+}
+
+.push-notification-text p {
+  font-size: 0.8125rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.push-notification-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.push-notification-btn-dismiss,
+.push-notification-btn-enable {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+.push-notification-btn-dismiss {
+  background: transparent;
+  color: #666;
+}
+
+.push-notification-btn-dismiss:hover {
+  background: var(--auth-cream, #FDF8F3);
+}
+
+.push-notification-btn-enable {
+  background: var(--auth-burgundy, #722F37);
+  color: white;
+}
+
+.push-notification-btn-enable:hover:not(:disabled) {
+  background: var(--auth-burgundy-light, #8B3D47);
+}
+
+.push-notification-btn-enable:disabled {
+  opacity: 0.7;
+}
+
+@media (prefers-color-scheme: dark) {
+  .push-notification-prompt {
+    background: #1F1B18;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .push-notification-icon {
+    background: rgba(201, 162, 39, 0.15);
+    color: var(--auth-gold, #C9A227);
+  }
+
+  .push-notification-text h3 {
+    color: #F5F0E8;
+  }
+
+  .push-notification-text p {
+    color: #999;
+  }
+
+  .push-notification-btn-dismiss {
+    color: #999;
+  }
+
+  .push-notification-btn-dismiss:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .push-notification-btn-enable {
+    background: var(--auth-gold, #C9A227);
+    color: #1a1a1a;
+  }
+
+  .push-notification-btn-enable:hover:not(:disabled) {
+    background: #D4AF37;
+  }
+}
