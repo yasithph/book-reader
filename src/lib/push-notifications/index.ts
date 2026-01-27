@@ -136,7 +136,7 @@ export async function sendChapterNotificationToBookPurchasers(
     // Get all users who purchased this book (approved purchases only)
     const { data: purchases, error: purchasesError } = await supabase
       .from("purchases")
-      .select("user_id, users!inner(id, language_preference)")
+      .select("user_id, users!purchases_user_id_fkey(id, language_preference)")
       .eq("book_id", bookId)
       .eq("status", "approved");
 
