@@ -397,7 +397,6 @@ async function getLastReadingSession(userId: string) {
       last_read_at,
       books!inner (
         id,
-        total_chapters,
         is_published
       )
     `)
@@ -413,20 +412,43 @@ async function getLastReadingSession(userId: string) {
   const booksData = progress.books;
   const book = (Array.isArray(booksData) ? booksData[0] : booksData) as {
     id: string;
-    total_chapters: number;
     is_published: boolean;
   } | undefined;
   if (!book?.is_published) return null;
 
-  // Calculate the current chapter
+  // Get all published chapter numbers for this book
+  const { data: publishedChapters } = await supabase
+    .from("chapters")
+    .select("chapter_number")
+    .eq("book_id", progress.book_id)
+    .eq("is_published", true)
+    .order("chapter_number", { ascending: true });
+
+  if (!publishedChapters || publishedChapters.length === 0) {
+    return null;
+  }
+
+  const publishedNumbers = publishedChapters.map(c => c.chapter_number);
   const completedChapters = progress.completed_chapters || [];
-  const currentChapter = completedChapters.length > 0
-    ? Math.min(Math.max(...completedChapters) + 1, book.total_chapters)
-    : 1;
+
+  let targetChapter: number;
+  if (completedChapters.length === 0) {
+    // No chapters completed - start at first published chapter
+    targetChapter = publishedNumbers[0];
+  } else {
+    // Find the next published chapter after the highest completed
+    const highestCompleted = Math.max(...completedChapters);
+    const nextChapter = publishedNumbers.find(n => n > highestCompleted);
+    if (!nextChapter) {
+      // User has completed all published chapters - don't redirect
+      return null;
+    }
+    targetChapter = nextChapter;
+  }
 
   return {
     bookId: progress.book_id,
-    chapterNumber: currentChapter,
+    chapterNumber: targetChapter,
     lastReadAt: progress.last_read_at,
   };
 }
