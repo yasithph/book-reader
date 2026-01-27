@@ -4,7 +4,8 @@ export const dynamic = "force-dynamic";
 
 interface UserWithBooks {
   id: string;
-  phone: string;
+  phone: string | null;
+  email: string | null;
   display_name: string | null;
   created_at: string;
   last_active_at: string | null;
@@ -26,6 +27,7 @@ async function getUsers(): Promise<UserWithBooks[]> {
       `
       id,
       phone,
+      email,
       display_name,
       created_at,
       last_active_at,
@@ -76,13 +78,15 @@ export default async function AdminUsersPage() {
                 <div key={user.id} className="admin-user-card">
                   <div className="admin-user-avatar">
                     {user.display_name?.[0]?.toUpperCase() ||
-                      user.phone.slice(-2)}
+                      user.phone?.slice(-2) || user.email?.[0]?.toUpperCase() || "?"}
                   </div>
                   <div className="admin-user-info">
                     <div className="admin-user-name">
                       {user.display_name || "No name"}
                     </div>
-                    <div className="admin-user-phone">+{user.phone}</div>
+                    <div className="admin-user-phone">
+                      {user.phone ? `+${user.phone}` : user.email}
+                    </div>
                     <div className="admin-user-meta">
                       {bookCount > 0 ? (
                         <span className="admin-badge admin-badge-success">
@@ -146,14 +150,14 @@ export default async function AdminUsersPage() {
                               }}
                             >
                               {user.display_name?.[0]?.toUpperCase() ||
-                                user.phone.slice(-2)}
+                                user.phone?.slice(-2) || user.email?.[0]?.toUpperCase() || "?"}
                             </div>
                             <div>
                               <div style={{ fontWeight: 500 }}>
                                 {user.display_name || "No name"}
                               </div>
                               <div className="admin-text-muted" style={{ fontSize: "0.8125rem" }}>
-                                +{user.phone}
+                                {user.phone ? `+${user.phone}` : user.email}
                               </div>
                             </div>
                           </div>
