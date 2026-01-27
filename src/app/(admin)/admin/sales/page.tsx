@@ -26,7 +26,8 @@ interface Bundle {
 
 interface User {
   id: string;
-  phone: string;
+  phone: string | null;
+  email: string | null;
   display_name: string | null;
   created_at: string;
 }
@@ -41,7 +42,7 @@ interface Purchase {
   created_at: string;
   payment_proof_url?: string | null;
   payment_reference?: string | null;
-  user?: { phone: string; display_name: string | null };
+  user?: { phone: string | null; email: string | null; display_name: string | null };
   book?: { title_en: string };
   bundle?: { name_en: string };
 }
@@ -55,7 +56,7 @@ interface SelectedBook extends Book {
 }
 
 interface SaleResult {
-  user: { phone: string; display_name: string | null };
+  user: { phone: string | null; email: string | null; display_name: string | null };
   items: { title: string; price: number }[];
   total: number;
   smsSent: boolean;
@@ -70,7 +71,9 @@ export default function AdminSalesPage() {
   const [productMode, setProductMode] = useState<ProductMode>("books");
 
   // New user fields
+  const [contactMode, setContactMode] = useState<"phone" | "email">("phone");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
 
   // Existing user search
@@ -113,7 +116,7 @@ export default function AdminSalesPage() {
 
         setBooks(booksData.books || []);
         setBundles((bundlesData.bundles || []).filter((b: Bundle) => b.is_active));
-        setUsers((usersData.users || []).filter((u: User) => u.phone));
+        setUsers(usersData.users || []);
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Failed to load data");
@@ -165,7 +168,8 @@ export default function AdminSalesPage() {
     const q = userSearch.toLowerCase();
     return users.filter(
       (user) =>
-        user.phone.includes(q) ||
+        user.phone?.includes(q) ||
+        user.email?.toLowerCase().includes(q) ||
         user.display_name?.toLowerCase().includes(q)
     ).slice(0, 10);
   }, [users, userSearch]);
@@ -206,8 +210,9 @@ export default function AdminSalesPage() {
     return selectedBooks.reduce((sum, book) => sum + book.customPrice, 0);
   }, [productMode, selectedBundle, selectedBooks]);
 
-  // Validate phone for new user
+  // Validate contact info for new user
   const phoneValid = isValidSriLankanPhone(phone);
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const formattedPhone = phone ? formatPhoneNumber(phone) : "";
 
   // Check if phone belongs to existing user
@@ -216,12 +221,19 @@ export default function AdminSalesPage() {
     return users.find((u) => u.phone === formattedPhone) || null;
   }, [phoneValid, formattedPhone, users]);
 
+  // Check if email belongs to existing user
+  const existingUserWithEmail = useMemo(() => {
+    if (!emailValid) return null;
+    const normalizedEmail = email.toLowerCase().trim();
+    return users.find((u) => u.email === normalizedEmail) || null;
+  }, [emailValid, email, users]);
+
   // Check if form is valid
   const isFormValid = useMemo(() => {
     // User validation
     const hasUser = sellerMode === "existing-user"
       ? selectedUser !== null
-      : phoneValid;
+      : contactMode === "email" ? emailValid : phoneValid;
 
     // Product validation
     const hasProduct = productMode === "bundles"
@@ -229,7 +241,7 @@ export default function AdminSalesPage() {
       : selectedBooks.length > 0;
 
     return hasUser && hasProduct;
-  }, [sellerMode, selectedUser, phoneValid, productMode, selectedBundle, selectedBooks]);
+  }, [sellerMode, selectedUser, contactMode, phoneValid, emailValid, productMode, selectedBundle, selectedBooks]);
 
   // Handle submit
   const handleSubmit = async (e: React.FormEvent) => {
@@ -249,6 +261,9 @@ export default function AdminSalesPage() {
       // User info
       if (sellerMode === "existing-user" && selectedUser) {
         payload.userId = selectedUser.id;
+      } else if (contactMode === "email") {
+        payload.email = email.toLowerCase().trim();
+        payload.displayName = displayName || null;
       } else {
         payload.phone = formattedPhone;
         payload.displayName = displayName || null;
@@ -288,7 +303,9 @@ export default function AdminSalesPage() {
   // Reset form
   const resetForm = () => {
     setPhone("");
+    setEmail("");
     setDisplayName("");
+    setContactMode("phone");
     setUserSearch("");
     setSelectedUser(null);
     setSelectedBooks([]);
@@ -329,7 +346,7 @@ export default function AdminSalesPage() {
             <div className="sales-success-row">
               <span className="sales-success-label">Customer</span>
               <span className="sales-success-value">
-                {success.user.display_name || `+${success.user.phone}`}
+                {success.user.display_name || (success.user.phone ? `+${success.user.phone}` : success.user.email)}
               </span>
             </div>
             <div className="sales-success-divider" />
@@ -355,7 +372,7 @@ export default function AdminSalesPage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                 </svg>
-                <span>SMS notification sent</span>
+                <span>Notification sent</span>
               </>
             ) : (
               <>
@@ -363,7 +380,7 @@ export default function AdminSalesPage() {
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 8v4M12 16h.01" />
                 </svg>
-                <span>SMS notification could not be sent</span>
+                <span>Notification could not be sent</span>
               </>
             )}
           </div>
@@ -453,6 +470,7 @@ export default function AdminSalesPage() {
                   onClick={() => {
                     setSellerMode("existing-user");
                     setPhone("");
+                    setEmail("");
                     setDisplayName("");
                   }}
                 >
@@ -463,51 +481,113 @@ export default function AdminSalesPage() {
               <div className="sales-card-body">
                 {sellerMode === "new-user" ? (
                   <>
-                    <div className="sales-field">
-                      <label className="sales-label">
-                        Phone Number <span className="sales-required">*</span>
-                      </label>
-                      <div className="sales-phone-input">
-                        <span className="sales-phone-prefix">+94</span>
-                        <input
-                          type="tel"
-                          value={phone.replace(/^(\+?94|0)/, "")}
-                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                          placeholder="77 123 4567"
-                          className="sales-input"
-                          maxLength={10}
-                        />
-                      </div>
-                      {phone && !existingUserWithPhone && (
-                        <span className={`sales-phone-status ${phoneValid ? "valid" : "invalid"}`}>
-                          {phoneValid ? "Valid number" : "Enter a valid 9-digit mobile number"}
-                        </span>
-                      )}
-                      {existingUserWithPhone && (
-                        <div className="sales-phone-existing">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <path d="M12 8v4M12 16h.01" />
-                          </svg>
-                          <span>
-                            This number belongs to{" "}
-                            <strong>{existingUserWithPhone.display_name || "an existing customer"}</strong>
-                          </span>
-                          <button
-                            type="button"
-                            className="sales-phone-existing-btn"
-                            onClick={() => {
-                              setSellerMode("existing-user");
-                              setSelectedUser(existingUserWithPhone);
-                              setPhone("");
-                              setDisplayName("");
-                            }}
-                          >
-                            Select them
-                          </button>
-                        </div>
-                      )}
+                    {/* Contact mode toggle */}
+                    <div className="sales-mode-toggle" style={{ marginBottom: '12px' }}>
+                      <button
+                        type="button"
+                        className={`sales-mode-btn ${contactMode === "phone" ? "active" : ""}`}
+                        onClick={() => { setContactMode("phone"); setEmail(""); }}
+                      >
+                        Phone
+                      </button>
+                      <button
+                        type="button"
+                        className={`sales-mode-btn ${contactMode === "email" ? "active" : ""}`}
+                        onClick={() => { setContactMode("email"); setPhone(""); }}
+                      >
+                        Email
+                      </button>
                     </div>
+
+                    {contactMode === "phone" ? (
+                      <div className="sales-field">
+                        <label className="sales-label">
+                          Phone Number <span className="sales-required">*</span>
+                        </label>
+                        <div className="sales-phone-input">
+                          <span className="sales-phone-prefix">+94</span>
+                          <input
+                            type="tel"
+                            value={phone.replace(/^(\+?94|0)/, "")}
+                            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                            placeholder="77 123 4567"
+                            className="sales-input"
+                            maxLength={10}
+                          />
+                        </div>
+                        {phone && !existingUserWithPhone && (
+                          <span className={`sales-phone-status ${phoneValid ? "valid" : "invalid"}`}>
+                            {phoneValid ? "Valid number" : "Enter a valid 9-digit mobile number"}
+                          </span>
+                        )}
+                        {existingUserWithPhone && (
+                          <div className="sales-phone-existing">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 8v4M12 16h.01" />
+                            </svg>
+                            <span>
+                              This number belongs to{" "}
+                              <strong>{existingUserWithPhone.display_name || "an existing customer"}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              className="sales-phone-existing-btn"
+                              onClick={() => {
+                                setSellerMode("existing-user");
+                                setSelectedUser(existingUserWithPhone);
+                                setPhone("");
+                                setDisplayName("");
+                              }}
+                            >
+                              Select them
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="sales-field">
+                        <label className="sales-label">
+                          Email Address <span className="sales-required">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="customer@example.com"
+                          className="sales-input sales-input-full"
+                        />
+                        {email && !existingUserWithEmail && (
+                          <span className={`sales-phone-status ${emailValid ? "valid" : "invalid"}`}>
+                            {emailValid ? "Valid email" : "Enter a valid email address"}
+                          </span>
+                        )}
+                        {existingUserWithEmail && (
+                          <div className="sales-phone-existing">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M12 8v4M12 16h.01" />
+                            </svg>
+                            <span>
+                              This email belongs to{" "}
+                              <strong>{existingUserWithEmail.display_name || "an existing customer"}</strong>
+                            </span>
+                            <button
+                              type="button"
+                              className="sales-phone-existing-btn"
+                              onClick={() => {
+                                setSellerMode("existing-user");
+                                setSelectedUser(existingUserWithEmail);
+                                setEmail("");
+                                setDisplayName("");
+                              }}
+                            >
+                              Select them
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className="sales-field">
                       <label className="sales-label">
@@ -545,14 +625,14 @@ export default function AdminSalesPage() {
                       <div className="sales-selected-user">
                         <div className="sales-selected-user-info">
                           <div className="sales-selected-user-avatar">
-                            {selectedUser.display_name?.[0] || selectedUser.phone.slice(-2)}
+                            {selectedUser.display_name?.[0] || selectedUser.phone?.slice(-2) || selectedUser.email?.[0]?.toUpperCase() || "?"}
                           </div>
                           <div>
                             <div className="sales-selected-user-name">
                               {selectedUser.display_name || "No name"}
                             </div>
                             <div className="sales-selected-user-phone">
-                              +{selectedUser.phone}
+                              {selectedUser.phone ? `+${selectedUser.phone}` : selectedUser.email}
                             </div>
                           </div>
                         </div>
@@ -581,13 +661,15 @@ export default function AdminSalesPage() {
                               onClick={() => setSelectedUser(user)}
                             >
                               <div className="sales-user-avatar">
-                                {user.display_name?.[0] || user.phone.slice(-2)}
+                                {user.display_name?.[0] || user.phone?.slice(-2) || user.email?.[0]?.toUpperCase() || "?"}
                               </div>
                               <div className="sales-user-info">
                                 <div className="sales-user-name">
                                   {user.display_name || "No name"}
                                 </div>
-                                <div className="sales-user-phone">+{user.phone}</div>
+                                <div className="sales-user-phone">
+                                  {user.phone ? `+${user.phone}` : user.email}
+                                </div>
                               </div>
                             </button>
                           ))
@@ -826,7 +908,7 @@ export default function AdminSalesPage() {
                 )}
               </button>
               <p className="sales-actions-hint">
-                An SMS will be sent to the customer
+                A notification will be sent to the customer
               </p>
             </div>
           </form>
@@ -968,7 +1050,7 @@ function PurchaseHistory({
                   {purchase.bundle?.name_en || purchase.book?.title_en || "Unknown"}
                 </div>
                 <div className="sales-purchase-customer">
-                  {purchase.user?.display_name || `+${purchase.user?.phone}` || "Unknown"}
+                  {purchase.user?.display_name || (purchase.user?.phone ? `+${purchase.user.phone}` : purchase.user?.email) || "Unknown"}
                 </div>
               </div>
               <div className="sales-purchase-meta">
@@ -1017,7 +1099,9 @@ function PurchaseHistory({
                   <span className="sales-modal-info-label">Customer</span>
                   <span className="sales-modal-info-value">
                     {selectedPurchase.user?.display_name || "No name"}
-                    <span className="sales-modal-info-phone">+{selectedPurchase.user?.phone}</span>
+                    <span className="sales-modal-info-phone">
+                      {selectedPurchase.user?.phone ? `+${selectedPurchase.user.phone}` : selectedPurchase.user?.email}
+                    </span>
                   </span>
                 </div>
                 <div className="sales-modal-info-row">

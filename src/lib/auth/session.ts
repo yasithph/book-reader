@@ -4,7 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export interface Session {
   userId: string;
-  phone: string;
+  phone: string | null;
+  email: string | null;
 }
 
 /**
@@ -14,13 +15,14 @@ export interface Session {
 export async function getSession(): Promise<Session | null> {
   const cookieStore = await cookies();
   const userId = cookieStore.get("session_user_id")?.value;
-  const phone = cookieStore.get("session_phone")?.value;
+  const phone = cookieStore.get("session_phone")?.value || null;
+  const email = cookieStore.get("session_email")?.value || null;
 
-  if (!userId || !phone) {
+  if (!userId || (!phone && !email)) {
     return null;
   }
 
-  return { userId, phone };
+  return { userId, phone, email };
 }
 
 /**

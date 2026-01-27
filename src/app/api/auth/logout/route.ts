@@ -7,6 +7,7 @@ export async function POST() {
   // Clear session cookies
   cookieStore.delete("session_user_id");
   cookieStore.delete("session_phone");
+  cookieStore.delete("session_email");
 
   return NextResponse.json({ success: true });
 }
