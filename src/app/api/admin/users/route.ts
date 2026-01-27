@@ -20,7 +20,7 @@ export async function GET() {
     // Fetch all users (non-admin)
     const { data: users, error } = await supabase
       .from("users")
-      .select("id, phone, display_name, created_at")
+      .select("id, phone, email, display_name, created_at")
       .eq("role", "user")
       .order("created_at", { ascending: false });
 

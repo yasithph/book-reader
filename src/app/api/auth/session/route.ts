@@ -16,6 +16,7 @@ export async function GET() {
       ? {
           id: user.id,
           phone: user.phone,
+          email: user.email,
           language: user.language,
           role: user.role,
           createdAt: user.created_at,

@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatPhoneNumber, isValidSriLankanPhone } from "@/lib/textit";
+import { isValidEmail } from "@/lib/resend";
 import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone, code } = body;
+    const { phone, email, code } = body;
 
-    // Validate inputs
-    if (!phone || typeof phone !== "string") {
+    // Must provide exactly one of phone or email
+    if (!phone && !email) {
       return NextResponse.json(
-        { error: "Phone number is required" },
+        { error: "Phone number or email is required" },
+        { status: 400 }
+      );
+    }
+
+    if (phone && email) {
+      return NextResponse.json(
+        { error: "Provide either phone or email, not both" },
         { status: 400 }
       );
     }
@@ -23,14 +31,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidSriLankanPhone(phone)) {
-      return NextResponse.json(
-        { error: "Invalid phone number" },
-        { status: 400 }
-      );
+    const isEmailMode = !!email;
+
+    // Validate identifier
+    if (isEmailMode) {
+      if (typeof email !== "string" || !isValidEmail(email)) {
+        return NextResponse.json(
+          { error: "Invalid email address" },
+          { status: 400 }
+        );
+      }
+    } else {
+      if (!isValidSriLankanPhone(phone)) {
+        return NextResponse.json(
+          { error: "Invalid phone number" },
+          { status: 400 }
+        );
+      }
     }
 
-    const formattedPhone = formatPhoneNumber(phone);
+    const identifier = isEmailMode ? email.toLowerCase().trim() : formatPhoneNumber(phone);
+    const identifierColumn = isEmailMode ? "email" : "phone";
     const supabase = createAdminClient();
 
     // DEV BYPASS: Accept "123456" as valid OTP in development
@@ -41,7 +62,7 @@ export async function POST(request: NextRequest) {
       const { data: otpRecord, error: fetchError } = await supabase
         .from("otp_codes")
         .select("*")
-        .eq("phone", formattedPhone)
+        .eq(identifierColumn, identifier)
         .eq("code", code)
         .eq("verified", false)
         .single();
@@ -72,7 +93,7 @@ export async function POST(request: NextRequest) {
     const { data: existingUser } = await supabase
       .from("users")
       .select("id")
-      .eq("phone", formattedPhone)
+      .eq(identifierColumn, identifier)
       .single();
 
     let userId: string;
@@ -84,20 +105,26 @@ export async function POST(request: NextRequest) {
     } else {
       // Check if auth user exists (might exist without public.users record)
       const { data: authUsers } = await supabase.auth.admin.listUsers();
-      const existingAuthUser = authUsers?.users?.find(
-        (u) => u.phone === formattedPhone
-      );
+      const existingAuthUser = isEmailMode
+        ? authUsers?.users?.find((u) => u.email === identifier)
+        : authUsers?.users?.find((u) => u.phone === identifier);
 
       if (existingAuthUser) {
         // Auth user exists but public.users record is missing - create it
         userId = existingAuthUser.id;
         isNewUser = true;
 
-        const { error: profileError } = await supabase.from("users").insert({
+        const profileData: Record<string, string> = {
           id: userId,
-          phone: formattedPhone,
           language_preference: "si",
-        });
+        };
+        if (isEmailMode) {
+          profileData.email = identifier;
+        } else {
+          profileData.phone = identifier;
+        }
+
+        const { error: profileError } = await supabase.from("users").insert(profileData);
 
         if (profileError) {
           console.error("Failed to create user profile for existing auth user:", profileError);
@@ -108,10 +135,11 @@ export async function POST(request: NextRequest) {
         }
       } else {
         // Truly new user - create auth user and profile
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-          phone: formattedPhone,
-          phone_confirm: true,
-        });
+        const createUserData = isEmailMode
+          ? { email: identifier, email_confirm: true }
+          : { phone: identifier, phone_confirm: true };
+
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser(createUserData);
 
         if (authError || !authUser.user) {
           console.error("Failed to create auth user:", authError);
@@ -125,11 +153,17 @@ export async function POST(request: NextRequest) {
         isNewUser = true;
 
         // Create user profile
-        const { error: profileError } = await supabase.from("users").insert({
+        const profileData: Record<string, string> = {
           id: userId,
-          phone: formattedPhone,
           language_preference: "si",
-        });
+        };
+        if (isEmailMode) {
+          profileData.email = identifier;
+        } else {
+          profileData.phone = identifier;
+        }
+
+        const { error: profileError } = await supabase.from("users").insert(profileData);
 
         if (profileError) {
           console.error("Failed to create user profile:", profileError);
@@ -149,24 +183,23 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      expires: sessionExpiry,
+      path: "/",
+    };
 
-    // Store session (we'll use cookies for this)
+    // Store session cookies
     const cookieStore = await cookies();
-    cookieStore.set("session_user_id", userId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: sessionExpiry,
-      path: "/",
-    });
+    cookieStore.set("session_user_id", userId, cookieOptions);
 
-    cookieStore.set("session_phone", formattedPhone, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      expires: sessionExpiry,
-      path: "/",
-    });
+    if (isEmailMode) {
+      cookieStore.set("session_email", identifier, cookieOptions);
+    } else {
+      cookieStore.set("session_phone", identifier, cookieOptions);
+    }
 
     return NextResponse.json({
       success: true,

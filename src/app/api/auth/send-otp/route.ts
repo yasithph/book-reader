@@ -8,36 +8,64 @@ import {
   OTP_EXPIRY_MINUTES,
   OTP_RATE_LIMIT,
 } from "@/lib/textit";
+import { isValidEmail, sendOTPEmail } from "@/lib/resend";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { phone } = body;
+    const { phone, email } = body;
 
-    // Validate phone number
-    if (!phone || typeof phone !== "string") {
+    // Must provide exactly one of phone or email
+    if (!phone && !email) {
       return NextResponse.json(
-        { error: "Phone number is required" },
+        { error: "Phone number or email is required" },
         { status: 400 }
       );
     }
 
-    if (!isValidSriLankanPhone(phone)) {
+    if (phone && email) {
       return NextResponse.json(
-        { error: "Invalid Sri Lankan phone number" },
+        { error: "Provide either phone or email, not both" },
         { status: 400 }
       );
     }
 
-    const formattedPhone = formatPhoneNumber(phone);
     const supabase = createAdminClient();
+    const isEmailMode = !!email;
+
+    // Validate identifier
+    if (isEmailMode) {
+      if (typeof email !== "string" || !isValidEmail(email)) {
+        return NextResponse.json(
+          { error: "Invalid email address" },
+          { status: 400 }
+        );
+      }
+    } else {
+      if (!phone || typeof phone !== "string") {
+        return NextResponse.json(
+          { error: "Phone number is required" },
+          { status: 400 }
+        );
+      }
+
+      if (!isValidSriLankanPhone(phone)) {
+        return NextResponse.json(
+          { error: "Invalid Sri Lankan phone number" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const identifier = isEmailMode ? email.toLowerCase().trim() : formatPhoneNumber(phone);
+    const identifierColumn = isEmailMode ? "email" : "phone";
 
     // Check rate limit - count OTPs sent in the last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { count: recentAttempts } = await supabase
       .from("otp_codes")
       .select("*", { count: "exact", head: true })
-      .eq("phone", formattedPhone)
+      .eq(identifierColumn, identifier)
       .gte("created_at", oneHourAgo);
 
     if (recentAttempts && recentAttempts >= OTP_RATE_LIMIT) {
@@ -47,11 +75,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Invalidate any existing OTPs for this phone
+    // Invalidate any existing OTPs for this identifier
     await supabase
       .from("otp_codes")
-      .update({ verified: true }) // Mark as verified to invalidate
-      .eq("phone", formattedPhone)
+      .update({ verified: true })
+      .eq(identifierColumn, identifier)
       .eq("verified", false);
 
     // Generate new OTP
@@ -61,12 +89,14 @@ export async function POST(request: NextRequest) {
     ).toISOString();
 
     // Store OTP in database
-    const { error: insertError } = await supabase.from("otp_codes").insert({
-      phone: formattedPhone,
+    const insertData: Record<string, string | boolean> = {
       code,
       expires_at: expiresAt,
       verified: false,
-    });
+    };
+    insertData[identifierColumn] = identifier;
+
+    const { error: insertError } = await supabase.from("otp_codes").insert(insertData);
 
     if (insertError) {
       console.error("Failed to store OTP:", insertError);
@@ -76,19 +106,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // DEV BYPASS: Skip SMS in development, log to console
+    // DEV BYPASS: Skip sending in development, log to console
     if (process.env.NODE_ENV === "development") {
-      console.log(`\n🔐 DEV OTP for ${formattedPhone}: ${code}\n   (or use bypass code: 123456)\n`);
-    } else {
-      // Send OTP via SMS
-      const result = await sendOTP(formattedPhone, code);
+      console.log(`\n🔐 DEV OTP for ${identifier}: ${code}\n   (or use bypass code: 123456)\n`);
+    } else if (isEmailMode) {
+      // Send OTP via email
+      const result = await sendOTPEmail(identifier, code);
 
       if (!result.success) {
-        // Clean up the OTP record if SMS fails
         await supabase
           .from("otp_codes")
           .delete()
-          .eq("phone", formattedPhone)
+          .eq(identifierColumn, identifier)
+          .eq("code", code);
+
+        return NextResponse.json(
+          { error: result.error || "Failed to send OTP email" },
+          { status: 500 }
+        );
+      }
+    } else {
+      // Send OTP via SMS
+      const result = await sendOTP(identifier, code);
+
+      if (!result.success) {
+        await supabase
+          .from("otp_codes")
+          .delete()
+          .eq(identifierColumn, identifier)
           .eq("code", code);
 
         return NextResponse.json(

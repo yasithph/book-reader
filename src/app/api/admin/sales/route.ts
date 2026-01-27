@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendSMS, formatPhoneNumber, isValidSriLankanPhone } from "@/lib/textit/client";
+import { isValidEmail, sendWelcomeEmail, sendLibraryUpdateEmail } from "@/lib/resend";
 import { getSession, getCurrentUser } from "@/lib/auth";
 
 interface BookSelection {
@@ -13,6 +14,7 @@ interface SaleRequest {
   userId?: string;
   // New user
   phone?: string;
+  email?: string;
   displayName?: string | null;
   // Products - either books or bundle
   books?: BookSelection[];
@@ -37,12 +39,12 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: SaleRequest = await request.json();
-    const { userId, phone, displayName, books, bundleId, amount } = body;
+    const { userId, phone, email, displayName, books, bundleId, amount } = body;
 
-    // Validate - need either userId or phone
-    if (!userId && !phone) {
+    // Validate - need either userId, phone, or email
+    if (!userId && !phone && !email) {
       return NextResponse.json(
-        { error: "Either userId or phone is required" },
+        { error: "Either userId, phone, or email is required" },
         { status: 400 }
       );
     }
@@ -56,7 +58,8 @@ export async function POST(request: NextRequest) {
     }
 
     let targetUserId: string;
-    let userPhone: string;
+    let userPhone: string | null = null;
+    let userEmail: string | null = null;
     let userName: string | null = null;
     let isNewUser = false;
 
@@ -65,7 +68,7 @@ export async function POST(request: NextRequest) {
       // Existing user by ID
       const { data: existingUser, error: userError } = await adminSupabase
         .from("users")
-        .select("id, phone, display_name")
+        .select("id, phone, email, display_name")
         .eq("id", userId)
         .single();
 
@@ -75,9 +78,74 @@ export async function POST(request: NextRequest) {
 
       targetUserId = existingUser.id;
       userPhone = existingUser.phone;
+      userEmail = existingUser.email;
       userName = existingUser.display_name;
+    } else if (email) {
+      // New or existing user by email
+      if (!isValidEmail(email)) {
+        return NextResponse.json(
+          { error: "Invalid email address" },
+          { status: 400 }
+        );
+      }
+
+      const normalizedEmail = email.toLowerCase().trim();
+      userEmail = normalizedEmail;
+      userName = displayName || null;
+
+      // Check if user already exists by email
+      const { data: existingUser } = await adminSupabase
+        .from("users")
+        .select("id, phone, email, display_name")
+        .eq("email", normalizedEmail)
+        .single();
+
+      if (existingUser) {
+        targetUserId = existingUser.id;
+        userPhone = existingUser.phone;
+        userName = existingUser.display_name || displayName || null;
+      } else {
+        // Create new user with email
+        const { data: authUser, error: authError } =
+          await adminSupabase.auth.admin.createUser({
+            email: normalizedEmail,
+            email_confirm: true,
+            user_metadata: {
+              display_name: displayName,
+            },
+          });
+
+        if (authError || !authUser.user) {
+          console.error("Error creating auth user:", authError);
+          return NextResponse.json(
+            { error: "Failed to create user account" },
+            { status: 500 }
+          );
+        }
+
+        targetUserId = authUser.user.id;
+        isNewUser = true;
+
+        // Create user profile
+        const { error: profileError } = await adminSupabase.from("users").insert({
+          id: targetUserId,
+          email: normalizedEmail,
+          display_name: displayName,
+          role: "user",
+          is_first_login: true,
+        });
+
+        if (profileError) {
+          console.error("Error creating user profile:", profileError);
+          await adminSupabase.auth.admin.deleteUser(targetUserId);
+          return NextResponse.json(
+            { error: "Failed to create user profile" },
+            { status: 500 }
+          );
+        }
+      }
     } else {
-      // New user by phone
+      // New or existing user by phone
       if (!isValidSriLankanPhone(phone!)) {
         return NextResponse.json(
           { error: "Invalid phone number" },
@@ -92,12 +160,13 @@ export async function POST(request: NextRequest) {
       // Check if user already exists
       const { data: existingUser } = await adminSupabase
         .from("users")
-        .select("id, phone, display_name")
+        .select("id, phone, email, display_name")
         .eq("phone", formattedPhone)
         .single();
 
       if (existingUser) {
         targetUserId = existingUser.id;
+        userEmail = existingUser.email;
         userName = existingUser.display_name || displayName || null;
       } else {
         // Create new user
@@ -172,7 +241,6 @@ export async function POST(request: NextRequest) {
       const saleAmount = amount || bundle.price_lkr;
 
       // Create a purchase record for each book in the bundle
-      // Each record stores the full bundle amount (dedupe by purchase_group_id for income)
       for (const book of bundleBooks) {
         const { error: purchaseError } = await adminSupabase
           .from("purchases")
@@ -181,7 +249,7 @@ export async function POST(request: NextRequest) {
             book_id: book.id,
             bundle_id: bundleId,
             purchase_group_id: purchaseGroupId,
-            amount_lkr: saleAmount, // Full bundle amount in each record
+            amount_lkr: saleAmount,
             status: "approved",
             reviewed_by: adminUser.id,
             reviewed_at: new Date().toISOString(),
@@ -242,21 +310,35 @@ export async function POST(request: NextRequest) {
       totalAmount = books.reduce((sum, b) => sum + b.price, 0);
     }
 
-    // Send SMS notification
-    let smsSent = false;
-    try {
-      const itemTitles = responseItems.map((i) => i.title).join(", ");
-      const smsMessage = isNewUser
-        ? `Welcome to Book Reader! Your account has been created. You can now access: ${itemTitles}. Login at: ${process.env.NEXT_PUBLIC_APP_URL || "https://bookreader.lk"}/auth`
-        : `Your Book Reader library has been updated! New items added: ${itemTitles}. Open the app to start reading.`;
+    // Send notification via appropriate channel
+    let notificationSent = false;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bookreader.lk";
 
-      await sendSMS({
-        to: userPhone,
-        text: smsMessage,
-      });
-      smsSent = true;
-    } catch (smsError) {
-      console.error("Error sending SMS:", smsError);
+    try {
+      if (userEmail && !userPhone) {
+        // Email-only user: send email notification
+        if (isNewUser) {
+          const result = await sendWelcomeEmail(userEmail, responseItems, appUrl);
+          notificationSent = result.success;
+        } else {
+          const result = await sendLibraryUpdateEmail(userEmail, responseItems);
+          notificationSent = result.success;
+        }
+      } else if (userPhone) {
+        // Phone user (may also have email): send SMS
+        const itemTitles = responseItems.map((i) => i.title).join(", ");
+        const smsMessage = isNewUser
+          ? `Welcome to Book Reader! Your account has been created. You can now access: ${itemTitles}. Login at: ${appUrl}/auth`
+          : `Your Book Reader library has been updated! New items added: ${itemTitles}. Open the app to start reading.`;
+
+        await sendSMS({
+          to: userPhone,
+          text: smsMessage,
+        });
+        notificationSent = true;
+      }
+    } catch (notifError) {
+      console.error("Error sending notification:", notifError);
     }
 
     return NextResponse.json({
@@ -264,12 +346,13 @@ export async function POST(request: NextRequest) {
       user: {
         id: targetUserId,
         phone: userPhone,
+        email: userEmail,
         display_name: userName,
         isNew: isNewUser,
       },
       items: responseItems,
       total: totalAmount,
-      smsSent,
+      smsSent: notificationSent,
     });
   } catch (error) {
     console.error("Error in sales route:", error);
