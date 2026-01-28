@@ -4,6 +4,15 @@ import { getSession, getCurrentUser } from "@/lib/auth";
 
 // Maximum content size (1MB)
 const MAX_CONTENT_SIZE = 1024 * 1024;
+const MAX_URL_LENGTH = 2048;
+
+// Validate chapter image URL is from our Supabase storage bucket
+function isValidChapterImageUrl(url: string): boolean {
+  if (url.length > MAX_URL_LENGTH) return false;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return false;
+  return url.startsWith(`${supabaseUrl}/storage/v1/object/public/chapter-images/`);
+}
 
 // Helper to check admin using session-based auth
 async function checkAdmin() {
@@ -60,7 +69,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { data: chapters, error } = await supabase
       .from("chapters")
-      .select("id, chapter_number, title_en, title_si, word_count, estimated_reading_time, draft_content, is_published")
+      .select("id, chapter_number, title_en, title_si, word_count, estimated_reading_time, draft_content, is_published, chapter_image_url")
       .eq("book_id", bookId)
       .order("chapter_number", { ascending: true });
 
@@ -97,6 +106,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       title_en,
       title_si,
       content_html,
+      chapter_image_url,
     } = body;
 
     // Validate required fields
@@ -138,6 +148,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Validate chapter image URL
+    if (chapter_image_url && !isValidChapterImageUrl(chapter_image_url)) {
+      return NextResponse.json(
+        { error: "Invalid chapter image URL" },
+        { status: 400 }
+      );
+    }
+
     const wordCount = countWords(content_html);
     const readingTime = estimateReadingTime(wordCount);
 
@@ -163,6 +181,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         title_si: title_si?.trim() || null,
         content: "",  // Empty until published
         draft_content: content_html,  // Store in draft
+        chapter_image_url: chapter_image_url || null,
         is_published: false,
         word_count: wordCount,
         estimated_reading_time: readingTime,

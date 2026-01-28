@@ -5,9 +5,18 @@ import { sendChapterNotificationToBookPurchasers } from "@/lib/push-notification
 
 // Maximum content size (1MB)
 const MAX_CONTENT_SIZE = 1024 * 1024;
+const MAX_URL_LENGTH = 2048;
 
 // UUID v4 regex pattern
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Validate chapter image URL is from our Supabase storage bucket
+function isValidChapterImageUrl(url: string): boolean {
+  if (url.length > MAX_URL_LENGTH) return false;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return false;
+  return url.startsWith(`${supabaseUrl}/storage/v1/object/public/chapter-images/`);
+}
 
 // Helper to check admin (optimized - single DB call)
 async function checkAdmin() {
@@ -127,6 +136,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       title_en,
       title_si,
       content,
+      chapter_image_url,
     } = body;
 
     // Validate required fields
@@ -168,10 +178,26 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Validate chapter image URL if provided
+    if (chapter_image_url !== undefined && chapter_image_url !== null && chapter_image_url !== "") {
+      if (!isValidChapterImageUrl(chapter_image_url)) {
+        return NextResponse.json(
+          { error: "Invalid chapter image URL" },
+          { status: 400 }
+        );
+      }
+    }
+
     const wordCount = countWords(content);
     const readingTime = estimateReadingTime(wordCount);
 
     const supabase = createAdminClient();
+
+    // Resolve chapter_image_url: undefined = don't update, null/"" = clear, string = set
+    const imageUrlUpdate: Record<string, string | null> = {};
+    if (chapter_image_url !== undefined) {
+      imageUrlUpdate.chapter_image_url = (typeof chapter_image_url === "string" && chapter_image_url.trim() !== "") ? chapter_image_url : null;
+    }
 
     // Save to draft_content, not content (content stays as published version)
     // NOTE: word_count and estimated_reading_time are NOT updated here
@@ -184,6 +210,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         title_si: title_si?.trim() || null,
         draft_content: content,
         // Don't update word_count/reading_time - they should reflect published content
+        ...imageUrlUpdate,
       })
       .eq("id", chapterId)
       .select()

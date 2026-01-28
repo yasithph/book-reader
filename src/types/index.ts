@@ -47,6 +47,7 @@ export interface Chapter {
   content: string;
   draft_content?: string | null;  // Only present in admin context
   is_published?: boolean;          // Only present in admin context
+  chapter_image_url?: string | null;
   word_count: number;
   estimated_reading_time: number;
   created_at: string;
@@ -133,6 +134,7 @@ export interface OfflineChapter {
   chapterNumber: number;
   title: string;
   content: string;
+  chapterImageUrl?: string | null;
   downloadedAt: Date;
   size: number;
 }

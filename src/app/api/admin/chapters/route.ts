@@ -5,9 +5,18 @@ import { sendChapterNotificationToBookPurchasers } from "@/lib/push-notification
 
 // Maximum content size (1MB)
 const MAX_CONTENT_SIZE = 1024 * 1024;
+const MAX_URL_LENGTH = 2048;
 
 // UUID v4 regex pattern
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Validate chapter image URL is from our Supabase storage bucket
+function isValidChapterImageUrl(url: string): boolean {
+  if (url.length > MAX_URL_LENGTH) return false;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) return false;
+  return url.startsWith(`${supabaseUrl}/storage/v1/object/public/chapter-images/`);
+}
 
 // Helper to check admin (optimized - single DB call)
 async function checkAdmin() {
@@ -74,6 +83,7 @@ export async function POST(request: NextRequest) {
       title_en,
       title_si,
       content,
+      chapter_image_url,
     } = body;
 
     // Validate required fields
@@ -120,6 +130,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate chapter image URL
+    if (chapter_image_url && !isValidChapterImageUrl(chapter_image_url)) {
+      return NextResponse.json(
+        { error: "Invalid chapter image URL" },
+        { status: 400 }
+      );
+    }
+
     const wordCount = countWords(content);
     const readingTime = estimateReadingTime(wordCount);
 
@@ -144,6 +162,7 @@ export async function POST(request: NextRequest) {
         title_en: title_en?.trim() || null,
         title_si: title_si?.trim() || null,
         content,
+        chapter_image_url: chapter_image_url || null,
         word_count: wordCount,
         estimated_reading_time: readingTime,
       })

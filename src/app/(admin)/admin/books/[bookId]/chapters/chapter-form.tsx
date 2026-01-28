@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
+import { ChapterImageUpload } from "@/components/admin/ChapterImageUpload";
 
 interface Chapter {
   id?: string;
@@ -11,6 +12,7 @@ interface Chapter {
   title_en: string;
   title_si: string;
   content: string;
+  chapter_image_url?: string | null;
 }
 
 interface ChapterFormProps {
@@ -32,6 +34,7 @@ export function ChapterForm({
     title_en: chapter?.title_en || "",
     title_si: chapter?.title_si || "",
     content: chapter?.content || "",
+    chapter_image_url: chapter?.chapter_image_url || null as string | null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -151,6 +154,13 @@ export function ChapterForm({
 
       {/* Hidden chapter number - can be changed in settings */}
       <input type="hidden" name="chapter_number" value={formData.chapter_number} />
+
+      {/* Chapter Header Image */}
+      <ChapterImageUpload
+        imageUrl={formData.chapter_image_url}
+        onImageChange={(url) => setFormData((prev) => ({ ...prev, chapter_image_url: url }))}
+        disabled={isSubmitting}
+      />
 
       {/* Full-width Editor */}
       <div className="chapter-editor-main">
