@@ -148,11 +148,6 @@ export default async function BookPage({ params }: BookPageProps) {
             <p className="kindle-book-detail-subtitle">{book.title_en}</p>
           </div>
 
-          {/* Author */}
-          <p className="kindle-book-detail-author">
-            ලියන්නා: <span>කශ්වි අමරසූරිය</span>
-          </p>
-
           {/* Stats */}
           <div className="kindle-book-detail-stats">
             <div className="kindle-book-detail-stat">

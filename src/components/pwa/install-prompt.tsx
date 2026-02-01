@@ -76,7 +76,7 @@ export function InstallPrompt() {
             </svg>
           </div>
           <div>
-            <h3 className="pwa-install-title">Install Book Reader</h3>
+            <h3 className="pwa-install-title">Install Meera</h3>
             <p className="pwa-install-description">
               Add to your home screen: tap{" "}
               <svg
@@ -121,7 +121,7 @@ export function InstallPrompt() {
           </svg>
         </div>
         <div>
-          <h3 className="pwa-install-title">Install Book Reader</h3>
+          <h3 className="pwa-install-title">Install Meera</h3>
           <p className="pwa-install-description">
             Read offline, get faster access, and enjoy a native app experience.
           </p>

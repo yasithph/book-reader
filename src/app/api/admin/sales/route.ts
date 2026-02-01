@@ -328,8 +328,8 @@ export async function POST(request: NextRequest) {
         // Phone user (may also have email): send SMS
         const itemTitles = responseItems.map((i) => i.title).join(", ");
         const smsMessage = isNewUser
-          ? `Welcome to Book Reader! Your account has been created. You can now access: ${itemTitles}. Login at: ${appUrl}/auth`
-          : `Your Book Reader library has been updated! New items added: ${itemTitles}. Open the app to start reading.`;
+          ? `Welcome to Meera! Your account has been created. You can now access: ${itemTitles}. Login at: ${appUrl}/auth`
+          : `Your Meera library has been updated! New items added: ${itemTitles}. Open the app to start reading.`;
 
         await sendSMS({
           to: userPhone,

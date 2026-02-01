@@ -377,7 +377,7 @@ export default function SettingsPage() {
               </div>
               <div className="kindle-settings-about-row">
                 <span>App</span>
-                <span className="kindle-settings-about-value sinhala">කශ්වි අමරසූරිය</span>
+                <span className="kindle-settings-about-value">Meera</span>
               </div>
             </div>
           </section>

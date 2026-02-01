@@ -162,8 +162,8 @@ export async function POST(request: NextRequest) {
     try {
       const bookTitles = responseBooks.map((b) => b.title).join(", ");
       const smsMessage = isNewUser
-        ? `Welcome to Book Reader! Your account has been created. You can now access: ${bookTitles}. Login at: ${process.env.NEXT_PUBLIC_APP_URL || "https://bookreader.lk"}/auth`
-        : `Your Book Reader library has been updated! New books added: ${bookTitles}. Open the app to start reading.`;
+        ? `Welcome to Meera! Your account has been created. You can now access: ${bookTitles}. Login at: ${process.env.NEXT_PUBLIC_APP_URL || "https://bookreader.lk"}/auth`
+        : `Your Meera library has been updated! New books added: ${bookTitles}. Open the app to start reading.`;
 
       await sendSMS({
         to: formattedPhone,

@@ -14,7 +14,7 @@ export async function sendOTPEmail(
     to: email,
     subject: `${code} - Your verification code`,
     html: formatOTPEmailHtml(code),
-    text: `Your Book Reader verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
+    text: `Your Meera verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
   });
 
   return { success: result.success, error: result.error };

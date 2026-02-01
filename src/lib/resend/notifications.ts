@@ -17,7 +17,7 @@ export async function sendWelcomeEmail(
 
   const result = await sendEmail({
     to: email,
-    subject: "Welcome to Book Reader!",
+    subject: "Welcome to Meera!",
     html: `
 <!DOCTYPE html>
 <html>
@@ -26,8 +26,8 @@ export async function sendWelcomeEmail(
   <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:40px auto;background:#ffffff;border-radius:8px;overflow:hidden;">
     <tr>
       <td style="padding:32px 24px;text-align:center;">
-        <h1 style="margin:0 0 8px;font-size:20px;color:#1a1a1a;">Welcome to Book Reader!</h1>
-        <p style="margin:0 0 16px;font-size:14px;color:#666;">Book Reader වෙත සාදරයෙන් පිළිගනිමු!</p>
+        <h1 style="margin:0 0 8px;font-size:20px;color:#1a1a1a;">Welcome to Meera!</h1>
+        <p style="margin:0 0 16px;font-size:14px;color:#666;">Meera වෙත සාදරයෙන් පිළිගනිමු!</p>
         <p style="margin:0 0 16px;font-size:14px;color:#333;">
           Your account has been created. You can now access:
         </p>
@@ -42,7 +42,7 @@ export async function sendWelcomeEmail(
   </table>
 </body>
 </html>`.trim(),
-    text: `Welcome to Book Reader! Your account has been created. You can now access: ${itemList}. Login at: ${appUrl}/auth`,
+    text: `Welcome to Meera! Your account has been created. You can now access: ${itemList}. Login at: ${appUrl}/auth`,
   });
 
   return { success: result.success, error: result.error };
@@ -82,7 +82,7 @@ export async function sendLibraryUpdateEmail(
   </table>
 </body>
 </html>`.trim(),
-    text: `Your Book Reader library has been updated! New items added: ${itemList}. Open the app to start reading.`,
+    text: `Your Meera library has been updated! New items added: ${itemList}. Open the app to start reading.`,
   });
 
   return { success: result.success, error: result.error };

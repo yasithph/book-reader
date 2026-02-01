@@ -238,11 +238,7 @@ export default function WelcomePage() {
           )}
         </button>
 
-        {/* Footer */}
-        <footer className="kindle-welcome-footer">
-          <p>කශ්වි අමරසූරිය</p>
-        </footer>
-      </div>
+              </div>
     </main>
   );
 }

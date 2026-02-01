@@ -20,7 +20,7 @@ export const OTP_RATE_LIMIT = 5;
 /**
  * Format OTP message for SMS
  */
-export function formatOTPMessage(code: string, appName: string = "Book Reader"): string {
+export function formatOTPMessage(code: string, appName: string = "Meera"): string {
   return `Your ${appName} verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`;
 }
 
