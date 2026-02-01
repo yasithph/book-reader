@@ -9,7 +9,7 @@ import { KindleHomeContent } from "@/components/home/kindle-home-content";
 import { BottomNav } from "@/components/layout/bottom-nav";
 
 export const metadata = {
-  title: "කශ්වි අමරසූරිය - Kashvi Amarasooriya",
+  title: "Meera",
   description: "කශ්වි අමරසූරියගේ සිංහල නවකතා එකතුව. Read Sinhala dark romance novels by Kashvi Amarasooriya.",
 };
 
@@ -540,8 +540,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       {/* Header */}
       <header className="landing-header">
         <div className="landing-header-inner">
-          <h1 className="landing-title">කශ්වි අමරසූරිය</h1>
-          <p className="landing-subtitle">Kashvi Amarasooriya</p>
+          <h1 className="landing-title">මීරා</h1>
+          <p className="landing-subtitle">Meera</p>
         </div>
         <Link href="/auth" className="landing-login-btn">
           <svg viewBox="0 0 20 20" fill="currentColor">

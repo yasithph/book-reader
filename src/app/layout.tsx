@@ -4,17 +4,17 @@ import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Book Reader - Sinhala Novels",
-    template: "%s | Book Reader",
+    default: "Meera",
+    template: "%s | Meera",
   },
   description: "Read Sinhala novels online and offline. A beautiful reading experience for Sri Lankan literature.",
   keywords: ["sinhala novels", "sri lankan books", "online reading", "ebook reader"],
-  authors: [{ name: "Book Reader" }],
+  authors: [{ name: "Meera" }],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Book Reader",
+    title: "Meera",
   },
   formatDetection: {
     telephone: false,
@@ -27,7 +27,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF9F6" },
+    { media: "(prefers-color-scheme: light)", color: "#e89990" },
     { media: "(prefers-color-scheme: dark)", color: "#1a1a1a" },
   ],
 };

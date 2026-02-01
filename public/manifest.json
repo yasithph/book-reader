@@ -1,20 +1,14 @@
 {
-  "name": "Kashvi Amarasooriya - Dark Romance Novels",
-  "short_name": "Kashvi Books",
+  "name": "Meera",
+  "short_name": "Meera",
   "description": "Read dark romance novels by Kashvi Amarasooriya - Kerala-inspired Sinhala fiction",
   "start_url": "/library",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#FAF9F6",
-  "theme_color": "#C9A227",
+  "background_color": "#e89990",
+  "theme_color": "#e89990",
   "scope": "/",
   "icons": [
-    {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
