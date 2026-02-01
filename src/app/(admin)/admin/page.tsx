@@ -12,6 +12,12 @@ const RichTextEditor = dynamic(
   { ssr: false, loading: () => <div className="write-loading-editor"><div className="write-loading-spinner" /></div> }
 );
 
+// Dynamic import for chapter image upload
+const ChapterImageUpload = dynamic(
+  () => import("@/components/admin/ChapterImageUpload").then((mod) => mod.ChapterImageUpload),
+  { ssr: false }
+);
+
 interface Book {
   id: string;
   title_en: string;
@@ -60,6 +66,7 @@ export default function AdminWritePage() {
   const [titleSi, setTitleSi] = useState("");
   const [content, setContent] = useState("");
   const [chapterNumber, setChapterNumber] = useState(1);
+  const [chapterImageUrl, setChapterImageUrl] = useState<string | null>(null);
 
   // UI state
   const [isLoading, setIsLoading] = useState(true);
@@ -112,6 +119,7 @@ export default function AdminWritePage() {
             title_en: titleEn,
             title_si: titleSi || null,
             content: content,
+            chapter_image_url: chapterImageUrl,
           }),
         });
 
@@ -165,7 +173,7 @@ export default function AdminWritePage() {
         setSaveStatus("error");
       }
     }
-  }, [selectedChapter, selectedBook, content, lastSavedContent, hasUnsavedChanges, isOnline, chapterNumber, titleEn, titleSi]);
+  }, [selectedChapter, selectedBook, content, lastSavedContent, hasUnsavedChanges, isOnline, chapterNumber, titleEn, titleSi, chapterImageUrl]);
 
   // Debounced auto-save on content change
   useEffect(() => {
@@ -257,6 +265,7 @@ export default function AdminWritePage() {
       setContent(contentToUse);
       setLastSavedContent(contentToUse);
       setChapterNumber(chapter.chapter_number);
+      setChapterImageUrl(chapter.chapter_image_url || null);
       setHasUnsavedChanges(false);
       setStep("editor");
     } catch (err) {
@@ -385,6 +394,7 @@ export default function AdminWritePage() {
             title_en: titleEn,
             title_si: titleSi || null,
             content: content,
+            chapter_image_url: chapterImageUrl,
           }),
         });
 
@@ -414,6 +424,7 @@ export default function AdminWritePage() {
       setTitleEn("");
       setTitleSi("");
       setContent("");
+      setChapterImageUrl(null);
       setLastSavedContent("");
       setHasUnsavedChanges(false);
       setSaveStatus("idle");
@@ -457,6 +468,7 @@ export default function AdminWritePage() {
         setTitleEn("");
         setTitleSi("");
         setContent("");
+        setChapterImageUrl(null);
         setLastSavedContent("");
         setHasUnsavedChanges(false);
         setSaveStatus("idle");
@@ -762,6 +774,18 @@ export default function AdminWritePage() {
             {isPublishing ? "Publishing..." : needsPublish ? "Publish" : "Published"}
           </button>
         </div>
+      </div>
+
+      {/* Chapter Header Image */}
+      <div style={{ padding: "0 1.5rem" }}>
+        <ChapterImageUpload
+          imageUrl={chapterImageUrl}
+          onImageChange={(url) => {
+            setChapterImageUrl(url);
+            setHasUnsavedChanges(true);
+          }}
+          disabled={isPublishing}
+        />
       </div>
 
       {/* Editor */}

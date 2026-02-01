@@ -406,6 +406,15 @@ export function ReaderView({
       >
         {/* Chapter header */}
         <header className="mb-12 text-center">
+          {chapter.chapter_image_url && (
+            <div className="mb-8 -mx-6 sm:-mx-8 overflow-hidden rounded-lg">
+              <img
+                src={chapter.chapter_image_url}
+                alt=""
+                className="w-full h-auto"
+              />
+            </div>
+          )}
           {hasCustomTitle ? (
             <>
               <p className="font-serif text-sm mb-2" style={{ color: currentTheme.secondary }}>
