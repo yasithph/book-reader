@@ -128,8 +128,12 @@ export function ReaderView({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (showSettings || showChapters) return; // Don't navigate when sheets are open
 
-      if (e.key === "ArrowLeft" && hasPreviousChapter) {
-        router.push(`/read/${book.id}/${chapterNumber - 1}`);
+      if (e.key === "ArrowLeft") {
+        if (chapterNumber === 1) {
+          router.push(`/read/${book.id}/intro/contents`);
+        } else if (hasPreviousChapter) {
+          router.push(`/read/${book.id}/${chapterNumber - 1}`);
+        }
       } else if (e.key === "ArrowRight" && hasNextChapter && nextChapterAccessible) {
         router.push(`/read/${book.id}/${chapterNumber + 1}`);
       } else if (e.key === "Escape") {
@@ -459,17 +463,18 @@ export function ReaderView({
 
           {/* Navigation */}
           <div className="flex items-center justify-center gap-4">
-            {hasPreviousChapter && (
+            {/* Previous link - goes to TOC for chapter 1, previous chapter otherwise */}
+            {(chapterNumber === 1 || hasPreviousChapter) && (
               <>
                 <Link
-                  href={`/read/${book.id}/${chapterNumber - 1}`}
+                  href={chapterNumber === 1 ? `/read/${book.id}/intro/contents` : `/read/${book.id}/${chapterNumber - 1}`}
                   className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
                   style={{ color: `${currentTheme.text}60` }}
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                   </svg>
-                  <span>Previous</span>
+                  <span>{chapterNumber === 1 ? "Contents" : "Previous"}</span>
                 </Link>
                 <span style={{ color: `${currentTheme.text}25` }}>·</span>
               </>
@@ -523,10 +528,16 @@ export function ReaderView({
         <div className="safe-bottom">
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
             <button
-              onClick={() => hasPreviousChapter && router.push(`/read/${book.id}/${chapterNumber - 1}`)}
-              disabled={!hasPreviousChapter}
+              onClick={() => {
+                if (chapterNumber === 1) {
+                  router.push(`/read/${book.id}/intro/contents`);
+                } else if (hasPreviousChapter) {
+                  router.push(`/read/${book.id}/${chapterNumber - 1}`);
+                }
+              }}
+              disabled={chapterNumber !== 1 && !hasPreviousChapter}
               className="p-1.5 transition-opacity disabled:opacity-20"
-              aria-label="Previous chapter"
+              aria-label={chapterNumber === 1 ? "Table of Contents" : "Previous chapter"}
             >
               <svg className="w-4 h-4" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
                 <path

@@ -185,7 +185,7 @@ export default async function BookPage({ params }: BookPageProps) {
           {/* Price and actions */}
           <div className="kindle-book-detail-actions">
             {book.is_free || hasApprovedPurchase ? (
-              <Link href={`/read/${book.id}/1`} className="kindle-book-detail-btn-primary">
+              <Link href={`/read/${book.id}/intro/disclaimer`} className="kindle-book-detail-btn-primary">
                 <svg viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10.75 16.82A7.462 7.462 0 0115 15.5c.71 0 1.396.098 2.046.282A.75.75 0 0018 15.06v-11a.75.75 0 00-.546-.721A9.006 9.006 0 0015 3a8.963 8.963 0 00-4.25 1.065V16.82zM9.25 4.065A8.963 8.963 0 005 3c-.85 0-1.673.118-2.454.339A.75.75 0 002 4.06v11a.75.75 0 00.954.721A7.506 7.506 0 015 15.5c1.579 0 3.042.487 4.25 1.32V4.065z" />
                 </svg>
@@ -200,7 +200,7 @@ export default async function BookPage({ params }: BookPageProps) {
                   <span className="kindle-book-detail-pending-title">Pending Approval</span>
                 </div>
                 {book.free_preview_chapters > 0 && (
-                  <Link href={`/read/${book.id}/1`} className="kindle-book-detail-btn-secondary">
+                  <Link href={`/read/${book.id}/intro/disclaimer`} className="kindle-book-detail-btn-secondary">
                     <svg viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                       <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -216,7 +216,7 @@ export default async function BookPage({ params }: BookPageProps) {
                 </div>
                 <div className="kindle-book-detail-btn-group">
                   {book.free_preview_chapters > 0 && (
-                    <Link href={`/read/${book.id}/1`} className="kindle-book-detail-btn-secondary">
+                    <Link href={`/read/${book.id}/intro/disclaimer`} className="kindle-book-detail-btn-secondary">
                       <svg viewBox="0 0 20 20" fill="currentColor">
                         <path d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" />
                         <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.186A10.004 10.004 0 0110 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0110 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />

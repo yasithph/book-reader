@@ -187,6 +187,68 @@ export function ChaptersSheet({
         {/* Chapter list */}
         <div className="overflow-y-auto" style={{ maxHeight: "calc(70vh - 100px)" }}>
           <nav className="py-2">
+            {/* Intro pages section */}
+            <div className="mb-2">
+              <Link
+                href={`/read/${bookId}/intro/disclaimer`}
+                onClick={onClose}
+                className="flex items-center gap-3 px-5 py-3 transition-colors"
+              >
+                <span
+                  className="w-7 h-7 flex items-center justify-center rounded-full text-sm flex-shrink-0"
+                  style={{
+                    backgroundColor: `${colors.text}08`,
+                  }}
+                >
+                  ⚠️
+                </span>
+                <span className="flex-1 text-sm" style={{ color: colors.secondary }}>
+                  Disclaimer
+                </span>
+              </Link>
+              <Link
+                href={`/read/${bookId}/intro/copyright`}
+                onClick={onClose}
+                className="flex items-center gap-3 px-5 py-3 transition-colors"
+              >
+                <span
+                  className="w-7 h-7 flex items-center justify-center rounded-full text-sm flex-shrink-0"
+                  style={{
+                    backgroundColor: `${colors.text}08`,
+                  }}
+                >
+                  ©
+                </span>
+                <span className="flex-1 text-sm" style={{ color: colors.secondary }}>
+                  Copyright
+                </span>
+              </Link>
+              <Link
+                href={`/read/${bookId}/intro/contents`}
+                onClick={onClose}
+                className="flex items-center gap-3 px-5 py-3 transition-colors"
+              >
+                <span
+                  className="w-7 h-7 flex items-center justify-center rounded-full text-sm flex-shrink-0"
+                  style={{
+                    backgroundColor: `${colors.text}08`,
+                  }}
+                >
+                  📑
+                </span>
+                <span className="flex-1 text-sm" style={{ color: colors.secondary }}>
+                  Table of Contents
+                </span>
+              </Link>
+            </div>
+
+            {/* Divider */}
+            <div
+              className="mx-5 my-2 h-px"
+              style={{ backgroundColor: colors.border }}
+            />
+
+            {/* Chapters */}
             {chapters.map((chapter) => {
               const isAccessible = isChapterAccessible(chapter.chapter_number);
               const isCurrent = chapter.chapter_number === currentChapter;
