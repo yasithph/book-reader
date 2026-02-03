@@ -100,9 +100,9 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be less than 5MB");
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Image must be less than 10MB");
       return;
     }
 
@@ -270,7 +270,7 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                           </svg>
                           <span>Click to upload cover image</span>
-                          <span className="cover-upload-hint">PNG, JPG up to 5MB</span>
+                          <span className="cover-upload-hint">PNG, JPG up to 10MB</span>
                         </>
                       )}
                     </div>
