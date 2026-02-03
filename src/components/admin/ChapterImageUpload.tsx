@@ -8,7 +8,7 @@ interface ChapterImageUploadProps {
   disabled?: boolean;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function ChapterImageUpload({
   imageUrl,
@@ -27,7 +27,7 @@ export function ChapterImageUpload({
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        setError("Image must be under 5MB");
+        setError("Image must be under 10MB");
         return;
       }
 
@@ -35,22 +35,35 @@ export function ChapterImageUpload({
       setIsUploading(true);
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("type", "chapter");
-
-        const res = await fetch("/api/admin/upload", {
-          method: "POST",
-          body: formData,
+        // Step 1: Get a signed upload URL from our API
+        const params = new URLSearchParams({
+          filename: file.name,
+          contentType: file.type,
+          type: "chapter",
         });
 
-        const data = await res.json();
+        const urlRes = await fetch(`/api/admin/upload?${params}`);
+        const urlData = await urlRes.json();
 
-        if (!res.ok) {
-          throw new Error(data.error || "Upload failed");
+        if (!urlRes.ok) {
+          throw new Error(urlData.error || "Failed to get upload URL");
         }
 
-        onImageChange(data.url);
+        // Step 2: Upload directly to Supabase using the signed URL
+        const uploadRes = await fetch(urlData.signedUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type,
+          },
+          body: file,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image to storage");
+        }
+
+        // Step 3: Use the public URL returned from step 1
+        onImageChange(urlData.publicUrl);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
       } finally {

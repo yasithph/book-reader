@@ -110,21 +110,35 @@ export function BookForm({ book, isEdit = false }: BookFormProps) {
     setError(null);
 
     try {
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", file);
-
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: formDataUpload,
+      // Step 1: Get a signed upload URL from our API
+      const params = new URLSearchParams({
+        filename: file.name,
+        contentType: file.type,
+        type: "cover",
       });
 
-      const data = await res.json();
+      const urlRes = await fetch(`/api/admin/upload?${params}`);
+      const urlData = await urlRes.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to upload image");
+      if (!urlRes.ok) {
+        throw new Error(urlData.error || "Failed to get upload URL");
       }
 
-      setFormData((prev) => ({ ...prev, cover_image_url: data.url }));
+      // Step 2: Upload directly to Supabase using the signed URL
+      const uploadRes = await fetch(urlData.signedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload image to storage");
+      }
+
+      // Step 3: Use the public URL returned from step 1
+      setFormData((prev) => ({ ...prev, cover_image_url: urlData.publicUrl }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload image");
     } finally {

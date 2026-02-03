@@ -157,30 +157,43 @@ export function RichTextEditor({ content, onChange, placeholder }: RichTextEdito
       return;
     }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Image must be less than 5MB");
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Image must be less than 10MB");
       return;
     }
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", "chapter");
-
-      const response = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: formData,
+      // Step 1: Get a signed upload URL from our API
+      const params = new URLSearchParams({
+        filename: file.name,
+        contentType: file.type,
+        type: "chapter",
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Upload failed");
+      const urlRes = await fetch(`/api/admin/upload?${params}`);
+      const urlData = await urlRes.json();
+
+      if (!urlRes.ok) {
+        throw new Error(urlData.error || "Failed to get upload URL");
       }
 
-      const { url } = await response.json();
-      editor.chain().focus().setImage({ src: url }).run();
+      // Step 2: Upload directly to Supabase using the signed URL
+      const uploadRes = await fetch(urlData.signedUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type,
+        },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload image to storage");
+      }
+
+      // Step 3: Use the public URL returned from step 1
+      editor.chain().focus().setImage({ src: urlData.publicUrl }).run();
     } catch (error) {
       console.error("Image upload error:", error);
       alert(error instanceof Error ? error.message : "Failed to upload image");
