@@ -35,8 +35,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid upload type" }, { status: 400 });
     }
 
-    // Generate unique filename with appropriate prefix
-    const fileExt = filename.split(".").pop() || "jpg";
+    // Validate content type is an image
+    if (!contentType.startsWith("image/")) {
+      return NextResponse.json({ error: "Only image files are allowed" }, { status: 400 });
+    }
+
+    // Whitelist allowed image extensions
+    const allowedExtensions = ["jpg", "jpeg", "png", "gif", "webp", "avif"];
+    const fileExt = (filename.split(".").pop() || "jpg").toLowerCase();
+    if (!allowedExtensions.includes(fileExt)) {
+      return NextResponse.json({ error: "Invalid file extension" }, { status: 400 });
+    }
     const prefix = uploadType === "cover" ? "covers" : "chapters";
     const filePath = `${prefix}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     const bucketName = BUCKETS[uploadType];
