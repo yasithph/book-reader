@@ -663,44 +663,58 @@ export function ReaderView({
             {/* Previous link - goes to TOC for chapter 1, previous chapter otherwise */}
             {(activeChapterNum === 1 || activeHasPrev) && (
               <>
-                <Link
-                  href={activeChapterNum === 1 ? `/read/${book.id}/intro/contents` : `/read/${book.id}/${activeChapterNum - 1}`}
-                  onClick={(e) => {
-                    if (!isOnline && activeChapterNum > 1) {
-                      e.preventDefault();
+                <button
+                  onClick={() => {
+                    setNavigatingDirection("prev");
+                    if (activeChapterNum === 1) {
+                      router.push(`/read/${book.id}/intro/contents`);
+                    } else {
                       navigateToChapter(activeChapterNum - 1);
                     }
                   }}
-                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+                  disabled={navigatingDirection !== null}
+                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                   style={{ color: `${currentTheme.text}60` }}
                 >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
-                  </svg>
+                  {navigatingDirection === "prev" ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                    </svg>
+                  )}
                   <span>{activeChapterNum === 1 ? "Contents" : "Previous"}</span>
-                </Link>
+                </button>
                 <span style={{ color: `${currentTheme.text}25` }}>·</span>
               </>
             )}
 
             {activeHasNext ? (
               activeNextAccessible ? (
-                <Link
-                  href={`/read/${book.id}/${activeChapterNum + 1}`}
-                  onClick={(e) => {
-                    if (!isOnline) {
-                      e.preventDefault();
-                      navigateToChapter(activeChapterNum + 1);
-                    }
+                <button
+                  onClick={() => {
+                    setNavigatingDirection("next");
+                    navigateToChapter(activeChapterNum + 1);
                   }}
-                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+                  disabled={navigatingDirection !== null}
+                  className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                   style={{ color: currentTheme.text }}
                 >
                   <span>Next Chapter</span>
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
-                  </svg>
-                </Link>
+                  {navigatingDirection === "next" ? (
+                    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
               ) : (
                 <Link
                   href={`/purchase/${book.id}`}
