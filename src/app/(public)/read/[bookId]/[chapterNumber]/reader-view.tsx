@@ -614,6 +614,8 @@ export function ReaderView({
         freePreviewChapters={book.free_preview_chapters}
         hasFullAccess={hasFullAccess}
         theme={settings.theme}
+        hasThankYou={!!book.intro_thank_you}
+        hasOffering={!!book.intro_offering}
       />
     </div>
   );

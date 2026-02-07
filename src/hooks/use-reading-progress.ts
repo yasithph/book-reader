@@ -90,18 +90,19 @@ export function useReadingProgress({
 
       saveTimeoutRef.current = setTimeout(async () => {
         try {
+          const payload = {
+            bookId,
+            chapterId,
+            scrollPosition: Math.round(scrollPosition),
+            isChapterComplete: isComplete,
+            completedChapters: isComplete
+              ? [...(progress?.completed_chapters || []), chapterNumber]
+              : progress?.completed_chapters || [],
+          };
           const res = await fetch("/api/progress", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              bookId,
-              chapterId,
-              scrollPosition: Math.round(scrollPosition),
-              isChapterComplete: isComplete,
-              completedChapters: isComplete
-                ? [...(progress?.completed_chapters || []), chapterNumber]
-                : progress?.completed_chapters || [],
-            }),
+            body: JSON.stringify(payload),
           });
 
           if (res.ok) {

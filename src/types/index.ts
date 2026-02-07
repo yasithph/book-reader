@@ -36,6 +36,10 @@ export interface Book {
   total_words: number;
   created_at: string;
   updated_at: string;
+  intro_disclaimer: string | null;
+  intro_copyright: string | null;
+  intro_thank_you: string | null;
+  intro_offering: string | null;
 }
 
 export interface Chapter {

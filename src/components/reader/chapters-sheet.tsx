@@ -19,6 +19,8 @@ interface ChaptersSheetProps {
   freePreviewChapters: number;
   hasFullAccess: boolean;
   theme: "light" | "dark" | "sepia";
+  hasThankYou?: boolean;
+  hasOffering?: boolean;
 }
 
 export function ChaptersSheet({
@@ -31,6 +33,8 @@ export function ChaptersSheet({
   freePreviewChapters,
   hasFullAccess,
   theme,
+  hasThankYou = false,
+  hasOffering = false,
 }: ChaptersSheetProps) {
   const sheetRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -223,6 +227,44 @@ export function ChaptersSheet({
                   Copyright
                 </span>
               </Link>
+              {hasThankYou && (
+                <Link
+                  href={`/read/${bookId}/intro/thank_you`}
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-5 py-3 transition-colors"
+                >
+                  <span
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-sm flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.text}08`,
+                    }}
+                  >
+                    🙏
+                  </span>
+                  <span className="flex-1 text-sm" style={{ color: colors.secondary }}>
+                    Thank You
+                  </span>
+                </Link>
+              )}
+              {hasOffering && (
+                <Link
+                  href={`/read/${bookId}/intro/offering`}
+                  onClick={onClose}
+                  className="flex items-center gap-3 px-5 py-3 transition-colors"
+                >
+                  <span
+                    className="w-7 h-7 flex items-center justify-center rounded-full text-sm flex-shrink-0"
+                    style={{
+                      backgroundColor: `${colors.text}08`,
+                    }}
+                  >
+                    🕯️
+                  </span>
+                  <span className="flex-1 text-sm" style={{ color: colors.secondary }}>
+                    Offering
+                  </span>
+                </Link>
+              )}
               <Link
                 href={`/read/${bookId}/intro/contents`}
                 onClick={onClose}

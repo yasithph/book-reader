@@ -46,9 +46,10 @@ export function KindleHomeContent({
     const hasAccess = book.is_free || purchasedBookIds.has(book.id);
     if (hasAccess) {
       const completedChapters = progressMap.get(book.id) || [];
-      const currentChapter = completedChapters.length > 0
-        ? Math.min(Math.max(...completedChapters) + 1, book.total_chapters)
-        : 1;
+      if (completedChapters.length === 0) {
+        return `/read/${book.id}/intro/disclaimer`;
+      }
+      const currentChapter = Math.min(Math.max(...completedChapters) + 1, book.total_chapters);
       return `/read/${book.id}/${currentChapter}`;
     }
     return `/books/${book.id}`;

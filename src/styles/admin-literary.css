@@ -5385,6 +5385,10 @@
   z-index: 0;
 }
 
+.book-tab-indicator.book-tab-indicator-3 {
+  width: 33.333%;
+}
+
 .book-tabs-content {
   min-height: 200px;
 }
@@ -6217,4 +6221,127 @@
 .chapter-back-link svg {
   width: 16px;
   height: 16px;
+}
+
+/* ===========================================
+   INTRO PAGES FORM
+   =========================================== */
+
+.intro-pages-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.intro-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.intro-section {
+  background: var(--admin-elevated);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.intro-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.intro-section-header:hover {
+  background: var(--admin-surface);
+}
+
+.intro-section-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.intro-section-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--admin-text-muted);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.intro-section-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.intro-section-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--admin-text);
+}
+
+.intro-section-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  background: var(--admin-accent-soft);
+  color: var(--admin-accent);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.intro-section-desc {
+  font-size: 0.8125rem;
+  color: var(--admin-text-muted);
+}
+
+.intro-section-content {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.intro-section-note {
+  font-size: 0.8125rem;
+  color: var(--admin-text-faint);
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.intro-section-content .rich-text-editor {
+  min-height: 200px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.intro-section-content .rich-text-editor .ProseMirror {
+  min-height: 150px;
+}
+
+.intro-save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.intro-save-error {
+  font-size: 0.875rem;
+  color: var(--admin-danger, #dc2626);
+}
+
+.intro-save-success {
+  font-size: 0.875rem;
+  color: #16a34a;
 }

@@ -135,7 +135,7 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
         total_chapters: totalPublished,
         current_chapter: bookProgress?.completed_chapters?.length
           ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
-          : 1,
+          : (bookProgress ? 1 : null),
         completed_chapters: bookProgress?.completed_chapters || [],
         last_read_at: bookProgress?.last_read_at || null,
         purchased_at: p.created_at,

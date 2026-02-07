@@ -9,6 +9,7 @@ import {
   DisclaimerContent,
   CopyrightContent,
   TocContent,
+  DynamicIntroContent,
 } from "@/components/reader/intro-pages";
 
 interface ChapterInfo {
@@ -17,35 +18,54 @@ interface ChapterInfo {
   title_si: string | null;
 }
 
+type IntroPageType = "disclaimer" | "copyright" | "thank_you" | "offering" | "contents";
+
 interface IntroPageViewProps {
   book: Book;
-  page: "disclaimer" | "copyright" | "contents";
+  page: IntroPageType;
   chapters: ChapterInfo[];
   hasFullAccess: boolean;
 }
 
-// Navigation flow for intro pages
-const INTRO_PAGES = ["disclaimer", "copyright", "contents"] as const;
+// Build the list of active intro pages based on book content
+function getActiveIntroPages(book: Book): IntroPageType[] {
+  const pages: IntroPageType[] = ["disclaimer", "copyright"];
+  if (book.intro_thank_you) pages.push("thank_you");
+  if (book.intro_offering) pages.push("offering");
+  pages.push("contents");
+  return pages;
+}
 
 function getNextIntroPage(
-  current: "disclaimer" | "copyright" | "contents"
+  current: IntroPageType,
+  activePages: IntroPageType[]
 ): string | null {
-  const currentIndex = INTRO_PAGES.indexOf(current);
-  if (currentIndex < INTRO_PAGES.length - 1) {
-    return INTRO_PAGES[currentIndex + 1];
+  const currentIndex = activePages.indexOf(current);
+  if (currentIndex < activePages.length - 1) {
+    return activePages[currentIndex + 1];
   }
   return null; // Last intro page, next is chapter 1
 }
 
 function getPrevIntroPage(
-  current: "disclaimer" | "copyright" | "contents"
+  current: IntroPageType,
+  activePages: IntroPageType[]
 ): string | null {
-  const currentIndex = INTRO_PAGES.indexOf(current);
+  const currentIndex = activePages.indexOf(current);
   if (currentIndex > 0) {
-    return INTRO_PAGES[currentIndex - 1];
+    return activePages[currentIndex - 1];
   }
   return null; // First intro page, no previous
 }
+
+// Page titles for display
+const PAGE_TITLES: Record<IntroPageType, string> = {
+  disclaimer: "Disclaimer",
+  copyright: "Copyright",
+  thank_you: "Thank You",
+  offering: "Offering",
+  contents: "Contents",
+};
 
 export function IntroPageView({
   book,
@@ -59,6 +79,8 @@ export function IntroPageView({
 
   // Reader settings hook
   const { settings, isLoaded: settingsLoaded, setTheme } = useReaderSettings();
+
+  const activePages = React.useMemo(() => getActiveIntroPages(book), [book]);
 
   // Hide controls after 3 seconds of inactivity
   const resetControlsTimeout = React.useCallback(() => {
@@ -82,8 +104,8 @@ export function IntroPageView({
   // Handle keyboard navigation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const prevPage = getPrevIntroPage(page);
-      const nextPage = getNextIntroPage(page);
+      const prevPage = getPrevIntroPage(page, activePages);
+      const nextPage = getNextIntroPage(page, activePages);
 
       if (e.key === "ArrowLeft" && prevPage) {
         router.push(`/read/${book.id}/intro/${prevPage}`);
@@ -100,7 +122,7 @@ export function IntroPageView({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [book.id, page, router]);
+  }, [book.id, page, activePages, router]);
 
   // Theme styles (matching reader-view.tsx)
   const themeStyles = {
@@ -125,15 +147,9 @@ export function IntroPageView({
   };
 
   const currentTheme = themeStyles[settings.theme];
-  const prevPage = getPrevIntroPage(page);
-  const nextPage = getNextIntroPage(page);
-
-  // Page titles for display
-  const pageInfo = {
-    disclaimer: { title: "Disclaimer", index: 1 },
-    copyright: { title: "Copyright", index: 2 },
-    contents: { title: "Contents", index: 3 },
-  };
+  const prevPage = getPrevIntroPage(page, activePages);
+  const nextPage = getNextIntroPage(page, activePages);
+  const currentPageIndex = activePages.indexOf(page);
 
   // Don't render until settings are loaded to avoid flash
   if (!settingsLoaded) {
@@ -154,6 +170,72 @@ export function IntroPageView({
       </div>
     );
   }
+
+  // Render page content based on type
+  const renderPageContent = () => {
+    switch (page) {
+      case "disclaimer":
+        if (book.intro_disclaimer) {
+          return (
+            <DynamicIntroContent
+              content={book.intro_disclaimer}
+              textColor={currentTheme.text}
+              secondaryColor={currentTheme.secondary}
+            />
+          );
+        }
+        return (
+          <DisclaimerContent
+            textColor={currentTheme.text}
+            secondaryColor={currentTheme.secondary}
+          />
+        );
+      case "copyright":
+        if (book.intro_copyright) {
+          return (
+            <DynamicIntroContent
+              content={book.intro_copyright}
+              textColor={currentTheme.text}
+              secondaryColor={currentTheme.secondary}
+            />
+          );
+        }
+        return (
+          <CopyrightContent
+            textColor={currentTheme.text}
+            secondaryColor={currentTheme.secondary}
+          />
+        );
+      case "thank_you":
+        return (
+          <DynamicIntroContent
+            content={book.intro_thank_you!}
+            textColor={currentTheme.text}
+            secondaryColor={currentTheme.secondary}
+          />
+        );
+      case "offering":
+        return (
+          <DynamicIntroContent
+            content={book.intro_offering!}
+            textColor={currentTheme.text}
+            secondaryColor={currentTheme.secondary}
+          />
+        );
+      case "contents":
+        return (
+          <TocContent
+            bookId={book.id}
+            chapters={chapters}
+            freePreviewChapters={book.free_preview_chapters}
+            hasFullAccess={hasFullAccess}
+            textColor={currentTheme.text}
+            secondaryColor={currentTheme.secondary}
+            accentColor={currentTheme.accent}
+          />
+        );
+    }
+  };
 
   return (
     <div
@@ -197,7 +279,7 @@ export function IntroPageView({
             className="text-[11px] tracking-widest uppercase"
             style={{ color: `${currentTheme.text}60` }}
           >
-            {pageInfo[page].title}
+            {PAGE_TITLES[page]}
           </span>
 
           {/* Theme toggle */}
@@ -270,29 +352,7 @@ export function IntroPageView({
         className="max-w-3xl mx-auto px-6 sm:px-8 py-24 sm:py-32 min-h-screen flex items-center justify-center"
         onClick={handleContentClick}
       >
-        {page === "disclaimer" && (
-          <DisclaimerContent
-            textColor={currentTheme.text}
-            secondaryColor={currentTheme.secondary}
-          />
-        )}
-        {page === "copyright" && (
-          <CopyrightContent
-            textColor={currentTheme.text}
-            secondaryColor={currentTheme.secondary}
-          />
-        )}
-        {page === "contents" && (
-          <TocContent
-            bookId={book.id}
-            chapters={chapters}
-            freePreviewChapters={book.free_preview_chapters}
-            hasFullAccess={hasFullAccess}
-            textColor={currentTheme.text}
-            secondaryColor={currentTheme.secondary}
-            accentColor={currentTheme.accent}
-          />
-        )}
+        {renderPageContent()}
       </main>
 
       {/* Bottom navigation bar */}
@@ -331,13 +391,13 @@ export function IntroPageView({
 
             {/* Progress dots */}
             <div className="flex items-center gap-2">
-              {INTRO_PAGES.map((p) => (
+              {activePages.map((p, i) => (
                 <div
                   key={p}
                   className="w-2 h-2 rounded-full transition-colors"
                   style={{
                     backgroundColor:
-                      p === page
+                      i === currentPageIndex
                         ? currentTheme.accent
                         : `${currentTheme.text}20`,
                   }}

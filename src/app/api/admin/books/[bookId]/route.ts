@@ -65,6 +65,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       is_free,
       free_preview_chapters,
       is_published,
+      intro_disclaimer,
+      intro_copyright,
+      intro_thank_you,
+      intro_offering,
     } = body;
 
     // Validate required fields
@@ -101,6 +105,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         is_free: is_free || false,
         free_preview_chapters: free_preview_chapters || 2,
         is_published: is_published || false,
+        intro_disclaimer: intro_disclaimer || null,
+        intro_copyright: intro_copyright || null,
+        intro_thank_you: intro_thank_you || null,
+        intro_offering: intro_offering || null,
         // Set published_at when first published
         ...(nowPublished && !wasPublished
           ? { published_at: new Date().toISOString() }

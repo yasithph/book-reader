@@ -1,11 +1,11 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 import type { Book } from "@/types";
 import { IntroPageView } from "./intro-page-view";
 
-const VALID_INTRO_PAGES = ["disclaimer", "copyright", "contents"] as const;
+const VALID_INTRO_PAGES = ["disclaimer", "copyright", "thank_you", "offering", "contents"] as const;
 type IntroPageType = (typeof VALID_INTRO_PAGES)[number];
 
 interface IntroPageProps {
@@ -71,6 +71,19 @@ function isValidIntroPage(page: string): page is IntroPageType {
   return VALID_INTRO_PAGES.includes(page as IntroPageType);
 }
 
+/**
+ * Get the list of active intro pages for a book.
+ * Always includes disclaimer, copyright, contents.
+ * Conditionally includes thank_you and offering if content exists.
+ */
+function getActiveIntroPages(book: Book): IntroPageType[] {
+  const pages: IntroPageType[] = ["disclaimer", "copyright"];
+  if (book.intro_thank_you) pages.push("thank_you");
+  if (book.intro_offering) pages.push("offering");
+  pages.push("contents");
+  return pages;
+}
+
 export async function generateMetadata({ params }: IntroPageProps) {
   const { bookId, page } = await params;
 
@@ -84,15 +97,17 @@ export async function generateMetadata({ params }: IntroPageProps) {
     return { title: "Book Not Found" };
   }
 
-  const pageTitle = {
+  const pageTitle: Record<IntroPageType, string> = {
     disclaimer: "Disclaimer",
     copyright: "Copyright",
+    thank_you: "Thank You",
+    offering: "Offering",
     contents: "Table of Contents",
-  }[page];
+  };
 
   return {
-    title: `${pageTitle} - ${book.title_en}`,
-    description: `${pageTitle} for ${book.title_en}`,
+    title: `${pageTitle[page]} - ${book.title_en}`,
+    description: `${pageTitle[page]} for ${book.title_en}`,
   };
 }
 
@@ -107,6 +122,16 @@ export default async function IntroPage({ params }: IntroPageProps) {
 
   if (!book) {
     notFound();
+  }
+
+  // If user navigates directly to a page that has no content, redirect to next valid page
+  const activePages = getActiveIntroPages(book);
+  if (!activePages.includes(page)) {
+    // Find the next valid page after where this page would be
+    const fullOrder: IntroPageType[] = ["disclaimer", "copyright", "thank_you", "offering", "contents"];
+    const pageIndex = fullOrder.indexOf(page);
+    const nextPage = fullOrder.slice(pageIndex + 1).find((p) => activePages.includes(p));
+    redirect(`/read/${bookId}/intro/${nextPage || "contents"}`);
   }
 
   // Get chapters and purchase status in parallel

@@ -127,7 +127,7 @@ export function LibraryContent({ books }: LibraryContentProps) {
               <div className="kindle-continue-inner">
                 <p className="kindle-section-label">Continue Reading</p>
                 <Link
-                  href={`/read/${mostRecentBook.book_id}/${mostRecentBook.current_chapter || 1}`}
+                  href={mostRecentBook.current_chapter ? `/read/${mostRecentBook.book_id}/${mostRecentBook.current_chapter}` : `/read/${mostRecentBook.book_id}/intro/disclaimer`}
                   className="kindle-continue-card"
                 >
                   <div className="kindle-continue-cover">
@@ -169,7 +169,7 @@ export function LibraryContent({ books }: LibraryContentProps) {
                 {filteredBooks.map((book) => (
                   <Link
                     key={book.book_id}
-                    href={`/read/${book.book_id}/${book.current_chapter || 1}`}
+                    href={book.current_chapter ? `/read/${book.book_id}/${book.current_chapter}` : `/read/${book.book_id}/intro/disclaimer`}
                     className="kindle-book-card"
                   >
                     <div className="kindle-book-cover">

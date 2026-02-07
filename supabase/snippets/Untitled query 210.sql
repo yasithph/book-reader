@@ -1,0 +1,1 @@
+UPDATE public.users SET role = 'admin' WHERE phone = '94771234567';
