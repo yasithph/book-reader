@@ -185,92 +185,115 @@
 }
 
 /* ========================================
-   PWA INSTALL PROMPT STYLES
+   KINDLE-STYLE PROMPT (Install + Notification)
+   Matches the Kindle auth design system:
+   clean, minimal, no gradients, literary feel
    ======================================== */
 
-.pwa-install-prompt {
+.kindle-prompt {
   position: fixed;
   bottom: 1.5rem;
   left: 1rem;
   right: 1rem;
-  max-width: 400px;
+  max-width: 360px;
   margin: 0 auto;
-  padding: 1.25rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.25rem 1.25rem 1rem;
+  background: #FAFAFA;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   z-index: 90;
-  animation: slideUp 0.4s ease-out;
+  animation: kindle-prompt-enter 0.4s ease-out;
 }
 
-.pwa-install-header {
+.kindle-prompt-notification {
+  bottom: 5rem;
+}
+
+.kindle-prompt-body {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.875rem;
   margin-bottom: 1rem;
 }
 
-.pwa-install-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--auth-burgundy) 0%, #5A252C 100%);
+.kindle-prompt-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #1a1a1a;
   flex-shrink: 0;
 }
 
-.pwa-install-title {
-  font-family: var(--font-serif);
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--auth-ink);
-  margin-bottom: 0.25rem;
-}
-
-.pwa-install-description {
-  font-size: 0.875rem;
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
-
-.pwa-install-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.pwa-install-btn {
+.kindle-prompt-text {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  font-weight: 500;
-  font-size: 0.9375rem;
-  transition: all 0.2s ease;
+  min-width: 0;
 }
 
-.pwa-install-btn-primary {
-  background: var(--auth-burgundy);
+.kindle-prompt-title {
+  font-family: var(--font-serif);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+
+.kindle-prompt-description {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: #6b6b6b;
+  line-height: 1.45;
+}
+
+.kindle-prompt-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.kindle-prompt-btn {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.kindle-prompt-btn-dismiss {
+  background: transparent;
+  color: #9a9a9a;
+}
+
+.kindle-prompt-btn-dismiss:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #6b6b6b;
+}
+
+.kindle-prompt-btn-action {
+  background: #1a1a1a;
   color: white;
 }
 
-.pwa-install-btn-primary:hover {
-  background: var(--auth-burgundy-light);
+.kindle-prompt-btn-action:hover:not(:disabled) {
+  background: #2d2d2d;
 }
 
-.pwa-install-btn-secondary {
-  background: var(--auth-cream);
-  color: var(--auth-ink);
+.kindle-prompt-btn-action:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.pwa-install-btn-secondary:hover {
-  background: var(--auth-cream-dark);
-}
-
-@keyframes slideUp {
+@keyframes kindle-prompt-enter {
   from {
-    transform: translateY(100%);
+    transform: translateY(16px);
     opacity: 0;
   }
   to {
@@ -280,26 +303,41 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .pwa-install-prompt {
-    background: #2A2520;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  .kindle-prompt {
+    background: #1C1C1C;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   }
 
-  .pwa-install-icon {
-    background: linear-gradient(135deg, var(--auth-gold) 0%, #A88920 100%);
+  .kindle-prompt-icon {
+    background: rgba(255, 255, 255, 0.06);
+    color: #E8E8E8;
   }
 
-  .pwa-install-title {
-    color: #F5F0E8;
+  .kindle-prompt-title {
+    color: #E8E8E8;
   }
 
-  .pwa-install-btn-secondary {
-    background: rgba(255, 255, 255, 0.08);
-    color: #F5F0E8;
+  .kindle-prompt-description {
+    color: #7a7a7a;
   }
 
-  .pwa-install-btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.12);
+  .kindle-prompt-btn-dismiss {
+    color: #6b6b6b;
+  }
+
+  .kindle-prompt-btn-dismiss:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #9a9a9a;
+  }
+
+  .kindle-prompt-btn-action {
+    background: #E8E8E8;
+    color: #1a1a1a;
+  }
+
+  .kindle-prompt-btn-action:hover:not(:disabled) {
+    background: #F5F5F5;
   }
 }
 
@@ -437,132 +475,4 @@
   }
 }
 
-/* ========================================
-   PUSH NOTIFICATION PROMPT (Minimalist)
-   ======================================== */
-
-.push-notification-prompt {
-  position: fixed;
-  bottom: 5rem;
-  left: 1rem;
-  right: 1rem;
-  max-width: 320px;
-  margin: 0 auto;
-  padding: 1rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  z-index: 90;
-  animation: slideUp 0.3s ease-out;
-}
-
-.push-notification-content {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.875rem;
-}
-
-.push-notification-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--auth-cream, #FDF8F3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--auth-burgundy, #722F37);
-  flex-shrink: 0;
-}
-
-.push-notification-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.push-notification-text h3 {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--auth-ink, #1a1a1a);
-  margin-bottom: 0.125rem;
-}
-
-.push-notification-text p {
-  font-size: 0.8125rem;
-  color: #666;
-  line-height: 1.4;
-}
-
-.push-notification-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.push-notification-btn-dismiss,
-.push-notification-btn-enable {
-  flex: 1;
-  padding: 0.625rem 0.75rem;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.15s ease;
-}
-
-.push-notification-btn-dismiss {
-  background: transparent;
-  color: #666;
-}
-
-.push-notification-btn-dismiss:hover {
-  background: var(--auth-cream, #FDF8F3);
-}
-
-.push-notification-btn-enable {
-  background: var(--auth-burgundy, #722F37);
-  color: white;
-}
-
-.push-notification-btn-enable:hover:not(:disabled) {
-  background: var(--auth-burgundy-light, #8B3D47);
-}
-
-.push-notification-btn-enable:disabled {
-  opacity: 0.7;
-}
-
-@media (prefers-color-scheme: dark) {
-  .push-notification-prompt {
-    background: #1F1B18;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  }
-
-  .push-notification-icon {
-    background: rgba(201, 162, 39, 0.15);
-    color: var(--auth-gold, #C9A227);
-  }
-
-  .push-notification-text h3 {
-    color: #F5F0E8;
-  }
-
-  .push-notification-text p {
-    color: #999;
-  }
-
-  .push-notification-btn-dismiss {
-    color: #999;
-  }
-
-  .push-notification-btn-dismiss:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  .push-notification-btn-enable {
-    background: var(--auth-gold, #C9A227);
-    color: #1a1a1a;
-  }
-
-  .push-notification-btn-enable:hover:not(:disabled) {
-    background: #D4AF37;
-  }
-}
+/* Push notification prompt uses shared .kindle-prompt styles above */

@@ -94,33 +94,33 @@ export function PushNotificationPrompt({ delay = 10000 }: PushNotificationPrompt
   const t = translations[language];
 
   return (
-    <div className="push-notification-prompt">
-      <div className="push-notification-content">
-        <div className="push-notification-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <div className="kindle-prompt kindle-prompt-notification">
+      <div className="kindle-prompt-body">
+        <div className="kindle-prompt-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+              d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
             />
           </svg>
         </div>
-        <div className="push-notification-text">
-          <h3 className={language === "si" ? "sinhala" : ""}>{t.title}</h3>
-          <p className={language === "si" ? "sinhala" : ""}>{t.description}</p>
+        <div className="kindle-prompt-text">
+          <h3 className={`kindle-prompt-title ${language === "si" ? "sinhala" : ""}`}>{t.title}</h3>
+          <p className={`kindle-prompt-description ${language === "si" ? "sinhala" : ""}`}>{t.description}</p>
         </div>
       </div>
-      <div className="push-notification-actions">
+      <div className="kindle-prompt-actions">
         <button
           onClick={handleDismiss}
-          className={`push-notification-btn-dismiss ${language === "si" ? "sinhala" : ""}`}
+          className={`kindle-prompt-btn kindle-prompt-btn-dismiss ${language === "si" ? "sinhala" : ""}`}
         >
           {t.dismiss}
         </button>
         <button
           onClick={handleEnable}
           disabled={isLoading}
-          className={`push-notification-btn-enable ${language === "si" ? "sinhala" : ""}`}
+          className={`kindle-prompt-btn kindle-prompt-btn-action ${language === "si" ? "sinhala" : ""}`}
         >
           {isLoading ? t.enabling : t.enable}
         </button>

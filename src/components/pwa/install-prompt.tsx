@@ -55,34 +55,24 @@ export function InstallPrompt() {
   // iOS-specific message
   if (isIOS) {
     return (
-      <div className="pwa-install-prompt">
-        <div className="pwa-install-header">
-          <div className="pwa-install-icon">
-            <svg className="w-6 h-6" viewBox="0 0 32 32" fill="none">
-              <path
-                d="M6 8C6 7.4 6.4 7 7 7H13C14.7 7 16 8.3 16 10V26C16 25.4 15.6 25 15 25H7C6.4 25 6 24.6 6 24V8Z"
-                fill="currentColor"
-                fillOpacity="0.3"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="M26 8C26 7.4 25.6 7 25 7H19C17.3 7 16 8.3 16 10V26C16 25.4 16.4 25 17 25H25C25.6 25 26 24.6 26 24V8Z"
-                fill="currentColor"
-                fillOpacity="0.2"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
+      <div className="kindle-prompt">
+        <div className="kindle-prompt-body">
+          <div className="kindle-prompt-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
-          <div>
-            <h3 className="pwa-install-title">Install Meera</h3>
-            <p className="pwa-install-description">
-              Add to your home screen: tap{" "}
+          <div className="kindle-prompt-text">
+            <h3 className="kindle-prompt-title">Install Meera</h3>
+            <p className="kindle-prompt-description">
+              Tap{" "}
               <svg
-                className="inline w-4 h-4"
+                className="inline"
+                width="14"
+                height="14"
                 viewBox="0 0 20 20"
                 fill="currentColor"
+                style={{ verticalAlign: "-2px" }}
               >
                 <path d="M13 4.5a2.5 2.5 0 11.702 1.737L6.97 9.604a2.518 2.518 0 010 .792l6.733 3.367a2.5 2.5 0 11-.671 1.341l-6.733-3.367a2.5 2.5 0 110-3.474l6.733-3.367A2.52 2.52 0 0113 4.5z" />
               </svg>{" "}
@@ -90,8 +80,8 @@ export function InstallPrompt() {
             </p>
           </div>
         </div>
-        <div className="pwa-install-actions">
-          <button onClick={handleDismiss} className="pwa-install-btn pwa-install-btn-secondary">
+        <div className="kindle-prompt-actions">
+          <button onClick={handleDismiss} className="kindle-prompt-btn kindle-prompt-btn-dismiss">
             Maybe Later
           </button>
         </div>
@@ -100,44 +90,31 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="pwa-install-prompt">
-      <div className="pwa-install-header">
-        <div className="pwa-install-icon">
-          <svg className="w-6 h-6" viewBox="0 0 32 32" fill="none">
-            <path
-              d="M6 8C6 7.4 6.4 7 7 7H13C14.7 7 16 8.3 16 10V26C16 25.4 15.6 25 15 25H7C6.4 25 6 24.6 6 24V8Z"
-              fill="currentColor"
-              fillOpacity="0.3"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M26 8C26 7.4 25.6 7 25 7H19C17.3 7 16 8.3 16 10V26C16 25.4 16.4 25 17 25H25C25.6 25 26 24.6 26 24V8Z"
-              fill="currentColor"
-              fillOpacity="0.2"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
+    <div className="kindle-prompt">
+      <div className="kindle-prompt-body">
+        <div className="kindle-prompt-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </div>
-        <div>
-          <h3 className="pwa-install-title">Install Meera</h3>
-          <p className="pwa-install-description">
-            Read offline, get faster access, and enjoy a native app experience.
+        <div className="kindle-prompt-text">
+          <h3 className="kindle-prompt-title">Install Meera</h3>
+          <p className="kindle-prompt-description">
+            Read offline with a native app experience.
           </p>
         </div>
       </div>
-      <div className="pwa-install-actions">
+      <div className="kindle-prompt-actions">
         <button
           onClick={handleDismiss}
-          className="pwa-install-btn pwa-install-btn-secondary"
+          className="kindle-prompt-btn kindle-prompt-btn-dismiss"
         >
           Not Now
         </button>
         <button
           onClick={handleInstall}
           disabled={isPrompting}
-          className="pwa-install-btn pwa-install-btn-primary"
+          className="kindle-prompt-btn kindle-prompt-btn-action"
         >
           {isPrompting ? "Installing..." : "Install"}
         </button>
