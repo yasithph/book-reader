@@ -54,7 +54,7 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
   // Get reading progress for all books
   const { data: progress, error: progressError } = await supabase
     .from("reading_progress")
-    .select("book_id, chapter_id, completed_chapters, last_read_at")
+    .select("book_id, chapter_id, completed_chapters, last_read_at, chapters(chapter_number)")
     .eq("user_id", userId);
 
   if (progressError) {
@@ -133,9 +133,16 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
         author_si: book.author_si,
         cover_image_url: book.cover_image_url,
         total_chapters: totalPublished,
-        current_chapter: bookProgress?.completed_chapters?.length
-          ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
-          : (bookProgress ? 1 : null),
+        current_chapter: (() => {
+          if (!bookProgress) return null;
+          const chapterFromProgress = Array.isArray(bookProgress.chapters)
+            ? bookProgress.chapters[0]?.chapter_number
+            : (bookProgress.chapters as { chapter_number: number } | null)?.chapter_number;
+          if (chapterFromProgress) return chapterFromProgress;
+          return bookProgress.completed_chapters?.length
+            ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
+            : 1;
+        })(),
         completed_chapters: bookProgress?.completed_chapters || [],
         last_read_at: bookProgress?.last_read_at || null,
         purchased_at: p.created_at,
@@ -160,9 +167,15 @@ async function getLibraryBooks(userId: string): Promise<LibraryBook[]> {
           author_si: book.author_si,
           cover_image_url: book.cover_image_url,
           total_chapters: totalPublished,
-          current_chapter: bookProgress.completed_chapters?.length
-            ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
-            : 1,
+          current_chapter: (() => {
+            const chapterFromProgress = Array.isArray(bookProgress.chapters)
+              ? bookProgress.chapters[0]?.chapter_number
+              : (bookProgress.chapters as { chapter_number: number } | null)?.chapter_number;
+            if (chapterFromProgress) return chapterFromProgress;
+            return bookProgress.completed_chapters?.length
+              ? Math.min(Math.max(...bookProgress.completed_chapters) + 1, totalPublished)
+              : 1;
+          })(),
           completed_chapters: bookProgress.completed_chapters || [],
           last_read_at: bookProgress.last_read_at,
           purchased_at: bookProgress.last_read_at || new Date().toISOString(),

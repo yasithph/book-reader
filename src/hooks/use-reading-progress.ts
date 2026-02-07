@@ -31,6 +31,8 @@ export function useReadingProgress({
   const [isLoading, setIsLoading] = React.useState(true);
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const lastSavedPositionRef = React.useRef<number>(0);
+  const latestScrollRef = React.useRef<number>(0);
+  const progressRef = React.useRef(progress);
 
   // Fetch initial progress
   React.useEffect(() => {
@@ -48,6 +50,26 @@ export function useReadingProgress({
           if (data.progress?.scroll_position) {
             lastSavedPositionRef.current = data.progress.scroll_position;
           }
+
+          // Save initial progress if no record exists or it's for a different chapter
+          if (!data.progress || data.progress.chapter_id !== chapterId) {
+            const saveRes = await fetch("/api/progress", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                bookId,
+                chapterId,
+                scrollPosition: 0,
+                isChapterComplete: false,
+                completedChapters: data.progress?.completed_chapters || [],
+              }),
+            });
+            if (saveRes.ok) {
+              const saveData = await saveRes.json();
+              setProgress(saveData.progress);
+              lastSavedPositionRef.current = 0;
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to fetch progress:", error);
@@ -57,7 +79,16 @@ export function useReadingProgress({
     }
 
     fetchProgress();
-  }, [bookId, enabled]);
+  }, [bookId, chapterId, enabled]);
+
+  // Keep refs in sync
+  React.useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
+
+  React.useEffect(() => {
+    latestScrollRef.current = scrollProgress;
+  }, [scrollProgress]);
 
   // Track scroll progress
   React.useEffect(() => {
@@ -135,14 +166,32 @@ export function useReadingProgress({
     saveProgress(100, true);
   }, [saveProgress]);
 
-  // Cleanup on unmount
+  // Flush pending save on unmount instead of cancelling
   React.useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+      // Fire a final save with latest position
+      const pos = latestScrollRef.current;
+      const positionDiff = Math.abs(pos - lastSavedPositionRef.current);
+      if (enabled && positionDiff >= 1) {
+        const payload = {
+          bookId,
+          chapterId,
+          scrollPosition: Math.round(pos),
+          isChapterComplete: false,
+          completedChapters: progressRef.current?.completed_chapters || [],
+        };
+        navigator.sendBeacon(
+          "/api/progress",
+          new Blob([JSON.stringify(payload)], { type: "application/json" })
+        );
+      }
     };
-  }, []);
+    // Only depend on stable identifiers — refs handle the mutable state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId, chapterId, enabled]);
 
   return {
     progress,

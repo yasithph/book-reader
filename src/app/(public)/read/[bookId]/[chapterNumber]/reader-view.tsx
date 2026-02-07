@@ -95,12 +95,36 @@ export function ReaderView({
   } = useReaderSettings();
 
   // Reading progress hook (only for logged-in users)
-  const { scrollProgress, markChapterComplete } = useReadingProgress({
+  const { progress, scrollProgress, isLoading: progressLoading, markChapterComplete } = useReadingProgress({
     bookId: book.id,
     chapterId: chapter.id,
     chapterNumber,
     enabled: isLoggedIn,
   });
+
+  // Restore scroll position when progress loads
+  const hasRestoredScroll = React.useRef(false);
+  React.useEffect(() => {
+    if (
+      progressLoading ||
+      hasRestoredScroll.current ||
+      !progress?.scroll_position ||
+      progress.scroll_position <= 0 ||
+      // Only restore if this progress record is for the current chapter
+      progress.chapter_id !== chapter.id
+    ) {
+      return;
+    }
+    hasRestoredScroll.current = true;
+    // Wait for content to render before scrolling
+    requestAnimationFrame(() => {
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight > 0) {
+        const scrollY = (progress.scroll_position / 100) * docHeight;
+        window.scrollTo(0, scrollY);
+      }
+    });
+  }, [progressLoading, progress, chapter.id]);
 
   // Hide controls after 3 seconds of inactivity
   const resetControlsTimeout = React.useCallback(() => {

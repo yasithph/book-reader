@@ -226,7 +226,6 @@ export function KindleHomeContent({
 
                   <div className="kindle-book-info">
                     <h3 className="kindle-book-title">{book.title_si}</h3>
-                    <p className="kindle-book-author">{book.author_si}</p>
                   </div>
                 </Link>
               ))}
