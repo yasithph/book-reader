@@ -15,6 +15,7 @@ interface UserWithBooks {
       title_en: string;
     };
     amount_lkr: number;
+    purchase_group_id: string | null;
   }>;
 }
 
@@ -33,6 +34,7 @@ async function getUsers(): Promise<UserWithBooks[]> {
       last_active_at,
       purchases:purchases!purchases_user_id_fkey (
         amount_lkr,
+        purchase_group_id,
         book:books (
           id,
           title_en
@@ -49,6 +51,20 @@ async function getUsers(): Promise<UserWithBooks[]> {
   }
 
   return (data as unknown as UserWithBooks[]) || [];
+}
+
+function calcTotalSpent(purchases: UserWithBooks["purchases"]): number {
+  if (!purchases?.length) return 0;
+  const seen = new Set<string>();
+  let total = 0;
+  for (const p of purchases) {
+    if (p.purchase_group_id) {
+      if (seen.has(p.purchase_group_id)) continue;
+      seen.add(p.purchase_group_id);
+    }
+    total += p.amount_lkr || 0;
+  }
+  return total;
 }
 
 export default async function AdminUsersPage() {
@@ -68,10 +84,7 @@ export default async function AdminUsersPage() {
           {/* Mobile Card View */}
           <div className="admin-user-list admin-stagger">
             {users.map((user) => {
-              const totalSpent = user.purchases?.reduce(
-                (sum, p) => sum + (p.amount_lkr || 0),
-                0
-              ) || 0;
+              const totalSpent = calcTotalSpent(user.purchases);
               const bookCount = user.purchases?.length || 0;
 
               return (
