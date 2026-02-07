@@ -628,11 +628,11 @@ function OTPStep({
               ref={(el) => { inputRefs.current[index] = el; }}
               type="text"
               inputMode="numeric"
-              maxLength={1}
               value={digit}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
               onPaste={handlePaste}
+              autoComplete={index === 0 ? "one-time-code" : "off"}
               disabled={loading}
               className={`kindle-auth-otp-digit ${digit ? "kindle-auth-otp-digit-filled" : ""}`}
               autoFocus={index === 0}
