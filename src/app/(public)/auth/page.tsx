@@ -19,7 +19,7 @@ function AuthContent() {
   const [email, setEmail] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState("");
-  const [expiresIn, setExpiresIn] = React.useState(300);
+  const [expiresIn, setExpiresIn] = React.useState(60);
   const [userId, setUserId] = React.useState<string | null>(null);
 
   const handleSendOTP = async (identifier: string) => {
@@ -49,7 +49,7 @@ function AuthContent() {
       } else {
         setPhone(identifier);
       }
-      setExpiresIn(data.expiresIn || 300);
+      setExpiresIn(data.expiresIn || 60);
       setStep("otp");
     } catch {
       setError("Network error. Please try again.");

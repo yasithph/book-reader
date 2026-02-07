@@ -10,7 +10,7 @@ export function generateOTP(): string {
 /**
  * OTP expiry time in minutes
  */
-export const OTP_EXPIRY_MINUTES = 5;
+export const OTP_EXPIRY_MINUTES = 1;
 
 /**
  * Rate limit: max OTP requests per phone per hour
@@ -21,7 +21,7 @@ export const OTP_RATE_LIMIT = 5;
  * Format OTP message for SMS
  */
 export function formatOTPMessage(code: string, appName: string = "Meera"): string {
-  return `Your ${appName} verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`;
+  return `Your ${appName} verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} ${OTP_EXPIRY_MINUTES === 1 ? "minute" : "minutes"}.`;
 }
 
 /**

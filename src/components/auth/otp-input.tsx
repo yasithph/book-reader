@@ -17,7 +17,7 @@ export function OTPInput({
   loading = false,
   error,
   phone,
-  expiresIn = 300,
+  expiresIn = 60,
 }: OTPInputProps) {
   const [code, setCode] = React.useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = React.useState(expiresIn);

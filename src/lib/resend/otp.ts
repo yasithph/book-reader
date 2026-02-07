@@ -14,7 +14,7 @@ export async function sendOTPEmail(
     to: email,
     subject: `${code} - Your verification code`,
     html: formatOTPEmailHtml(code),
-    text: `Your Meera verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} minutes.`,
+    text: `Your Meera verification code is: ${code}. Valid for ${OTP_EXPIRY_MINUTES} ${OTP_EXPIRY_MINUTES === 1 ? "minute" : "minutes"}.`,
   });
 
   return { success: result.success, error: result.error };
@@ -41,7 +41,7 @@ export function formatOTPEmailHtml(code: string): string {
           <span style="font-size:32px;font-weight:700;letter-spacing:8px;color:#1a1a1a;">${code}</span>
         </div>
         <p style="margin:0;font-size:14px;color:#888;">
-          This code expires in ${OTP_EXPIRY_MINUTES} minutes.<br>
+          This code expires in ${OTP_EXPIRY_MINUTES} ${OTP_EXPIRY_MINUTES === 1 ? "minute" : "minutes"}.<br>
           මෙම කේතය මිනිත්තු ${OTP_EXPIRY_MINUTES}කින් කල් ඉකුත් වේ.
         </p>
       </td>
