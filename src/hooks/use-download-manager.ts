@@ -152,9 +152,9 @@ export function useDownloadManager(bookId: string): UseDownloadManagerReturn {
             );
 
             if (!response.ok) {
-              if (response.status === 403) {
-                // User doesn't have access to this chapter
-                console.log(`Skipping chapter ${i} - no access`);
+              if (response.status === 403 || response.status === 404) {
+                // 403: no access, 404: not published yet
+                console.log(`Skipping chapter ${i} - ${response.status === 403 ? "no access" : "not found"}`);
                 continue;
               }
               throw new Error(`Failed to fetch chapter ${i}`);

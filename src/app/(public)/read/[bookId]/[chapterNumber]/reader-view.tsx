@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import type { Book, Chapter, ReaderTheme } from "@/types";
 import { SettingsSheet, ChaptersSheet } from "@/components/reader";
-import { useReadingProgress, useReaderSettings } from "@/hooks";
+import { useReadingProgress, useReaderSettings, useDownloadManager, usePWAInstall } from "@/hooks";
 
 interface ChapterInfo {
   chapter_number: number;
@@ -101,6 +101,28 @@ export function ReaderView({
     chapterNumber,
     enabled: isLoggedIn,
   });
+
+  // Download manager hook (for offline reading)
+  const { isDownloaded, downloadState, downloadBook } = useDownloadManager(book.id);
+  const { isInstalled } = usePWAInstall();
+
+  // Auto-download book for offline reading (PWA + logged-in + full access only)
+  // Skips preview-only users to avoid a flood of 403s for locked chapters
+  const hasTriggeredDownload = React.useRef(false);
+  React.useEffect(() => {
+    if (
+      isInstalled &&
+      isLoggedIn &&
+      hasFullAccess &&
+      !isDownloaded &&
+      !downloadState.isDownloading &&
+      !downloadState.error &&
+      !hasTriggeredDownload.current
+    ) {
+      hasTriggeredDownload.current = true;
+      downloadBook(book);
+    }
+  }, [isInstalled, isLoggedIn, hasFullAccess, isDownloaded, downloadState.isDownloading, downloadState.error, downloadBook, book]);
 
   // Restore scroll position when progress loads
   const hasRestoredScroll = React.useRef(false);
@@ -423,6 +445,40 @@ export function ReaderView({
             ) : (
               <span>Last preview chapter — <Link href={`/purchase/${book.id}`} className="underline font-medium">Purchase to continue reading</Link></span>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Download progress bar */}
+      {downloadState.isDownloading && (
+        <div
+          className={`
+            fixed top-0 left-0 right-0 z-40 transition-all duration-300
+            ${showControls ? (hasPendingPurchase || (isPreviewMode && previewChaptersRemaining >= 0)) ? "translate-y-[96px]" : "translate-y-[44px]" : "translate-y-0"}
+          `}
+        >
+          <div
+            className="h-1"
+            style={{ backgroundColor: `${currentTheme.text}12` }}
+          >
+            <div
+              className="h-full transition-all duration-300 ease-out"
+              style={{
+                width: `${downloadState.progress}%`,
+                backgroundColor: currentTheme.accent,
+              }}
+            />
+          </div>
+          <div
+            className="text-center py-1 px-4"
+            style={{ backgroundColor: currentTheme.bg }}
+          >
+            <p
+              className="text-[11px]"
+              style={{ color: currentTheme.secondary }}
+            >
+              Downloading… {downloadState.currentChapter} of {downloadState.totalChapters} chapters
+            </p>
           </div>
         </div>
       )}
