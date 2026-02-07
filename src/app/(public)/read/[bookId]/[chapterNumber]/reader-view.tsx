@@ -87,6 +87,7 @@ export function ReaderView({
   const [showControls, setShowControls] = React.useState(true);
   const [showSettings, setShowSettings] = React.useState(false);
   const [showChapters, setShowChapters] = React.useState(false);
+  const [navigatingDirection, setNavigatingDirection] = React.useState<"prev" | "next" | null>(null);
   const controlsTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Reader settings hook
@@ -406,11 +407,11 @@ export function ReaderView({
           {/* Chapter indicator - clickable to open chapters list */}
           <button
             onClick={() => setShowChapters(true)}
-            className="flex items-center gap-1.5 px-2 py-1 -mx-2 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+            className="flex items-center gap-2 px-3 py-1.5 -mx-3 rounded-md transition-colors hover:bg-black/5 dark:hover:bg-white/5"
             aria-label="View all chapters"
           >
             <svg
-              className="w-4 h-4"
+              className="w-5 h-5"
               style={{ color: `${currentTheme.text}60` }}
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -418,13 +419,13 @@ export function ReaderView({
               <path d="M10.75 16.82A7.462 7.462 0 0115 15.5c.71 0 1.396.098 2.046.282A.75.75 0 0018 15.06v-11a.75.75 0 00-.546-.721A9.006 9.006 0 0015 3a8.963 8.963 0 00-4.25 1.065V16.82zM9.25 4.065A8.963 8.963 0 005 3c-.85 0-1.673.118-2.454.339A.75.75 0 002 4.06v11a.75.75 0 00.954.721A7.506 7.506 0 015 15.5c1.579 0 3.042.487 4.25 1.32V4.065z" />
             </svg>
             <span
-              className="text-[11px] tracking-widest uppercase"
+              className="text-xs tracking-widest uppercase"
               style={{ color: `${currentTheme.text}60` }}
             >
               {activeChapterNum} of {activeTotalChapters}
             </span>
             <svg
-              className="w-3 h-3"
+              className="w-3.5 h-3.5"
               style={{ color: `${currentTheme.text}40` }}
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -737,23 +738,31 @@ export function ReaderView({
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
             <button
               onClick={() => {
+                setNavigatingDirection("prev");
                 if (activeChapterNum === 1) {
                   router.push(`/read/${book.id}/intro/contents`);
                 } else if (activeHasPrev) {
                   navigateToChapter(activeChapterNum - 1);
                 }
               }}
-              disabled={activeChapterNum !== 1 && !activeHasPrev}
-              className="p-1.5 transition-opacity disabled:opacity-20"
+              disabled={navigatingDirection !== null || (activeChapterNum !== 1 && !activeHasPrev)}
+              className="p-3 transition-opacity disabled:opacity-20"
               aria-label={activeChapterNum === 1 ? "Table of Contents" : "Previous chapter"}
             >
-              <svg className="w-4 h-4" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              {navigatingDirection === "prev" ? (
+                <svg className="w-6 h-6 animate-spin" style={{ color: currentTheme.secondary }} viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
             </button>
 
             {/* Minimal progress indicator */}
@@ -781,18 +790,30 @@ export function ReaderView({
             </div>
 
             <button
-              onClick={() => activeHasNext && activeNextAccessible && navigateToChapter(activeChapterNum + 1)}
-              disabled={!activeHasNext || !activeNextAccessible}
-              className="p-1.5 transition-opacity disabled:opacity-20"
+              onClick={() => {
+                if (activeHasNext && activeNextAccessible) {
+                  setNavigatingDirection("next");
+                  navigateToChapter(activeChapterNum + 1);
+                }
+              }}
+              disabled={navigatingDirection !== null || !activeHasNext || !activeNextAccessible}
+              className="p-3 transition-opacity disabled:opacity-20"
               aria-label="Next chapter"
             >
-              <svg className="w-4 h-4" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
-                <path
-                  fillRule="evenodd"
-                  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              {navigatingDirection === "next" ? (
+                <svg className="w-6 h-6 animate-spin" style={{ color: currentTheme.secondary }} viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
             </button>
           </div>
         </div>

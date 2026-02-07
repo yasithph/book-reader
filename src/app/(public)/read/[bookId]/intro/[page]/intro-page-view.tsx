@@ -75,6 +75,7 @@ export function IntroPageView({
 }: IntroPageViewProps) {
   const router = useRouter();
   const [showControls, setShowControls] = React.useState(true);
+  const [navigatingDirection, setNavigatingDirection] = React.useState<"prev" | "next" | null>(null);
   const controlsTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Reader settings hook
@@ -367,24 +368,35 @@ export function IntroPageView({
           <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
             {/* Previous */}
             {prevPage ? (
-              <Link
-                href={`/read/${book.id}/intro/${prevPage}`}
-                className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+              <button
+                onClick={() => {
+                  setNavigatingDirection("prev");
+                  router.push(`/read/${book.id}/intro/${prevPage}`);
+                }}
+                disabled={navigatingDirection !== null}
+                className="flex items-center gap-2 p-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                 style={{ color: `${currentTheme.text}60` }}
               >
-                <svg
-                  className="w-3.5 h-3.5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                {navigatingDirection === "prev" ? (
+                  <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
                 <span>Previous</span>
-              </Link>
+              </button>
             ) : (
               <div />
             )}
@@ -407,43 +419,65 @@ export function IntroPageView({
 
             {/* Next */}
             {nextPage ? (
-              <Link
-                href={`/read/${book.id}/intro/${nextPage}`}
-                className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+              <button
+                onClick={() => {
+                  setNavigatingDirection("next");
+                  router.push(`/read/${book.id}/intro/${nextPage}`);
+                }}
+                disabled={navigatingDirection !== null}
+                className="flex items-center gap-2 p-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                 style={{ color: currentTheme.text }}
               >
                 <span>Next</span>
-                <svg
-                  className="w-3.5 h-3.5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </Link>
+                {navigatingDirection === "next" ? (
+                  <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </button>
             ) : (
-              <Link
-                href={`/read/${book.id}/1`}
-                className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
+              <button
+                onClick={() => {
+                  setNavigatingDirection("next");
+                  router.push(`/read/${book.id}/1`);
+                }}
+                disabled={navigatingDirection !== null}
+                className="flex items-center gap-2 p-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                 style={{ color: currentTheme.accent }}
               >
                 <span>Start Reading</span>
-                <svg
-                  className="w-3.5 h-3.5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </Link>
+                {navigatingDirection === "next" ? (
+                  <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </button>
             )}
           </div>
         </div>
