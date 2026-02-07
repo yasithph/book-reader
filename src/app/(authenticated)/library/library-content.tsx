@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { isBookDownloaded } from "@/lib/offline/indexed-db";
 
 interface LibraryBook {
   book_id: string;
@@ -25,6 +26,23 @@ interface LibraryContentProps {
 
 export function LibraryContent({ books }: LibraryContentProps) {
   const [filter, setFilter] = React.useState<FilterType>("all");
+  const [downloadedBooks, setDownloadedBooks] = React.useState<Set<string>>(new Set());
+
+  // Check which books are available offline
+  React.useEffect(() => {
+    async function checkDownloads() {
+      const results = await Promise.all(
+        books.map(async (book) => {
+          const downloaded = await isBookDownloaded(book.book_id);
+          return downloaded ? book.book_id : null;
+        })
+      );
+      setDownloadedBooks(new Set(results.filter(Boolean) as string[]));
+    }
+    if (books.length > 0) {
+      checkDownloads();
+    }
+  }, [books]);
 
   const filteredBooks = React.useMemo(() => {
     switch (filter) {
@@ -194,6 +212,16 @@ export function LibraryContent({ books }: LibraryContentProps) {
                       ) : book.completed_chapters.length > 0 ? (
                         <ProgressRing percent={getProgressPercent(book)} />
                       ) : null}
+
+                      {/* Downloaded for offline badge */}
+                      {downloadedBooks.has(book.book_id) && (
+                        <div className="kindle-book-downloaded-badge">
+                          <svg viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 3a.75.75 0 01.75.75v7.19l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.22 2.22V3.75A.75.75 0 0110 3z" />
+                            <path d="M3.75 14.25a.75.75 0 01.75.75v1.5c0 .414.336.75.75.75h9.5a.75.75 0 00.75-.75V15a.75.75 0 011.5 0v1.5A2.25 2.25 0 0114.75 18.75h-9.5A2.25 2.25 0 013 16.5V15a.75.75 0 01.75-.75z" />
+                          </svg>
+                        </div>
+                      )}
                     </div>
 
                     <div className="kindle-book-info">

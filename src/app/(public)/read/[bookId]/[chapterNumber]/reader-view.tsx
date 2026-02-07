@@ -103,18 +103,22 @@ export function ReaderView({
   });
 
   // Download manager hook (for offline reading)
-  const { isDownloaded, downloadState, downloadBook } = useDownloadManager(book.id);
+  const { isDownloaded, lastSyncedAt, downloadState, downloadBook } = useDownloadManager(book.id);
   const { isInstalled } = usePWAInstall();
 
   // Auto-download book for offline reading (PWA + logged-in + full access only)
   // Skips preview-only users to avoid a flood of 403s for locked chapters
+  // Also re-syncs when the book has been updated since last download
   const hasTriggeredDownload = React.useRef(false);
   React.useEffect(() => {
+    const needsResync = isDownloaded && lastSyncedAt &&
+      new Date(book.updated_at).getTime() > new Date(lastSyncedAt).getTime();
+
     if (
       isInstalled &&
       isLoggedIn &&
       hasFullAccess &&
-      !isDownloaded &&
+      (!isDownloaded || needsResync) &&
       !downloadState.isDownloading &&
       !downloadState.error &&
       !hasTriggeredDownload.current
@@ -122,7 +126,7 @@ export function ReaderView({
       hasTriggeredDownload.current = true;
       downloadBook(book);
     }
-  }, [isInstalled, isLoggedIn, hasFullAccess, isDownloaded, downloadState.isDownloading, downloadState.error, downloadBook, book]);
+  }, [isInstalled, isLoggedIn, hasFullAccess, isDownloaded, lastSyncedAt, downloadState.isDownloading, downloadState.error, downloadBook, book]);
 
   // Restore scroll position when progress loads
   const hasRestoredScroll = React.useRef(false);

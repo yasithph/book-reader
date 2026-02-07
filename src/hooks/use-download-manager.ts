@@ -7,8 +7,6 @@ import {
   getOfflineBook,
   getDownloadedChapterNumbers,
   deleteOfflineBook,
-  isBookDownloaded as checkBookDownloaded,
-  getDownloadProgress,
 } from "@/lib/offline";
 
 interface Book {
@@ -43,6 +41,7 @@ interface DownloadState {
 interface UseDownloadManagerReturn {
   downloadState: DownloadState;
   isDownloaded: boolean;
+  lastSyncedAt: string | null;
   downloadedChapters: number[];
   downloadProgress: { downloaded: number; total: number };
   downloadBook: (book: Book) => Promise<void>;
@@ -62,24 +61,26 @@ export function useDownloadManager(bookId: string): UseDownloadManagerReturn {
   });
 
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [downloadedChapters, setDownloadedChapters] = useState<number[]>([]);
   const [downloadProgress, setDownloadProgress] = useState({ downloaded: 0, total: 0 });
   const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   const checkDownloadStatus = useCallback(async () => {
     try {
-      const downloaded = await checkBookDownloaded(bookId);
+      const offlineBook = await getOfflineBook(bookId);
+      const downloaded = !!offlineBook;
       setIsDownloaded(downloaded);
 
-      if (downloaded) {
+      if (downloaded && offlineBook) {
         const chapters = await getDownloadedChapterNumbers(bookId);
         setDownloadedChapters(chapters);
-
-        const progress = await getDownloadProgress(bookId);
-        setDownloadProgress(progress);
+        setDownloadProgress({ downloaded: chapters.length, total: offlineBook.total_chapters });
+        setLastSyncedAt(offlineBook.last_synced_at ?? null);
       } else {
         setDownloadedChapters([]);
         setDownloadProgress({ downloaded: 0, total: 0 });
+        setLastSyncedAt(null);
       }
     } catch (error) {
       console.error("Failed to check download status:", error);
@@ -273,6 +274,7 @@ export function useDownloadManager(bookId: string): UseDownloadManagerReturn {
   return {
     downloadState,
     isDownloaded,
+    lastSyncedAt,
     downloadedChapters,
     downloadProgress,
     downloadBook,
