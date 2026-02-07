@@ -20,6 +20,8 @@ interface SaleRequest {
   books?: BookSelection[];
   bundleId?: string;
   amount?: number; // For bundle purchases
+  // Optional purchase date (YYYY-MM-DD) to backdate
+  purchaseDate?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: SaleRequest = await request.json();
-    const { userId, phone, email, displayName, books, bundleId, amount } = body;
+    const { userId, phone, email, displayName, books, bundleId, amount, purchaseDate } = body;
 
     // Validate - need either userId, phone, or email
     if (!userId && !phone && !email) {
@@ -242,9 +244,7 @@ export async function POST(request: NextRequest) {
 
       // Create a purchase record for each book in the bundle
       for (const book of bundleBooks) {
-        const { error: purchaseError } = await adminSupabase
-          .from("purchases")
-          .upsert({
+        const purchaseRecord: Record<string, any> = {
             user_id: targetUserId,
             book_id: book.id,
             bundle_id: bundleId,
@@ -253,7 +253,13 @@ export async function POST(request: NextRequest) {
             status: "approved",
             reviewed_by: adminUser.id,
             reviewed_at: new Date().toISOString(),
-          }, {
+        };
+        if (purchaseDate) {
+          purchaseRecord.created_at = new Date(purchaseDate).toISOString();
+        }
+        const { error: purchaseError } = await adminSupabase
+          .from("purchases")
+          .upsert(purchaseRecord, {
             onConflict: "user_id,book_id",
           });
 
@@ -281,16 +287,20 @@ export async function POST(request: NextRequest) {
 
       // Create purchases for each book
       for (const book of books) {
-        const { error: purchaseError } = await adminSupabase
-          .from("purchases")
-          .upsert({
+        const purchaseRecord: Record<string, any> = {
             user_id: targetUserId,
             book_id: book.bookId,
             amount_lkr: book.price,
             status: "approved",
             reviewed_by: adminUser.id,
             reviewed_at: new Date().toISOString(),
-          }, {
+        };
+        if (purchaseDate) {
+          purchaseRecord.created_at = new Date(purchaseDate).toISOString();
+        }
+        const { error: purchaseError } = await adminSupabase
+          .from("purchases")
+          .upsert(purchaseRecord, {
             onConflict: "user_id,book_id",
           });
 

@@ -50,6 +50,7 @@ interface Purchase {
 type ViewMode = "new-sale" | "history";
 type SellerMode = "new-user" | "existing-user";
 type ProductMode = "books" | "bundles";
+type PricingMode = "full" | "discount" | "free";
 
 interface SelectedBook extends Book {
   customPrice: number;
@@ -80,6 +81,11 @@ export default function AdminSalesPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  // Pricing
+  const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split("T")[0]);
+  const [pricingMode, setPricingMode] = useState<PricingMode>("full");
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   // Products
   const [books, setBooks] = useState<Book[]>([]);
@@ -203,12 +209,18 @@ export default function AdminSalesPage() {
   };
 
   // Calculate total
-  const total = useMemo(() => {
+  const subtotal = useMemo(() => {
     if (productMode === "bundles" && selectedBundle) {
       return selectedBundle.price_lkr;
     }
     return selectedBooks.reduce((sum, book) => sum + book.customPrice, 0);
   }, [productMode, selectedBundle, selectedBooks]);
+
+  const total = useMemo(() => {
+    if (pricingMode === "free") return 0;
+    if (pricingMode === "discount") return Math.max(0, subtotal - discountAmount);
+    return subtotal;
+  }, [pricingMode, subtotal, discountAmount]);
 
   // Validate contact info for new user
   const phoneValid = isValidSriLankanPhone(phone);
@@ -269,15 +281,40 @@ export default function AdminSalesPage() {
         payload.displayName = displayName || null;
       }
 
+      // Purchase date
+      if (purchaseDate && purchaseDate !== new Date().toISOString().split("T")[0]) {
+        payload.purchaseDate = purchaseDate;
+      }
+
       // Product info
       if (productMode === "bundles" && selectedBundle) {
         payload.bundleId = selectedBundle.id;
-        payload.amount = selectedBundle.price_lkr;
+        if (pricingMode === "free") {
+          payload.amount = 0;
+        } else if (pricingMode === "discount") {
+          payload.amount = Math.max(0, selectedBundle.price_lkr - discountAmount);
+        } else {
+          payload.amount = selectedBundle.price_lkr;
+        }
       } else {
-        payload.books = selectedBooks.map((b) => ({
-          bookId: b.id,
-          price: b.customPrice,
-        }));
+        if (pricingMode === "free") {
+          payload.books = selectedBooks.map((b) => ({
+            bookId: b.id,
+            price: 0,
+          }));
+        } else if (pricingMode === "discount" && subtotal > 0) {
+          // Distribute discount proportionally across books
+          const ratio = Math.max(0, subtotal - discountAmount) / subtotal;
+          payload.books = selectedBooks.map((b) => ({
+            bookId: b.id,
+            price: Math.round(b.customPrice * ratio),
+          }));
+        } else {
+          payload.books = selectedBooks.map((b) => ({
+            bookId: b.id,
+            price: b.customPrice,
+          }));
+        }
       }
 
       const res = await fetch("/api/admin/sales", {
@@ -315,6 +352,9 @@ export default function AdminSalesPage() {
     setSuccess(null);
     setSellerMode("new-user");
     setProductMode("books");
+    setPurchaseDate(new Date().toISOString().split("T")[0]);
+    setPricingMode("full");
+    setDiscountAmount(0);
   };
 
   if (isLoading) {
@@ -840,16 +880,22 @@ export default function AdminSalesPage() {
                             <div className="sales-selected-title">{book.title_en}</div>
                           </div>
                           <div className="sales-selected-price">
-                            <input
-                              type="number"
-                              value={book.customPrice}
-                              onChange={(e) =>
-                                updatePrice(book.id, parseFloat(e.target.value) || 0)
-                              }
-                              className="sales-price-input"
-                              min="0"
-                              step="50"
-                            />
+                            {pricingMode === "full" ? (
+                              <input
+                                type="number"
+                                value={book.customPrice}
+                                onChange={(e) =>
+                                  updatePrice(book.id, parseFloat(e.target.value) || 0)
+                                }
+                                className="sales-price-input"
+                                min="0"
+                                step="50"
+                              />
+                            ) : (
+                              <span className="sales-price-display">
+                                Rs. {pricingMode === "free" ? "0" : book.customPrice.toLocaleString()}
+                              </span>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -873,6 +919,65 @@ export default function AdminSalesPage() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Purchase Date */}
+                  <div className="sales-field" style={{ marginTop: "1rem" }}>
+                    <label className="sales-label">Purchase Date</label>
+                    <input
+                      type="date"
+                      value={purchaseDate}
+                      onChange={(e) => setPurchaseDate(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="sales-input sales-input-full sales-date-input"
+                    />
+                  </div>
+
+                  {/* Pricing Mode */}
+                  <div className="sales-pricing-section">
+                    <label className="sales-label">Pricing</label>
+                    <div className="sales-mode-toggle sales-pricing-toggle">
+                      <button
+                        type="button"
+                        className={`sales-mode-btn ${pricingMode === "full" ? "active" : ""}`}
+                        onClick={() => setPricingMode("full")}
+                      >
+                        Full Price
+                      </button>
+                      <button
+                        type="button"
+                        className={`sales-mode-btn ${pricingMode === "discount" ? "active" : ""}`}
+                        onClick={() => setPricingMode("discount")}
+                      >
+                        Discount
+                      </button>
+                      <button
+                        type="button"
+                        className={`sales-mode-btn ${pricingMode === "free" ? "active" : ""}`}
+                        onClick={() => setPricingMode("free")}
+                      >
+                        Free
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Discount Amount Input */}
+                  {pricingMode === "discount" && (
+                    <div className="sales-field sales-discount-field">
+                      <label className="sales-label">
+                        Discount Amount (LKR)
+                      </label>
+                      <input
+                        type="number"
+                        value={discountAmount || ""}
+                        onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                        placeholder="Enter discount amount"
+                        className="sales-input sales-input-full"
+                        min="0"
+                        max={subtotal}
+                        step="50"
+                      />
                     </div>
                   )}
 
