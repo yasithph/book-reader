@@ -21,6 +21,7 @@ interface ChaptersSheetProps {
   theme: "light" | "dark" | "sepia";
   hasThankYou?: boolean;
   hasOffering?: boolean;
+  onNavigateChapter?: (chapterNumber: number) => void;
 }
 
 export function ChaptersSheet({
@@ -35,6 +36,7 @@ export function ChaptersSheet({
   theme,
   hasThankYou = false,
   hasOffering = false,
+  onNavigateChapter,
 }: ChaptersSheetProps) {
   const sheetRef = React.useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -339,7 +341,13 @@ export function ChaptersSheet({
                   key={chapter.chapter_number}
                   href={`/read/${bookId}/${chapter.chapter_number}`}
                   ref={isCurrent ? currentChapterRef : undefined}
-                  onClick={onClose}
+                  onClick={(e) => {
+                    if (onNavigateChapter) {
+                      e.preventDefault();
+                      onNavigateChapter(chapter.chapter_number);
+                    }
+                    onClose();
+                  }}
                   className="flex items-center gap-3 px-5 py-3.5 transition-colors"
                   style={{
                     backgroundColor: isCurrent ? `${colors.text}08` : "transparent",

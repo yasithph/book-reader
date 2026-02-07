@@ -6,7 +6,12 @@ import { useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import type { Book, Chapter, ReaderTheme } from "@/types";
 import { SettingsSheet, ChaptersSheet } from "@/components/reader";
-import { useReadingProgress, useReaderSettings, useDownloadManager, usePWAInstall } from "@/hooks";
+import { useReadingProgress, useReaderSettings, useDownloadManager, useOnlineStatus, usePWAInstall } from "@/hooks";
+import {
+  getOfflineBook,
+  getOfflineChapter,
+  getBookChapters,
+} from "@/lib/offline/indexed-db";
 
 interface ChapterInfo {
   chapter_number: number;
@@ -94,11 +99,32 @@ export function ReaderView({
     resetSettings,
   } = useReaderSettings();
 
-  // Reading progress hook (only for logged-in users)
+  // Offline state — declared before reading progress so active chapter is available
+  const isOnline = useOnlineStatus();
+  const [offlineOverride, setOfflineOverride] = React.useState<{
+    chapter: Chapter;
+    chapterNumber: number;
+    totalChapters: number;
+    allChapters: ChapterInfo[];
+    downloadedNumbers: number[];
+  } | null>(null);
+
+  // Active values — use offline override when present, otherwise props
+  const activeChapter = offlineOverride?.chapter ?? chapter;
+  const activeChapterNum = offlineOverride?.chapterNumber ?? chapterNumber;
+  const activeTotalChapters = offlineOverride?.totalChapters ?? totalChapters;
+  const activeAllChapters = offlineOverride?.allChapters ?? allChapters;
+  const activeHasPrev = activeChapterNum > 1;
+  const activeHasNext = activeChapterNum < activeTotalChapters;
+  const activeNextAccessible = offlineOverride
+    ? activeHasNext && offlineOverride.downloadedNumbers.includes(activeChapterNum + 1)
+    : nextChapterAccessible;
+
+  // Reading progress hook — uses active chapter so offline navigation tracks correctly
   const { progress, scrollProgress, isLoading: progressLoading, markChapterComplete } = useReadingProgress({
     bookId: book.id,
-    chapterId: chapter.id,
-    chapterNumber,
+    chapterId: activeChapter.id,
+    chapterNumber: activeChapterNum,
     enabled: isLoggedIn,
   });
 
@@ -128,6 +154,92 @@ export function ReaderView({
     }
   }, [isInstalled, isLoggedIn, hasFullAccess, isDownloaded, lastSyncedAt, downloadState.isDownloading, downloadState.error, downloadBook, book]);
 
+  // Offline navigation — when offline, load chapters from IndexedDB instead of RSC
+  const navigateToChapter = React.useCallback(async (targetChapter: number, pushHistory = true) => {
+    if (isOnline) {
+      if (pushHistory) {
+        router.push(`/read/${book.id}/${targetChapter}`);
+      } else {
+        // popstate when online — let Next.js fetch the chapter via RSC
+        setOfflineOverride(null);
+        router.replace(`/read/${book.id}/${targetChapter}`);
+      }
+      return;
+    }
+
+    // Navigating back to the original server-rendered chapter — just clear override
+    if (targetChapter === chapterNumber) {
+      setOfflineOverride(null);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    try {
+      const [offBook, offChapter, offChapters] = await Promise.all([
+        getOfflineBook(book.id),
+        getOfflineChapter(book.id, targetChapter),
+        getBookChapters(book.id),
+      ]);
+
+      if (!offBook || !offChapter) {
+        if (pushHistory) {
+          router.push(`/read/${book.id}/${targetChapter}`);
+        }
+        return;
+      }
+
+      const mappedChapter: Chapter = {
+        id: offChapter.id,
+        book_id: offChapter.book_id,
+        chapter_number: offChapter.chapter_number,
+        title_en: offChapter.title_en,
+        title_si: offChapter.title_si,
+        content: offChapter.content,
+        word_count: offChapter.word_count,
+        estimated_reading_time: offChapter.reading_time_minutes,
+        chapter_image_url: null,
+        created_at: offChapter.downloaded_at,
+        updated_at: offChapter.downloaded_at,
+      };
+
+      const numbers = offChapters.map(ch => ch.chapter_number).sort((a, b) => a - b);
+      const infos = offChapters
+        .map(ch => ({ chapter_number: ch.chapter_number, title_en: ch.title_en, title_si: ch.title_si }))
+        .sort((a, b) => a.chapter_number - b.chapter_number);
+
+      setOfflineOverride({
+        chapter: mappedChapter,
+        chapterNumber: targetChapter,
+        totalChapters: offBook.total_chapters,
+        allChapters: infos,
+        downloadedNumbers: numbers,
+      });
+
+      if (pushHistory) {
+        window.history.pushState(null, "", `/read/${book.id}/${targetChapter}`);
+      }
+      window.scrollTo(0, 0);
+    } catch {
+      if (pushHistory) {
+        router.push(`/read/${book.id}/${targetChapter}`);
+      }
+    }
+  }, [isOnline, book.id, chapterNumber, router]);
+
+  // Handle browser back/forward with offline-navigated chapters
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const match = window.location.pathname.match(/\/read\/[^/]+\/(\d+)$/);
+      if (match) {
+        navigateToChapter(parseInt(match[1], 10), false);
+      } else {
+        setOfflineOverride(null);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [navigateToChapter]);
+
   // Restore scroll position when progress loads
   const hasRestoredScroll = React.useRef(false);
   React.useEffect(() => {
@@ -137,7 +249,7 @@ export function ReaderView({
       !progress?.scroll_position ||
       progress.scroll_position <= 0 ||
       // Only restore if this progress record is for the current chapter
-      progress.chapter_id !== chapter.id
+      progress.chapter_id !== activeChapter.id
     ) {
       return;
     }
@@ -150,7 +262,7 @@ export function ReaderView({
         window.scrollTo(0, scrollY);
       }
     });
-  }, [progressLoading, progress, chapter.id]);
+  }, [progressLoading, progress, activeChapter.id]);
 
   // Hide controls after 3 seconds of inactivity
   const resetControlsTimeout = React.useCallback(() => {
@@ -179,13 +291,13 @@ export function ReaderView({
       if (showSettings || showChapters) return; // Don't navigate when sheets are open
 
       if (e.key === "ArrowLeft") {
-        if (chapterNumber === 1) {
+        if (activeChapterNum === 1) {
           router.push(`/read/${book.id}/intro/contents`);
-        } else if (hasPreviousChapter) {
-          router.push(`/read/${book.id}/${chapterNumber - 1}`);
+        } else if (activeHasPrev) {
+          navigateToChapter(activeChapterNum - 1);
         }
-      } else if (e.key === "ArrowRight" && hasNextChapter && nextChapterAccessible) {
-        router.push(`/read/${book.id}/${chapterNumber + 1}`);
+      } else if (e.key === "ArrowRight" && activeHasNext && activeNextAccessible) {
+        navigateToChapter(activeChapterNum + 1);
       } else if (e.key === "Escape") {
         if (showSettings) {
           setShowSettings(false);
@@ -203,7 +315,7 @@ export function ReaderView({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [book.id, chapterNumber, hasPreviousChapter, hasNextChapter, nextChapterAccessible, router, showSettings, showChapters]);
+  }, [book.id, activeChapterNum, activeHasPrev, activeHasNext, activeNextAccessible, navigateToChapter, router, showSettings, showChapters]);
 
   // Mark chapter complete when reaching end
   React.useEffect(() => {
@@ -235,7 +347,7 @@ export function ReaderView({
   };
 
   const currentTheme = themeStyles[settings.theme];
-  const chapterTitle = chapter.title_si || chapter.title_en || null;
+  const chapterTitle = activeChapter.title_si || activeChapter.title_en || null;
   const hasCustomTitle = !!chapterTitle;
 
   // Don't render until settings are loaded to avoid flash
@@ -309,7 +421,7 @@ export function ReaderView({
               className="text-[11px] tracking-widest uppercase"
               style={{ color: `${currentTheme.text}60` }}
             >
-              {chapterNumber} of {totalChapters}
+              {activeChapterNum} of {activeTotalChapters}
             </span>
             <svg
               className="w-3 h-3"
@@ -494,10 +606,10 @@ export function ReaderView({
       >
         {/* Chapter header */}
         <header className="mb-12 text-center">
-          {chapter.chapter_image_url && (
+          {activeChapter.chapter_image_url && (
             <div className="mb-8 -mx-6 sm:-mx-8 overflow-hidden rounded-lg">
               <img
-                src={chapter.chapter_image_url}
+                src={activeChapter.chapter_image_url}
                 alt=""
                 className="w-full h-auto"
               />
@@ -506,7 +618,7 @@ export function ReaderView({
           {hasCustomTitle ? (
             <>
               <p className="font-serif text-sm mb-2" style={{ color: currentTheme.secondary }}>
-                Chapter {chapterNumber}
+                Chapter {activeChapterNum}
               </p>
               <h1
                 className="sinhala font-serif text-2xl sm:text-3xl font-medium leading-relaxed"
@@ -520,7 +632,7 @@ export function ReaderView({
               className="font-serif text-2xl sm:text-3xl font-medium leading-relaxed"
               style={{ color: currentTheme.text }}
             >
-              Chapter {chapterNumber}
+              Chapter {activeChapterNum}
             </h1>
           )}
         </header>
@@ -534,7 +646,7 @@ export function ReaderView({
             lineHeight: settings.lineSpacing,
           }}
           dangerouslySetInnerHTML={{
-            __html: formatChapterContent(chapter.content),
+            __html: formatChapterContent(activeChapter.content),
           }}
         />
 
@@ -548,26 +660,38 @@ export function ReaderView({
           {/* Navigation */}
           <div className="flex items-center justify-center gap-4">
             {/* Previous link - goes to TOC for chapter 1, previous chapter otherwise */}
-            {(chapterNumber === 1 || hasPreviousChapter) && (
+            {(activeChapterNum === 1 || activeHasPrev) && (
               <>
                 <Link
-                  href={chapterNumber === 1 ? `/read/${book.id}/intro/contents` : `/read/${book.id}/${chapterNumber - 1}`}
+                  href={activeChapterNum === 1 ? `/read/${book.id}/intro/contents` : `/read/${book.id}/${activeChapterNum - 1}`}
+                  onClick={(e) => {
+                    if (!isOnline && activeChapterNum > 1) {
+                      e.preventDefault();
+                      navigateToChapter(activeChapterNum - 1);
+                    }
+                  }}
                   className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
                   style={{ color: `${currentTheme.text}60` }}
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                   </svg>
-                  <span>{chapterNumber === 1 ? "Contents" : "Previous"}</span>
+                  <span>{activeChapterNum === 1 ? "Contents" : "Previous"}</span>
                 </Link>
                 <span style={{ color: `${currentTheme.text}25` }}>·</span>
               </>
             )}
 
-            {hasNextChapter ? (
-              nextChapterAccessible ? (
+            {activeHasNext ? (
+              activeNextAccessible ? (
                 <Link
-                  href={`/read/${book.id}/${chapterNumber + 1}`}
+                  href={`/read/${book.id}/${activeChapterNum + 1}`}
+                  onClick={(e) => {
+                    if (!isOnline) {
+                      e.preventDefault();
+                      navigateToChapter(activeChapterNum + 1);
+                    }
+                  }}
                   className="flex items-center gap-1.5 text-sm transition-opacity hover:opacity-70"
                   style={{ color: currentTheme.text }}
                 >
@@ -613,15 +737,15 @@ export function ReaderView({
           <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
             <button
               onClick={() => {
-                if (chapterNumber === 1) {
+                if (activeChapterNum === 1) {
                   router.push(`/read/${book.id}/intro/contents`);
-                } else if (hasPreviousChapter) {
-                  router.push(`/read/${book.id}/${chapterNumber - 1}`);
+                } else if (activeHasPrev) {
+                  navigateToChapter(activeChapterNum - 1);
                 }
               }}
-              disabled={chapterNumber !== 1 && !hasPreviousChapter}
+              disabled={activeChapterNum !== 1 && !activeHasPrev}
               className="p-1.5 transition-opacity disabled:opacity-20"
-              aria-label={chapterNumber === 1 ? "Table of Contents" : "Previous chapter"}
+              aria-label={activeChapterNum === 1 ? "Table of Contents" : "Previous chapter"}
             >
               <svg className="w-4 h-4" style={{ color: currentTheme.secondary }} viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -657,8 +781,8 @@ export function ReaderView({
             </div>
 
             <button
-              onClick={() => hasNextChapter && nextChapterAccessible && router.push(`/read/${book.id}/${chapterNumber + 1}`)}
-              disabled={!hasNextChapter || !nextChapterAccessible}
+              onClick={() => activeHasNext && activeNextAccessible && navigateToChapter(activeChapterNum + 1)}
+              disabled={!activeHasNext || !activeNextAccessible}
               className="p-1.5 transition-opacity disabled:opacity-20"
               aria-label="Next chapter"
             >
@@ -693,13 +817,14 @@ export function ReaderView({
         onClose={() => setShowChapters(false)}
         bookId={book.id}
         bookTitle={book.title_si || book.title_en}
-        chapters={allChapters}
-        currentChapter={chapterNumber}
+        chapters={activeAllChapters}
+        currentChapter={activeChapterNum}
         freePreviewChapters={book.free_preview_chapters}
         hasFullAccess={hasFullAccess}
         theme={settings.theme}
         hasThankYou={!!book.intro_thank_you}
         hasOffering={!!book.intro_offering}
+        onNavigateChapter={navigateToChapter}
       />
     </div>
   );
