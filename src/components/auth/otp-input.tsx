@@ -51,7 +51,28 @@ export function OTPInput({
   };
 
   const handleChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
+    const digits = value.replace(/\D/g, "");
+
+    // Multi-digit input (paste delivered via onChange on mobile)
+    if (digits.length > 1) {
+      const newCode = [...code];
+      for (let i = 0; i < digits.length && index + i < 6; i++) {
+        newCode[index + i] = digits[i];
+      }
+      setCode(newCode);
+
+      const nextEmpty = newCode.findIndex((c) => !c);
+      const focusIndex = nextEmpty === -1 ? 5 : nextEmpty;
+      inputRefs.current[focusIndex]?.focus();
+
+      const fullCode = newCode.join("");
+      if (fullCode.length === 6) {
+        onSubmit(fullCode);
+      }
+      return;
+    }
+
+    const digit = digits.slice(-1);
 
     const newCode = [...code];
     newCode[index] = digit;
@@ -139,6 +160,7 @@ export function OTPInput({
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
+                onPaste={handlePaste}
                 disabled={loading}
                 className={`
                   otp-digit
