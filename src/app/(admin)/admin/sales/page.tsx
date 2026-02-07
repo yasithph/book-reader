@@ -1037,6 +1037,13 @@ function PurchaseHistory({
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Edit state
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
   // Get date boundaries
   const now = new Date();
   const startOfToday = new Date(now);
@@ -1087,6 +1094,47 @@ function PurchaseHistory({
       setActionError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  // Open edit modal
+  const openEdit = (purchase: Purchase, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPurchase(purchase);
+    setEditAmount(String(purchase.amount_lkr));
+    setEditDate(new Date(purchase.created_at).toISOString().split("T")[0]);
+    setEditError(null);
+  };
+
+  // Handle edit save
+  const handleEditSave = async () => {
+    if (!editingPurchase) return;
+
+    setEditLoading(true);
+    setEditError(null);
+
+    try {
+      const res = await fetch(`/api/admin/purchases/${editingPurchase.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "edit",
+          amount_lkr: parseFloat(editAmount) || 0,
+          created_at: new Date(editDate).toISOString(),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update purchase");
+      }
+
+      setEditingPurchase(null);
+      onRefresh();
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -1168,6 +1216,16 @@ function PurchaseHistory({
                 <span className="sales-purchase-date">
                   {new Date(purchase.created_at).toLocaleDateString()}
                 </span>
+                <button
+                  className="sales-purchase-edit-btn"
+                  onClick={(e) => openEdit(purchase, e)}
+                  title="Edit purchase"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
               </div>
             </div>
           ))}
@@ -1320,6 +1378,99 @@ function PurchaseHistory({
                   </svg>
                 )}
                 Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Purchase Modal */}
+      {editingPurchase && (
+        <div className="sales-modal-overlay" onClick={() => !editLoading && setEditingPurchase(null)}>
+          <div className="sales-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sales-modal-header">
+              <h2 className="sales-modal-title">Edit Purchase</h2>
+              <button
+                className="sales-modal-close"
+                onClick={() => !editLoading && setEditingPurchase(null)}
+                disabled={editLoading}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="sales-modal-body">
+              <div className="sales-modal-info">
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Product</span>
+                  <span className="sales-modal-info-value">
+                    {editingPurchase.bundle?.name_en || editingPurchase.book?.title_en || "Unknown"}
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Customer</span>
+                  <span className="sales-modal-info-value">
+                    {editingPurchase.user?.display_name || (editingPurchase.user?.phone ? `+${editingPurchase.user.phone}` : editingPurchase.user?.email) || "Unknown"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="sales-field" style={{ marginTop: "1rem" }}>
+                <label className="sales-label">Amount (LKR)</label>
+                <input
+                  type="number"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  className="sales-input sales-input-full"
+                  min="0"
+                  step="50"
+                />
+              </div>
+
+              <div className="sales-field" style={{ marginTop: "0.75rem" }}>
+                <label className="sales-label">Purchase Date</label>
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="sales-input sales-input-full sales-date-input"
+                />
+              </div>
+
+              {editError && (
+                <div className="sales-modal-error" style={{ marginTop: "0.75rem" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <span>{editError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="sales-modal-actions">
+              <button
+                className="sales-modal-btn sales-modal-btn-reject"
+                onClick={() => setEditingPurchase(null)}
+                disabled={editLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="sales-modal-btn sales-modal-btn-approve"
+                onClick={handleEditSave}
+                disabled={editLoading}
+              >
+                {editLoading ? (
+                  <span className="sales-btn-spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+                Save
               </button>
             </div>
           </div>

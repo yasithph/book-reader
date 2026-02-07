@@ -18,9 +18,9 @@ export async function PATCH(
 
   const { purchaseId } = await params;
   const body = await request.json();
-  const { action, rejection_reason } = body;
+  const { action, rejection_reason, amount_lkr, created_at } = body;
 
-  if (!["approve", "reject"].includes(action)) {
+  if (!["approve", "reject", "edit"].includes(action)) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
@@ -37,6 +37,47 @@ export async function PATCH(
     return NextResponse.json({ error: "Purchase not found" }, { status: 404 });
   }
 
+  // Handle edit action
+  if (action === "edit") {
+    const editData: Record<string, unknown> = {};
+    if (amount_lkr !== undefined) editData.amount_lkr = amount_lkr;
+    if (created_at !== undefined) editData.created_at = created_at;
+
+    if (Object.keys(editData).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+    }
+
+    let updateError;
+
+    if (purchase.purchase_group_id) {
+      const { error } = await supabase
+        .from("purchases")
+        .update(editData)
+        .eq("purchase_group_id", purchase.purchase_group_id);
+      updateError = error;
+    } else {
+      const { error } = await supabase
+        .from("purchases")
+        .update(editData)
+        .eq("id", purchaseId);
+      updateError = error;
+    }
+
+    if (updateError) {
+      console.error("Failed to edit purchase:", updateError);
+      return NextResponse.json(
+        { error: "Failed to edit purchase" },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Purchase updated",
+    });
+  }
+
+  // Approve/reject requires pending status
   if (purchase.status !== "pending") {
     return NextResponse.json(
       { error: "Purchase is not pending" },

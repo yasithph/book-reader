@@ -4678,6 +4678,30 @@
   margin-left: auto;
 }
 
+.sales-purchase-edit-btn {
+  background: none;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  padding: 0.3rem;
+  cursor: pointer;
+  color: var(--admin-text-muted);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sales-purchase-edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.sales-purchase-edit-btn:hover {
+  color: var(--admin-accent);
+  border-color: var(--admin-accent);
+  background: rgba(255, 153, 0, 0.05);
+}
+
 .sales-purchase-item--clickable {
   cursor: pointer;
   transition: all 0.2s ease;
