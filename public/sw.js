@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const STATIC_CACHE = `book-reader-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `book-reader-dynamic-${CACHE_VERSION}`;
 const IMAGE_CACHE = `book-reader-images-${CACHE_VERSION}`;
@@ -132,6 +132,11 @@ async function networkFirst(request, cacheName = DYNAMIC_CACHE) {
     // Return offline page for navigation requests
     if (request.mode === "navigate") {
       return caches.match("/offline");
+    }
+    // For Next.js RSC requests, throw so the error boundary can activate
+    // Returning a synthetic 503 would corrupt the RSC payload parser
+    if (request.headers.get("RSC") === "1" || request.headers.get("Next-Router-State-Tree")) {
+      throw error;
     }
     return new Response("Offline", { status: 503 });
   }
