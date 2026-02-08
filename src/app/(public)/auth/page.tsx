@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type AuthStep = "phone" | "email" | "otp" | "name";
@@ -10,8 +9,12 @@ type AuthMode = "phone" | "email";
 
 function AuthContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/";
+  const [redirectTo, setRedirectTo] = React.useState("/");
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setRedirectTo(params.get("redirect") || "/");
+  }, []);
 
   const [step, setStep] = React.useState<AuthStep>("phone");
   const [authMode, setAuthMode] = React.useState<AuthMode>("phone");
@@ -138,7 +141,7 @@ function AuthContent() {
   };
 
   return (
-    <main className="kindle-auth">
+    <main className="kindle-auth" translate="no">
       {/* Back to home link */}
       <Link href="/" className="kindle-auth-back">
         <svg viewBox="0 0 20 20" fill="currentColor">
@@ -826,9 +829,5 @@ function AuthSkeleton() {
 }
 
 export default function AuthPage() {
-  return (
-    <Suspense fallback={<AuthSkeleton />}>
-      <AuthContent />
-    </Suspense>
-  );
+  return <AuthContent />;
 }
