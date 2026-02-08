@@ -171,6 +171,7 @@ export function ReaderView({
     // Navigating back to the original server-rendered chapter — just clear override
     if (targetChapter === chapterNumber) {
       setOfflineOverride(null);
+      setNavigatingDirection(null);
       window.scrollTo(0, 0);
       return;
     }
@@ -186,6 +187,7 @@ export function ReaderView({
         if (pushHistory) {
           router.push(`/read/${book.id}/${targetChapter}`);
         }
+        setNavigatingDirection(null);
         return;
       }
 
@@ -215,6 +217,7 @@ export function ReaderView({
         allChapters: infos,
         downloadedNumbers: numbers,
       });
+      setNavigatingDirection(null);
 
       if (pushHistory) {
         window.history.pushState(null, "", `/read/${book.id}/${targetChapter}`);
@@ -224,6 +227,7 @@ export function ReaderView({
       if (pushHistory) {
         router.push(`/read/${book.id}/${targetChapter}`);
       }
+      setNavigatingDirection(null);
     }
   }, [isOnline, book.id, chapterNumber, router]);
 
