@@ -212,6 +212,7 @@ export async function DELETE(
     );
   }
 
+  // Delete from public.users first (cascades to purchases, reading_progress, etc.)
   const { error: deleteError } = await supabase
     .from("users")
     .delete()
@@ -223,6 +224,12 @@ export async function DELETE(
       { error: "Failed to delete user" },
       { status: 500 }
     );
+  }
+
+  // Also delete from Supabase Auth so the phone/email can re-register
+  const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
+  if (authDeleteError) {
+    console.error("Failed to delete auth user (public.users already deleted):", authDeleteError);
   }
 
   return NextResponse.json({ success: true, message: "User deleted" });
