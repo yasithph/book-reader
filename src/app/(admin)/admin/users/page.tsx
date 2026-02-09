@@ -112,7 +112,7 @@ export default function AdminUsersPage() {
     setEditingUser(user);
     setEditForm({
       display_name: user.display_name || "",
-      phone: user.phone || "",
+      phone: user.phone?.startsWith("94") ? user.phone.slice(2) : user.phone || "",
       email: user.email || "",
     });
     setEditError("");
@@ -523,13 +523,16 @@ export default function AdminUsersPage() {
               </div>
               <div className="admin-user-edit-field">
                 <label className="admin-user-edit-label">Phone</label>
-                <input
-                  type="tel"
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-                  placeholder="e.g. 0771234567"
-                  className="admin-user-edit-input"
-                />
+                <div className="sales-phone-input">
+                  <span className="sales-phone-prefix">+94</span>
+                  <input
+                    type="tel"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, "") }))}
+                    placeholder="77 123 4567"
+                    className="sales-input"
+                  />
+                </div>
               </div>
               <div className="admin-user-edit-field">
                 <label className="admin-user-edit-label">Email</label>
