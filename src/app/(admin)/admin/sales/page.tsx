@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatPhoneNumber, isValidSriLankanPhone } from "@/lib/textit/client";
+import IncomeReport from "@/components/admin/IncomeReport";
 
 interface Book {
   id: string;
@@ -47,7 +48,7 @@ interface Purchase {
   bundle?: { name_en: string };
 }
 
-type ViewMode = "new-sale" | "history" | "pending";
+type ViewMode = "new-sale" | "history" | "pending" | "reports";
 type SellerMode = "new-user" | "existing-user";
 type ProductMode = "books" | "bundles";
 type PricingMode = "full" | "discount" | "free";
@@ -471,9 +472,21 @@ export default function AdminSalesPage() {
             <span className="sales-view-badge">{pendingCount}</span>
           )}
         </button>
+        <button
+          className={`sales-view-btn ${viewMode === "reports" ? "active" : ""}`}
+          onClick={() => setViewMode("reports")}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18M9 21V9" />
+          </svg>
+          Reports
+        </button>
       </div>
 
-      {viewMode === "pending" ? (
+      {viewMode === "reports" ? (
+        <IncomeReport />
+      ) : viewMode === "pending" ? (
         <PendingPurchases
           purchases={purchases}
           loading={historyLoading}
@@ -487,13 +500,6 @@ export default function AdminSalesPage() {
         />
       ) : (
         <>
-          <div className="sales-header">
-            <h1 className="sales-title">Record Sale</h1>
-            <p className="sales-subtitle">
-              Register a new purchase for a customer
-            </p>
-          </div>
-
           <form onSubmit={handleSubmit} className="sales-form">
             {error && (
               <div className="sales-error">
