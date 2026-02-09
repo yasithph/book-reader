@@ -235,6 +235,15 @@ function AuthContent() {
   );
 }
 
+const parsePhoneDigits = (raw: string) => {
+  let digits = raw.replace(/\D/g, "");
+  // Strip leading country code from autofill (e.g. +94773034285)
+  if (digits.startsWith("94") && digits.length > 10) {
+    digits = digits.slice(2);
+  }
+  return digits.slice(0, 10);
+};
+
 // Phone Input Step
 function PhoneStep({
   onSubmit,
@@ -251,6 +260,18 @@ function PhoneStep({
   const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
+  // Detect browser autofill that bypasses React onChange
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const input = inputRef.current;
+      if (input && input.value && phone === "") {
+        const digits = parsePhoneDigits(input.value);
+        if (digits.length > 0) setPhone(digits);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [phone]);
+
   const formatDisplayPhone = (value: string) => {
     const digits = value.replace(/\D/g, "");
     if (digits.length <= 2) return digits;
@@ -259,10 +280,7 @@ function PhoneStep({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 10) {
-      setPhone(value);
-    }
+    setPhone(parsePhoneDigits(e.target.value));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
