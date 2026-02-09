@@ -202,7 +202,7 @@ export default function IncomeReport() {
     color: string;
   }
 
-  const { chartData, bookKeys, totalIncome, totalBooksSold, bookStats } = useMemo(() => {
+  const { chartData, bookKeys, totalIncome, totalBooksSold, bookStats, perBookSold } = useMemo(() => {
     const { start, end } = getDateRange(period);
 
     // Filter records to the selected period
@@ -297,12 +297,25 @@ export default function IncomeReport() {
     // Sort by income descending
     stats.sort((a, b) => b.income - a.income);
 
+    // Per-book sold stats: count by book_title regardless of bundle
+    const perBookMap: Record<string, { sold: number; fromBundles: number }> = {};
+    for (const r of filtered) {
+      const title = r.book_title || "Unknown";
+      if (!perBookMap[title]) perBookMap[title] = { sold: 0, fromBundles: 0 };
+      perBookMap[title].sold += 1;
+      if (r.bundle_id) perBookMap[title].fromBundles += 1;
+    }
+    const perBookSold = Object.entries(perBookMap)
+      .map(([title, { sold, fromBundles }]) => ({ title, sold, fromBundles }))
+      .sort((a, b) => b.sold - a.sold);
+
     return {
       chartData: data,
       bookKeys: labels,
       totalIncome: income,
       totalBooksSold: booksSold,
       bookStats: stats,
+      perBookSold,
     };
   }, [records, period]);
 
@@ -442,6 +455,42 @@ export default function IncomeReport() {
                   <td style={{ textAlign: "right", color: "var(--admin-accent)" }}>
                     Rs. {totalIncome.toLocaleString()}
                   </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Per-Book Sold Table */}
+        <div className="admin-card" style={{ marginTop: "1.25rem" }}>
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Book</th>
+                  <th style={{ textAlign: "right" }}>Individual</th>
+                  <th style={{ textAlign: "right" }}>From Bundles</th>
+                  <th style={{ textAlign: "right" }}>Total Sold</th>
+                </tr>
+              </thead>
+              <tbody>
+                {perBookSold.map((row) => (
+                  <tr key={row.title}>
+                    <td>{row.title}</td>
+                    <td style={{ textAlign: "right" }}>{row.sold - row.fromBundles}</td>
+                    <td style={{ textAlign: "right" }}>{row.fromBundles}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600 }}>{row.sold}</td>
+                  </tr>
+                ))}
+                <tr style={{ fontWeight: 600, borderTop: "2px solid var(--admin-border)" }}>
+                  <td>Total</td>
+                  <td style={{ textAlign: "right" }}>
+                    {perBookSold.reduce((s, r) => s + r.sold - r.fromBundles, 0)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    {perBookSold.reduce((s, r) => s + r.fromBundles, 0)}
+                  </td>
+                  <td style={{ textAlign: "right" }}>{totalBooksSold}</td>
                 </tr>
               </tbody>
             </table>
