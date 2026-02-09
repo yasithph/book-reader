@@ -43,8 +43,7 @@ export async function GET() {
           name_en
         )
       `)
-      .order("created_at", { ascending: false })
-      .limit(100);
+      .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching purchases:", error);

@@ -1044,6 +1044,10 @@ function PurchaseHistory({
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
   // Get date boundaries
   const now = new Date();
   const startOfToday = new Date(now);
@@ -1067,6 +1071,18 @@ function PurchaseHistory({
     .reduce((sum, p) => sum + p.amount_lkr, 0);
 
   const approvedCount = approvedPurchases.length;
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(purchases.length / itemsPerPage));
+  const paginatedPurchases = purchases.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset to page 1 when purchases change (e.g., after refresh)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [purchases.length]);
 
   // Handle approve/reject
   const handleAction = async (action: "approve" | "reject") => {
@@ -1191,8 +1207,9 @@ function PurchaseHistory({
           <p>Sales will appear here once recorded</p>
         </div>
       ) : (
+        <>
         <div className="sales-purchase-list">
-          {purchases.map((purchase) => (
+          {paginatedPurchases.map((purchase) => (
             <div
               key={purchase.id}
               className={`sales-purchase-item ${purchase.status === "pending" ? "sales-purchase-item--clickable" : ""}`}
@@ -1230,6 +1247,34 @@ function PurchaseHistory({
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="sales-pagination">
+            <button
+              className="sales-pagination-btn"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <span className="sales-pagination-info">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              className="sales-pagination-btn"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {/* Purchase Detail Modal */}
