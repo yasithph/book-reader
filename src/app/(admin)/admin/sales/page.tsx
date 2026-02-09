@@ -1098,15 +1098,6 @@ function PurchaseHistory({
   // Filter approved purchases
   const approvedPurchases = purchases.filter((p) => p.status === "approved");
 
-  // Calculate income totals
-  const todayIncome = approvedPurchases
-    .filter((p) => new Date(p.created_at) >= startOfToday)
-    .reduce((sum, p) => sum + p.amount_lkr, 0);
-
-  const thisWeekIncome = approvedPurchases
-    .filter((p) => new Date(p.created_at) >= startOfWeek)
-    .reduce((sum, p) => sum + p.amount_lkr, 0);
-
   const approvedCount = approvedPurchases.length;
 
   // Start of month for date filter
@@ -1281,18 +1272,6 @@ function PurchaseHistory({
             <path d="M21 3v5h-5" />
           </svg>
         </button>
-      </div>
-
-      {/* Income Summary - Using admin-stats pattern */}
-      <div className="admin-stats" style={{ marginBottom: '1.5rem' }}>
-        <div className="admin-stat">
-          <div className="admin-stat-value">Rs. {todayIncome.toLocaleString()}</div>
-          <div className="admin-stat-label">Today</div>
-        </div>
-        <div className="admin-stat">
-          <div className="admin-stat-value">Rs. {thisWeekIncome.toLocaleString()}</div>
-          <div className="admin-stat-label">This Week</div>
-        </div>
       </div>
 
       {/* Search */}

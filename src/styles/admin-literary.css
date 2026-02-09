@@ -8,30 +8,30 @@
    =========================================== */
 
 :root {
-  /* Admin Theme - Kindle-inspired minimalist */
-  --admin-bg: #FFFFFF;
-  --admin-elevated: #FFFFFF;
-  --admin-surface: #F7F7F7;
-  --admin-text: #0F1111;
-  --admin-text-muted: #565959;
-  --admin-text-faint: #8D9096;
-  --admin-border: #E6E6E6;
-  --admin-border-strong: #D5D5D5;
+  /* Admin Theme - Warm paper & terracotta */
+  --admin-bg: #FAF9F6;
+  --admin-elevated: #FFFEF9;
+  --admin-surface: #F5F4F1;
+  --admin-text: #1a1a1a;
+  --admin-text-muted: #6b6b6b;
+  --admin-text-faint: #9a9a9a;
+  --admin-border: #EFEEE9;
+  --admin-border-strong: #E0DDD6;
 
-  /* Kindle Orange Accent */
-  --admin-accent: #FF9900;
-  --admin-accent-soft: rgba(255, 153, 0, 0.1);
-  --admin-accent-hover: #E68A00;
+  /* Ink Accent - minimalist */
+  --admin-accent: #1a1a1a;
+  --admin-accent-soft: rgba(26, 26, 26, 0.08);
+  --admin-accent-hover: #2d2d2d;
 
   /* Status Colors */
-  --admin-success: #067D62;
-  --admin-warning: #C45500;
-  --admin-danger: #B12704;
+  --admin-success: #16a34a;
+  --admin-warning: #b45309;
+  --admin-danger: #dc2626;
 
-  /* Shadows - subtle */
-  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --admin-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --admin-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.12);
+  /* Shadows - softer, warmer */
+  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --admin-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --admin-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
 
   /* Transitions */
   --admin-transition: 0.15s ease;
@@ -44,14 +44,17 @@
 
 /* Dark Mode */
 .admin-dark {
-  --admin-bg: #0F1111;
-  --admin-elevated: #1A1A1A;
-  --admin-surface: #232F3E;
-  --admin-text: #F7F7F7;
-  --admin-text-muted: #A0A4A8;
-  --admin-text-faint: #6B7075;
-  --admin-border: #2D2D2D;
-  --admin-border-strong: #3D3D3D;
+  --admin-bg: #121212;
+  --admin-elevated: #1a1a1a;
+  --admin-surface: #2d2d2d;
+  --admin-text: #E8E8E8;
+  --admin-text-muted: #9a9a9a;
+  --admin-text-faint: #6b6b6b;
+  --admin-border: #2d2d2d;
+  --admin-border-strong: #3a3a3a;
+  --admin-accent: #E8E8E8;
+  --admin-accent-soft: rgba(232, 232, 232, 0.1);
+  --admin-accent-hover: #d0d0d0;
   --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --admin-shadow-md: 0 1px 3px rgba(0, 0, 0, 0.4);
   --admin-shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.5);
@@ -4563,7 +4566,7 @@
 
 /* Income Card */
 .sales-income-card {
-  background: linear-gradient(135deg, var(--admin-accent) 0%, #e68a00 100%);
+  background: linear-gradient(135deg, var(--admin-accent) 0%, var(--admin-accent-hover) 100%);
   border-radius: 12px;
   padding: 1rem;
   color: white;
@@ -4571,7 +4574,7 @@
 }
 
 .sales-income-card-primary {
-  background: linear-gradient(135deg, var(--admin-accent) 0%, #e68a00 100%);
+  background: linear-gradient(135deg, var(--admin-accent) 0%, var(--admin-accent-hover) 100%);
 }
 
 .sales-income-card:not(.sales-income-card-primary):not(.sales-income-card-muted) {
