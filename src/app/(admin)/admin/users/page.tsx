@@ -1,6 +1,6 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState, useEffect, useMemo } from "react";
 
 interface UserWithBooks {
   id: string;
@@ -20,84 +20,215 @@ interface UserWithBooks {
   }>;
 }
 
-async function getUsers(): Promise<UserWithBooks[]> {
-  const supabase = createAdminClient();
+type DateFilter = "all" | "today" | "yesterday" | "7d" | "30d";
 
-  const { data, error } = await supabase
-    .from("users")
-    .select(
-      `
-      id,
-      phone,
-      email,
-      display_name,
-      created_at,
-      last_active_at,
-      purchases:purchases!purchases_user_id_fkey (
-        amount_lkr,
-        purchase_group_id,
-        bundle_id,
-        book:books (
-          id,
-          title_en
-        )
-      )
-    `
-    )
-    .eq("role", "user")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching users:", error);
-    return [];
-  }
-
-  return (data as unknown as UserWithBooks[]) || [];
-}
-
-function calcTotalSpent(purchases: UserWithBooks["purchases"], userName?: string | null): number {
+function calcTotalSpent(purchases: UserWithBooks["purchases"]): number {
   if (!purchases?.length) return 0;
   const seen = new Set<string>();
   let total = 0;
-  console.log(`[calcTotalSpent] User: ${userName}, purchases:`, JSON.stringify(purchases.map(p => ({
-    amount: p.amount_lkr,
-    group_id: p.purchase_group_id,
-    bundle_id: p.bundle_id,
-    book: p.book?.title_en,
-  }))));
   for (const p of purchases) {
     const groupKey = p.purchase_group_id || p.bundle_id;
     if (groupKey) {
-      if (seen.has(groupKey)) {
-        console.log(`[calcTotalSpent] Skipping duplicate groupKey=${groupKey} amount=${p.amount_lkr}`);
-        continue;
-      }
+      if (seen.has(groupKey)) continue;
       seen.add(groupKey);
     }
     total += p.amount_lkr || 0;
   }
-  console.log(`[calcTotalSpent] User: ${userName}, total: ${total}`);
   return total;
 }
 
-export default async function AdminUsersPage() {
-  const users = await getUsers();
+function matchesDateFilter(createdAt: string, filter: DateFilter): boolean {
+  if (filter === "all") return true;
+  const date = new Date(createdAt);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  switch (filter) {
+    case "today":
+      return date >= startOfToday;
+    case "yesterday": {
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+      return date >= startOfYesterday && date < startOfToday;
+    }
+    case "7d": {
+      const weekAgo = new Date(startOfToday);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return date >= weekAgo;
+    }
+    case "30d": {
+      const monthAgo = new Date(startOfToday);
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      return date >= monthAgo;
+    }
+    default:
+      return true;
+  }
+}
+
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<UserWithBooks[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [editingUser, setEditingUser] = useState<UserWithBooks | null>(null);
+  const [editForm, setEditForm] = useState({ display_name: "", phone: "", email: "" });
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/admin/users");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setUsers(data.users || []);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // Search filter
+      if (search) {
+        const q = search.toLowerCase();
+        const matchesName = user.display_name?.toLowerCase().includes(q);
+        const matchesPhone = user.phone?.includes(q);
+        const matchesEmail = user.email?.toLowerCase().includes(q);
+        if (!matchesName && !matchesPhone && !matchesEmail) return false;
+      }
+      // Date filter
+      return matchesDateFilter(user.created_at, dateFilter);
+    });
+  }, [users, search, dateFilter]);
+
+  const openEdit = (user: UserWithBooks) => {
+    setEditingUser(user);
+    setEditForm({
+      display_name: user.display_name || "",
+      phone: user.phone || "",
+      email: user.email || "",
+    });
+    setEditError("");
+  };
+
+  const handleEdit = async () => {
+    if (!editingUser) return;
+    setEditLoading(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          display_name: editForm.display_name,
+          phone: editForm.phone || null,
+          email: editForm.email || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditError(data.error || "Failed to update user");
+        return;
+      }
+      setEditingUser(null);
+      await fetchUsers();
+    } catch {
+      setEditError("Failed to update user");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Failed to delete user");
+        return;
+      }
+      setDeletingId(null);
+      await fetchUsers();
+    } catch {
+      alert("Failed to delete user");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const dateFilterOptions: { value: DateFilter; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "today", label: "Today" },
+    { value: "yesterday", label: "Yesterday" },
+    { value: "7d", label: "Last 7 days" },
+    { value: "30d", label: "Last 30 days" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="admin-animate-in">
+        <div className="admin-page-header">
+          <h1 className="admin-page-title">Users</h1>
+          <p className="admin-page-subtitle">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-animate-in">
       <div className="admin-page-header">
         <h1 className="admin-page-title">Users</h1>
         <p className="admin-page-subtitle">
-          {users.length} registered {users.length === 1 ? "reader" : "readers"}
+          {filteredUsers.length} of {users.length} registered{" "}
+          {users.length === 1 ? "reader" : "readers"}
         </p>
       </div>
 
-      {users.length > 0 ? (
+      {/* Search Bar */}
+      <div className="admin-user-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by name, phone, or email..."
+          className="admin-user-search-input"
+        />
+      </div>
+
+      {/* Date Filter Chips */}
+      <div className="admin-user-filters">
+        {dateFilterOptions.map((opt) => (
+          <button
+            key={opt.value}
+            className={`admin-user-filter-chip${dateFilter === opt.value ? " active" : ""}`}
+            onClick={() => setDateFilter(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {filteredUsers.length > 0 ? (
         <>
           {/* Mobile Card View */}
           <div className="admin-user-list admin-stagger">
-            {users.map((user) => {
-              const totalSpent = calcTotalSpent(user.purchases, user.display_name);
+            {filteredUsers.map((user) => {
+              const totalSpent = calcTotalSpent(user.purchases);
               const bookCount = user.purchases?.length || 0;
 
               return (
@@ -130,6 +261,47 @@ export default async function AdminUsersPage() {
                       )}
                     </div>
                   </div>
+                  <div className="admin-user-card-actions">
+                    <button
+                      className="admin-user-action-btn"
+                      onClick={() => openEdit(user)}
+                      title="Edit user"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
+                    </button>
+                    {deletingId === user.id ? (
+                      <div className="admin-user-delete-confirm">
+                        <button
+                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          onClick={() => handleDelete(user.id)}
+                          disabled={deleteLoading}
+                        >
+                          {deleteLoading ? "..." : "Yes"}
+                        </button>
+                        <button
+                          className="admin-btn admin-btn-secondary admin-btn-sm"
+                          onClick={() => setDeletingId(null)}
+                          disabled={deleteLoading}
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="admin-user-action-btn delete"
+                        onClick={() => setDeletingId(user.id)}
+                        title="Delete user"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -146,11 +318,12 @@ export default async function AdminUsersPage() {
                     <th>Total Spent</th>
                     <th>Registered</th>
                     <th>Last Active</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => {
-                    const totalSpent = calcTotalSpent(user.purchases, user.display_name);
+                  {filteredUsers.map((user) => {
+                    const totalSpent = calcTotalSpent(user.purchases);
                     const bookCount = user.purchases?.length || 0;
 
                     return (
@@ -246,6 +419,50 @@ export default async function AdminUsersPage() {
                             </span>
                           )}
                         </td>
+                        <td>
+                          {deletingId === user.id ? (
+                            <div className="admin-user-delete-confirm">
+                              <span>Delete?</span>
+                              <button
+                                className="admin-btn admin-btn-danger admin-btn-sm"
+                                onClick={() => handleDelete(user.id)}
+                                disabled={deleteLoading}
+                              >
+                                {deleteLoading ? "..." : "Yes"}
+                              </button>
+                              <button
+                                className="admin-btn admin-btn-secondary admin-btn-sm"
+                                onClick={() => setDeletingId(null)}
+                                disabled={deleteLoading}
+                              >
+                                No
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="admin-user-table-actions">
+                              <button
+                                className="admin-user-action-btn"
+                                onClick={() => openEdit(user)}
+                                title="Edit user"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              <button
+                                className="admin-user-action-btn delete"
+                                onClick={() => setDeletingId(user.id)}
+                                title="Delete user"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -265,10 +482,91 @@ export default async function AdminUsersPage() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
-            <h3 className="admin-card-empty-title">No users registered</h3>
+            <h3 className="admin-card-empty-title">
+              {search || dateFilter !== "all" ? "No users match your filters" : "No users registered"}
+            </h3>
             <p className="admin-card-empty-text">
-              Users will appear here after their first purchase
+              {search || dateFilter !== "all"
+                ? "Try adjusting your search or date filter"
+                : "Users will appear here after their first purchase"}
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="sales-modal-overlay" onClick={() => !editLoading && setEditingUser(null)}>
+          <div className="sales-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sales-modal-header">
+              <h2 className="sales-modal-title">Edit User</h2>
+              <button
+                className="sales-modal-close"
+                onClick={() => setEditingUser(null)}
+                disabled={editLoading}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="sales-modal-body">
+              <div className="admin-user-edit-field">
+                <label className="admin-user-edit-label">Display Name</label>
+                <input
+                  type="text"
+                  value={editForm.display_name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, display_name: e.target.value }))}
+                  placeholder="Enter name"
+                  className="admin-user-edit-input"
+                />
+              </div>
+              <div className="admin-user-edit-field">
+                <label className="admin-user-edit-label">Phone</label>
+                <input
+                  type="tel"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="e.g. 0771234567"
+                  className="admin-user-edit-input"
+                />
+              </div>
+              <div className="admin-user-edit-field">
+                <label className="admin-user-edit-label">Email</label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                  placeholder="e.g. user@example.com"
+                  className="admin-user-edit-input"
+                />
+              </div>
+              {editError && (
+                <div className="sales-modal-error" style={{ marginTop: "0.75rem" }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <span>{editError}</span>
+                </div>
+              )}
+            </div>
+            <div className="sales-modal-actions">
+              <button
+                className="sales-modal-btn sales-modal-btn-reject"
+                onClick={() => setEditingUser(null)}
+                disabled={editLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="sales-modal-btn sales-modal-btn-approve"
+                onClick={handleEdit}
+                disabled={editLoading}
+              >
+                {editLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         </div>
       )}

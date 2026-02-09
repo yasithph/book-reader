@@ -17,10 +17,27 @@ export async function GET() {
 
     const supabase = createAdminClient();
 
-    // Fetch all users (non-admin)
     const { data: users, error } = await supabase
       .from("users")
-      .select("id, phone, email, display_name, created_at")
+      .select(
+        `
+        id,
+        phone,
+        email,
+        display_name,
+        created_at,
+        last_active_at,
+        purchases:purchases!purchases_user_id_fkey (
+          amount_lkr,
+          purchase_group_id,
+          bundle_id,
+          book:books (
+            id,
+            title_en
+          )
+        )
+      `
+      )
       .eq("role", "user")
       .order("created_at", { ascending: false });
 
