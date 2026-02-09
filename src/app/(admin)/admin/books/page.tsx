@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import Link from "next/link";
 import { DeleteBookButton } from "./delete-button";
-import { PurchaseActions } from "../purchase-actions";
 import { BundlesSection } from "./bundles-section";
 
 export const dynamic = "force-dynamic";
@@ -46,25 +45,19 @@ interface Bundle {
 async function getStats() {
   const supabase = createAdminClient();
 
-  const [usersRes, booksRes, purchasesRes, pendingPurchasesRes] = await Promise.all([
+  const [usersRes, booksRes, purchasesRes] = await Promise.all([
     supabase.from("users").select("id", { count: "exact", head: true }).eq("role", "user"),
     supabase.from("books").select("id", { count: "exact", head: true }),
     supabase
       .from("purchases")
       .select("id", { count: "exact", head: true })
       .eq("status", "approved"),
-    supabase
-      .from("purchases")
-      .select("*")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
   ]);
 
   return {
     totalUsers: usersRes.count || 0,
     totalBooks: booksRes.count || 0,
     totalPurchases: purchasesRes.count || 0,
-    pendingPurchases: pendingPurchasesRes.data || [],
   };
 }
 
@@ -164,58 +157,7 @@ export default async function AdminBooksPage() {
           <div className="admin-stat-label">Purchases</div>
         </div>
 
-        {stats.pendingPurchases.length > 0 && (
-          <div className="admin-stat admin-stat--warning">
-            <div className="admin-stat-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <div className="admin-stat-value">{stats.pendingPurchases.length}</div>
-            <div className="admin-stat-label">Pending</div>
-          </div>
-        )}
       </div>
-
-      {/* Pending Approvals */}
-      {stats.pendingPurchases.length > 0 && (
-        <div className="admin-card admin-mb-3">
-          <div className="admin-card-header">
-            <h2 className="admin-card-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 20, height: 20 }}>
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-              Pending Approvals
-              <span className="admin-card-badge">{stats.pendingPurchases.length}</span>
-            </h2>
-          </div>
-          <div className="admin-card-body">
-            <div className="admin-pending-list">
-              {stats.pendingPurchases.map((purchase: any) => (
-                <div key={purchase.id} className="admin-pending-item">
-                  <div className="admin-pending-info">
-                    <div className="admin-pending-title">Purchase Request</div>
-                    <div className="admin-pending-meta">
-                      LKR {purchase.amount_lkr} · {new Date(purchase.created_at).toLocaleDateString()}
-                    </div>
-                    {purchase.payment_reference && (
-                      <div className="admin-pending-ref">Ref: {purchase.payment_reference}</div>
-                    )}
-                  </div>
-                  <div className="admin-pending-actions">
-                    <PurchaseActions
-                      purchaseId={purchase.id}
-                      paymentProofUrl={purchase.payment_proof_url}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Page Header */}
       <div className="admin-page-header-actions">

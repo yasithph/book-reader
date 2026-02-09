@@ -47,7 +47,7 @@ interface Purchase {
   bundle?: { name_en: string };
 }
 
-type ViewMode = "new-sale" | "history";
+type ViewMode = "new-sale" | "history" | "pending";
 type SellerMode = "new-user" | "existing-user";
 type ProductMode = "books" | "bundles";
 type PricingMode = "full" | "discount" | "free";
@@ -133,12 +133,10 @@ export default function AdminSalesPage() {
     fetchData();
   }, []);
 
-  // Fetch purchase history when switching to history view
+  // Fetch purchases on mount (for pending count badge)
   useEffect(() => {
-    if (viewMode === "history" && purchases.length === 0) {
-      fetchPurchaseHistory();
-    }
-  }, [viewMode]);
+    fetchPurchaseHistory();
+  }, []);
 
   const fetchPurchaseHistory = async () => {
     setHistoryLoading(true);
@@ -152,6 +150,9 @@ export default function AdminSalesPage() {
       setHistoryLoading(false);
     }
   };
+
+  // Pending count for tab badge
+  const pendingCount = useMemo(() => purchases.filter(p => p.status === "pending").length, [purchases]);
 
   // Filter paid books (exclude free)
   const paidBooks = useMemo(() => books.filter((b) => !b.is_free), [books]);
@@ -457,9 +458,28 @@ export default function AdminSalesPage() {
           </svg>
           History
         </button>
+        <button
+          className={`sales-view-btn ${viewMode === "pending" ? "active" : ""}`}
+          onClick={() => setViewMode("pending")}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 8v4M12 16h.01" />
+          </svg>
+          Pending
+          {pendingCount > 0 && (
+            <span className="sales-view-badge">{pendingCount}</span>
+          )}
+        </button>
       </div>
 
-      {viewMode === "history" ? (
+      {viewMode === "pending" ? (
+        <PendingPurchases
+          purchases={purchases}
+          loading={historyLoading}
+          onRefresh={fetchPurchaseHistory}
+        />
+      ) : viewMode === "history" ? (
         <PurchaseHistory
           purchases={purchases}
           loading={historyLoading}
@@ -1036,6 +1056,7 @@ function PurchaseHistory({
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [approveDate, setApproveDate] = useState("");
 
   // Edit state
   const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
@@ -1149,7 +1170,10 @@ function PurchaseHistory({
       const res = await fetch(`/api/admin/purchases/${selectedPurchase.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({
+          action,
+          ...(action === "approve" && approveDate ? { created_at: new Date(approveDate).toISOString() } : {}),
+        }),
       });
 
       if (!res.ok) {
@@ -1349,7 +1373,12 @@ function PurchaseHistory({
             <div
               key={purchase.id}
               className={`sales-purchase-item ${purchase.status === "pending" ? "sales-purchase-item--clickable" : ""}`}
-              onClick={() => purchase.status === "pending" && setSelectedPurchase(purchase)}
+              onClick={() => {
+                if (purchase.status === "pending") {
+                  setSelectedPurchase(purchase);
+                  setApproveDate(new Date(purchase.created_at).toISOString().split("T")[0]);
+                }
+              }}
             >
               <div className="sales-purchase-main">
                 <div className="sales-purchase-product">
@@ -1493,7 +1522,13 @@ function PurchaseHistory({
                 <div className="sales-modal-info-row">
                   <span className="sales-modal-info-label">Date</span>
                   <span className="sales-modal-info-value">
-                    {new Date(selectedPurchase.created_at).toLocaleString()}
+                    <input
+                      type="date"
+                      value={approveDate}
+                      onChange={(e) => setApproveDate(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="sales-approve-date-input"
+                    />
                   </span>
                 </div>
                 {selectedPurchase.payment_reference && (
@@ -1711,6 +1746,309 @@ function PurchaseHistory({
                   </svg>
                 )}
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Pending Purchases Component
+function PendingPurchases({
+  purchases,
+  loading,
+  onRefresh
+}: {
+  purchases: Purchase[];
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [approveDate, setApproveDate] = useState("");
+
+  const pendingPurchases = useMemo(() => purchases.filter(p => p.status === "pending"), [purchases]);
+
+  const isPDF = (url: string | null | undefined) => {
+    if (!url) return false;
+    return url.toLowerCase().endsWith(".pdf");
+  };
+
+  const handleAction = async (action: "approve" | "reject") => {
+    if (!selectedPurchase) return;
+
+    setActionLoading(true);
+    setActionError(null);
+
+    try {
+      const res = await fetch(`/api/admin/purchases/${selectedPurchase.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          ...(action === "approve" && approveDate ? { created_at: new Date(approveDate).toISOString() } : {}),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to update purchase");
+      }
+
+      setSelectedPurchase(null);
+      onRefresh();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  return (
+    <div className="sales-history">
+      <div className="sales-history-header">
+        <div>
+          <h1 className="sales-title">Pending Approvals</h1>
+          <p className="sales-subtitle">
+            {pendingPurchases.length} pending {pendingPurchases.length === 1 ? "purchase" : "purchases"}
+          </p>
+        </div>
+        <button onClick={onRefresh} className="sales-refresh-btn" disabled={loading}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={loading ? "spinning" : ""}>
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+          </svg>
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="sales-loading">
+          <div className="sales-loading-spinner" />
+          <p>Loading...</p>
+        </div>
+      ) : pendingPurchases.length === 0 ? (
+        <div className="sales-empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+          <h3>No pending approvals</h3>
+          <p>All purchases have been reviewed</p>
+        </div>
+      ) : (
+        <div className="sales-purchase-list">
+          {pendingPurchases.map((purchase) => (
+            <div
+              key={purchase.id}
+              className="sales-purchase-item sales-purchase-item--clickable"
+              onClick={() => {
+                setSelectedPurchase(purchase);
+                setApproveDate(new Date(purchase.created_at).toISOString().split("T")[0]);
+              }}
+            >
+              <div className="sales-purchase-main">
+                <div className="sales-purchase-product">
+                  {purchase.bundle?.name_en || purchase.book?.title_en || "Unknown"}
+                </div>
+                <div className="sales-purchase-customer">
+                  {purchase.user?.display_name || "Unknown"}
+                  {(purchase.user?.phone || purchase.user?.email) && (
+                    <span className="sales-purchase-contact">
+                      {purchase.user?.phone ? `+${purchase.user.phone}` : purchase.user?.email}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="sales-purchase-meta">
+                <span className="sales-purchase-status sales-purchase-status--pending">
+                  pending
+                </span>
+                <span className="sales-purchase-amount">
+                  Rs. {purchase.amount_lkr.toLocaleString()}
+                </span>
+                <span className="sales-purchase-date">
+                  {new Date(purchase.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Review Purchase Modal */}
+      {selectedPurchase && (
+        <div className="sales-modal-overlay" onClick={() => !actionLoading && setSelectedPurchase(null)}>
+          <div className="sales-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sales-modal-header">
+              <h2 className="sales-modal-title">Review Purchase</h2>
+              <button
+                className="sales-modal-close"
+                onClick={() => !actionLoading && setSelectedPurchase(null)}
+                disabled={actionLoading}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="sales-modal-body">
+              <div className="sales-modal-info">
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Product</span>
+                  <span className="sales-modal-info-value">
+                    {selectedPurchase.bundle?.name_en || selectedPurchase.book?.title_en || "Unknown"}
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Customer</span>
+                  <span className="sales-modal-info-value">
+                    {selectedPurchase.user?.display_name || "No name"}
+                    <span className="sales-modal-info-phone">
+                      {selectedPurchase.user?.phone ? `+${selectedPurchase.user.phone}` : selectedPurchase.user?.email}
+                    </span>
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Amount</span>
+                  <span className="sales-modal-info-value sales-modal-info-amount">
+                    Rs. {selectedPurchase.amount_lkr.toLocaleString()}
+                  </span>
+                </div>
+                <div className="sales-modal-info-row">
+                  <span className="sales-modal-info-label">Date</span>
+                  <span className="sales-modal-info-value">
+                    <input
+                      type="date"
+                      value={approveDate}
+                      onChange={(e) => setApproveDate(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                      className="sales-approve-date-input"
+                    />
+                  </span>
+                </div>
+                {selectedPurchase.payment_reference && (
+                  <div className="sales-modal-info-row">
+                    <span className="sales-modal-info-label">Reference</span>
+                    <span className="sales-modal-info-value">{selectedPurchase.payment_reference}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Proof */}
+              <div className="sales-modal-proof">
+                <h3 className="sales-modal-proof-title">Payment Proof</h3>
+                {selectedPurchase.payment_proof_url ? (
+                  isPDF(selectedPurchase.payment_proof_url) ? (
+                    <div className="sales-modal-proof-pdf">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14,2 14,8 20,8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <line x1="10" y1="9" x2="8" y2="9" />
+                      </svg>
+                      <span>PDF Document</span>
+                      <a
+                        href={selectedPurchase.payment_proof_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="sales-modal-proof-link"
+                      >
+                        Open PDF
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                          <polyline points="15,3 21,3 21,9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="sales-modal-proof-image">
+                      <img
+                        src={selectedPurchase.payment_proof_url}
+                        alt="Payment proof"
+                        onClick={() => window.open(selectedPurchase.payment_proof_url!, "_blank")}
+                      />
+                      <p className="sales-modal-proof-hint">Click to view full size</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="sales-modal-proof-empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21,15 16,10 5,21" />
+                    </svg>
+                    <span>No payment proof uploaded</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Already has access warning */}
+              {(() => {
+                const hasExistingAccess = purchases.some(
+                  (p) =>
+                    p.id !== selectedPurchase.id &&
+                    p.user_id === selectedPurchase.user_id &&
+                    p.status === "approved" &&
+                    (selectedPurchase.book_id
+                      ? p.book_id === selectedPurchase.book_id
+                      : p.bundle_id === selectedPurchase.bundle_id)
+                );
+                return hasExistingAccess ? (
+                  <div className="sales-modal-warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    <span>This user already has access to this product</span>
+                  </div>
+                ) : null;
+              })()}
+
+              {actionError && (
+                <div className="sales-modal-error">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                  </svg>
+                  <span>{actionError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="sales-modal-actions">
+              <button
+                className="sales-modal-btn sales-modal-btn-reject"
+                onClick={() => handleAction("reject")}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <span className="sales-btn-spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                )}
+                Reject
+              </button>
+              <button
+                className="sales-modal-btn sales-modal-btn-approve"
+                onClick={() => handleAction("approve")}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <span className="sales-btn-spinner" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+                Approve
               </button>
             </div>
           </div>

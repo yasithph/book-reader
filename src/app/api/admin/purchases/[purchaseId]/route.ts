@@ -87,12 +87,24 @@ export async function PATCH(
 
   // For bundle purchases, update all purchases with the same purchase_group_id
   // For single book purchases, update just the one record
-  const updateData = {
+  const updateData: Record<string, unknown> = {
     status: action === "approve" ? "approved" : "rejected",
     rejection_reason: action === "reject" ? rejection_reason : null,
     reviewed_by: session.userId,
     reviewed_at: new Date().toISOString(),
   };
+
+  // Allow changing the purchase date when approving
+  if (action === "approve" && created_at) {
+    const parsedDate = new Date(created_at);
+    if (isNaN(parsedDate.getTime())) {
+      return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+    }
+    if (parsedDate > new Date()) {
+      return NextResponse.json({ error: "Date cannot be in the future" }, { status: 400 });
+    }
+    updateData.created_at = parsedDate.toISOString();
+  }
 
   let updateError;
 
