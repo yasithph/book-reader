@@ -1044,6 +1044,16 @@ function PurchaseHistory({
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
+  // Delete state
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Search and filter
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month" | "custom">("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
@@ -1072,17 +1082,61 @@ function PurchaseHistory({
 
   const approvedCount = approvedPurchases.length;
 
+  // Start of month for date filter
+  const startOfMonth = new Date(now);
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  // Filtered purchases (search + date)
+  const filteredPurchases = useMemo(() => {
+    let result = purchases;
+
+    // Date filter
+    if (dateFilter === "today") {
+      result = result.filter((p) => new Date(p.created_at) >= startOfToday);
+    } else if (dateFilter === "week") {
+      result = result.filter((p) => new Date(p.created_at) >= startOfWeek);
+    } else if (dateFilter === "month") {
+      result = result.filter((p) => new Date(p.created_at) >= startOfMonth);
+    } else if (dateFilter === "custom") {
+      if (customDateFrom) {
+        const from = new Date(customDateFrom);
+        from.setHours(0, 0, 0, 0);
+        result = result.filter((p) => new Date(p.created_at) >= from);
+      }
+      if (customDateTo) {
+        const to = new Date(customDateTo);
+        to.setHours(23, 59, 59, 999);
+        result = result.filter((p) => new Date(p.created_at) <= to);
+      }
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((p) => {
+        const name = p.user?.display_name?.toLowerCase() || "";
+        const phone = p.user?.phone || "";
+        const email = p.user?.email?.toLowerCase() || "";
+        const product = (p.bundle?.name_en || p.book?.title_en || "").toLowerCase();
+        return name.includes(q) || phone.includes(q) || email.includes(q) || product.includes(q);
+      });
+    }
+
+    return result;
+  }, [purchases, searchQuery, dateFilter, customDateFrom, customDateTo]);
+
   // Pagination
-  const totalPages = Math.max(1, Math.ceil(purchases.length / itemsPerPage));
-  const paginatedPurchases = purchases.slice(
+  const totalPages = Math.max(1, Math.ceil(filteredPurchases.length / itemsPerPage));
+  const paginatedPurchases = filteredPurchases.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Reset to page 1 when purchases change (e.g., after refresh)
+  // Reset to page 1 when purchases/filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [purchases.length]);
+  }, [purchases.length, searchQuery, dateFilter, customDateFrom, customDateTo]);
 
   // Handle approve/reject
   const handleAction = async (action: "approve" | "reject") => {
@@ -1154,6 +1208,28 @@ function PurchaseHistory({
     }
   };
 
+  // Handle delete
+  const handleDelete = async (purchaseId: string) => {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/admin/purchases/${purchaseId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to delete purchase");
+      }
+
+      setDeletingId(null);
+      onRefresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete purchase");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   // Check if payment proof is a PDF
   const isPDF = (url: string | null | undefined) => {
     if (!url) return false;
@@ -1189,13 +1265,73 @@ function PurchaseHistory({
         </div>
       </div>
 
+      {/* Search */}
+      <div className="admin-user-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="M21 21l-4.35-4.35" />
+        </svg>
+        <input
+          type="text"
+          className="admin-user-search-input"
+          placeholder="Search by name, phone, email, or product..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: 'var(--admin-text-muted)' }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
+      {/* Date Filters */}
+      <div className="admin-user-filters">
+        {([["all", "All"], ["today", "Today"], ["week", "This Week"], ["month", "This Month"], ["custom", "Custom"]] as const).map(([value, label]) => (
+          <button
+            key={value}
+            className={`admin-user-filter-chip ${dateFilter === value ? "active" : ""}`}
+            onClick={() => setDateFilter(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {dateFilter === "custom" && (
+        <div className="sales-custom-date-row">
+          <div className="sales-custom-date-field">
+            <label className="sales-custom-date-label">From</label>
+            <input
+              type="date"
+              className="sales-custom-date-input"
+              value={customDateFrom}
+              onChange={(e) => setCustomDateFrom(e.target.value)}
+            />
+          </div>
+          <div className="sales-custom-date-field">
+            <label className="sales-custom-date-label">To</label>
+            <input
+              type="date"
+              className="sales-custom-date-input"
+              value={customDateTo}
+              onChange={(e) => setCustomDateTo(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Purchase List */}
       {loading ? (
         <div className="sales-loading">
           <div className="sales-loading-spinner" />
           <p>Loading purchases...</p>
         </div>
-      ) : purchases.length === 0 ? (
+      ) : filteredPurchases.length === 0 ? (
         <div className="sales-empty-state">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -1203,8 +1339,8 @@ function PurchaseHistory({
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <h3>No purchases yet</h3>
-          <p>Sales will appear here once recorded</p>
+          <h3>{purchases.length === 0 ? "No purchases yet" : "No matching purchases"}</h3>
+          <p>{purchases.length === 0 ? "Sales will appear here once recorded" : "Try adjusting your search or filters"}</p>
         </div>
       ) : (
         <>
@@ -1220,7 +1356,12 @@ function PurchaseHistory({
                   {purchase.bundle?.name_en || purchase.book?.title_en || "Unknown"}
                 </div>
                 <div className="sales-purchase-customer">
-                  {purchase.user?.display_name || (purchase.user?.phone ? `+${purchase.user.phone}` : purchase.user?.email) || "Unknown"}
+                  {purchase.user?.display_name || "Unknown"}
+                  {(purchase.user?.phone || purchase.user?.email) && (
+                    <span className="sales-purchase-contact">
+                      {purchase.user?.phone ? `+${purchase.user.phone}` : purchase.user?.email}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="sales-purchase-meta">
@@ -1233,16 +1374,47 @@ function PurchaseHistory({
                 <span className="sales-purchase-date">
                   {new Date(purchase.created_at).toLocaleDateString()}
                 </span>
-                <button
-                  className="sales-purchase-edit-btn"
-                  onClick={(e) => openEdit(purchase, e)}
-                  title="Edit purchase"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                  </svg>
-                </button>
+                <div className="sales-purchase-actions">
+                  <button
+                    className="sales-purchase-edit-btn"
+                    onClick={(e) => openEdit(purchase, e)}
+                    title="Edit purchase"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </button>
+                  {deletingId === purchase.id ? (
+                    <div className="sales-purchase-delete-confirm">
+                      <button
+                        className="admin-btn admin-btn-danger admin-btn-sm"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(purchase.id); }}
+                        disabled={deleteLoading}
+                      >
+                        {deleteLoading ? "..." : "Yes"}
+                      </button>
+                      <button
+                        className="admin-btn admin-btn-secondary admin-btn-sm"
+                        onClick={(e) => { e.stopPropagation(); setDeletingId(null); }}
+                        disabled={deleteLoading}
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="sales-purchase-delete-btn"
+                      onClick={(e) => { e.stopPropagation(); setDeletingId(purchase.id); }}
+                      title={purchase.bundle_id ? "Delete bundle purchase" : "Delete purchase"}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
