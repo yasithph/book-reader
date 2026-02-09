@@ -34,7 +34,8 @@ export async function GET() {
         payment_reference,
         users!purchases_user_id_fkey (
           phone,
-          display_name
+          display_name,
+          email
         ),
         books!purchases_book_id_fkey (
           title_en
@@ -85,6 +86,7 @@ export async function GET() {
       user: p.users ? {
         phone: p.users.phone,
         display_name: p.users.display_name,
+        email: p.users.email,
       } : null,
       book: p.books ? {
         title_en: p.books.title_en,
@@ -106,6 +108,7 @@ export async function GET() {
       user: p.users ? {
         phone: p.users.phone,
         display_name: p.users.display_name,
+        email: p.users.email,
       } : null,
       book: null,
       bundle: p.bundles ? {
