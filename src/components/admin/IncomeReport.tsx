@@ -25,6 +25,7 @@ interface PurchaseRecord {
 
 type Period =
   | "all-time"
+  | "today"
   | "this-week"
   | "last-week"
   | "this-month"
@@ -34,6 +35,7 @@ type Period =
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
   { value: "all-time", label: "All Time" },
+  { value: "today", label: "Today" },
   { value: "this-week", label: "This Week" },
   { value: "last-week", label: "Last Week" },
   { value: "this-month", label: "This Month" },
@@ -67,6 +69,11 @@ function getDateRange(period: Period): { start: Date; end: Date } {
       const start = new Date(2000, 0, 1);
       const end = new Date(now.getFullYear() + 1, 0, 1);
       return { start, end };
+    }
+    case "today": {
+      const end = new Date(today);
+      end.setDate(today.getDate() + 1);
+      return { start: today, end };
     }
     case "this-week": {
       const start = new Date(today);
@@ -113,6 +120,9 @@ function getBucketKey(
   if (period === "all-time") {
     return String(date.getFullYear());
   }
+  if (period === "today") {
+    return "Today";
+  }
   if (period === "this-week" || period === "last-week") {
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const dayOfWeek = date.getDay();
@@ -141,6 +151,9 @@ function getAllBuckets(period: Period, filtered?: PurchaseRecord[]): string[] {
     const buckets: string[] = [];
     for (let y = min; y <= max; y++) buckets.push(String(y));
     return buckets;
+  }
+  if (period === "today") {
+    return ["Today"];
   }
   if (period === "this-week" || period === "last-week") {
     return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
