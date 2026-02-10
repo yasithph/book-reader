@@ -19,7 +19,7 @@ export async function GET() {
     // Fetch all non-admin users
     const { data: users, error: usersError } = await supabase
       .from("users")
-      .select("id, created_at, last_active_at")
+      .select("id, created_at")
       .eq("role", "user");
 
     if (usersError) {

@@ -14,7 +14,6 @@ import {
 interface UserRecord {
   id: string;
   created_at: string;
-  last_active_at: string | null;
 }
 
 interface PurchaseRecord {
@@ -208,14 +207,7 @@ export default function UserReport() {
   const { start, end } = useMemo(() => getDateRange(period), [period]);
 
   // Summary stats — all computed from all-time data for consistency
-  const { totalUsers, activeUsers, avgBooks, avgSpend } = useMemo(() => {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const active = users.filter(
-      (u) => u.last_active_at && new Date(u.last_active_at) >= sevenDaysAgo
-    );
-
+  const { totalUsers, avgBooks, avgSpend } = useMemo(() => {
     // Avg books per user
     const userBookCounts: Record<string, Set<string>> = {};
     for (const p of purchases) {
@@ -243,7 +235,6 @@ export default function UserReport() {
 
     return {
       totalUsers: users.length,
-      activeUsers: active.length,
       avgBooks: avgBooksPerUser,
       avgSpend: avgSpendPerUser,
     };
@@ -267,27 +258,6 @@ export default function UserReport() {
     }
 
     return buckets.map((b) => ({ name: b, registrations: bucketMap[b] }));
-  }, [users, period, start, end]);
-
-  // Chart 2: Active Users
-  const activeChartData = useMemo(() => {
-    const filtered = users.filter((u) => {
-      if (!u.last_active_at) return false;
-      const d = new Date(u.last_active_at);
-      return d >= start && d < end;
-    });
-    const dates = filtered.map((u) => new Date(u.last_active_at!));
-    const buckets = getAllBuckets(period, dates);
-    const bucketMap: Record<string, number> = {};
-    for (const b of buckets) bucketMap[b] = 0;
-
-    for (const u of filtered) {
-      const d = new Date(u.last_active_at!);
-      const key = getBucketKey(d, period);
-      if (key in bucketMap) bucketMap[key]++;
-    }
-
-    return buckets.map((b) => ({ name: b, active: bucketMap[b] }));
   }, [users, period, start, end]);
 
   // Today's Most Read Books
@@ -373,7 +343,6 @@ export default function UserReport() {
   };
 
   const hasRegistrations = registrationChartData.some((d) => d.registrations > 0);
-  const hasActive = activeChartData.some((d) => d.active > 0);
 
   if (loading) {
     return (
@@ -402,14 +371,10 @@ export default function UserReport() {
       </div>
 
       {/* Summary Cards */}
-      <div className="report-summary-row-4">
+      <div className="report-summary-row">
         <div className="report-summary-card">
           <div className="report-summary-label">Total Users</div>
           <div className="report-summary-value">{totalUsers}</div>
-        </div>
-        <div className="report-summary-card">
-          <div className="report-summary-label">Active Users (7d)</div>
-          <div className="report-summary-value">{activeUsers}</div>
         </div>
         <div className="report-summary-card">
           <div className="report-summary-label">Avg Books/User</div>
@@ -462,50 +427,6 @@ export default function UserReport() {
         <div className="admin-card">
           <div className="admin-card-empty">
             <h3 className="admin-card-empty-title">No registrations in this period</h3>
-            <p className="admin-card-empty-text">Try selecting a different time period</p>
-          </div>
-        </div>
-      )}
-
-      {/* Chart 2: Active Users */}
-      <h3 className="report-section-title">Active Users</h3>
-      {hasActive ? (
-        <div className="report-chart-container">
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart
-              data={activeChartData}
-              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--admin-border)" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "var(--admin-text-muted)", fontSize: 12 }}
-                axisLine={{ stroke: "var(--admin-border)" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "var(--admin-text-muted)", fontSize: 12 }}
-                axisLine={{ stroke: "var(--admin-border)" }}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-              />
-              <Bar
-                dataKey="active"
-                name="Active Users"
-                fill={COLORS[1]}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <div className="admin-card">
-          <div className="admin-card-empty">
-            <h3 className="admin-card-empty-title">No active users in this period</h3>
             <p className="admin-card-empty-text">Try selecting a different time period</p>
           </div>
         </div>
