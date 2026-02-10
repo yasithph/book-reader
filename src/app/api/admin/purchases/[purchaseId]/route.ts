@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession, getCurrentUser } from "@/lib/auth";
+import { sendSMS } from "@/lib/textit/client";
+import { sendEmail } from "@/lib/resend/client";
 
 export async function PATCH(
   request: NextRequest,
@@ -130,6 +132,85 @@ export async function PATCH(
       { error: "Failed to update purchase" },
       { status: 500 }
     );
+  }
+
+  // Send notification to user on approval
+  if (action === "approve") {
+    try {
+      // Fetch user contact info
+      const { data: purchaseUser } = await supabase
+        .from("users")
+        .select("phone, email")
+        .eq("id", purchase.user_id)
+        .single();
+
+      if (purchaseUser) {
+        // Fetch book/bundle titles for this purchase
+        let itemTitles: string[] = [];
+        if (purchase.purchase_group_id) {
+          const { data: groupPurchases } = await supabase
+            .from("purchases")
+            .select("books!purchases_book_id_fkey(title_en), bundles(name_en)")
+            .eq("purchase_group_id", purchase.purchase_group_id);
+          const bundleName = (groupPurchases as any)?.[0]?.bundles?.name_en;
+          if (bundleName) {
+            itemTitles = [bundleName];
+          } else {
+            itemTitles = (groupPurchases || [])
+              .map((p: any) => p.books?.title_en)
+              .filter(Boolean);
+          }
+        } else {
+          const { data: bookData } = await supabase
+            .from("books")
+            .select("title_en")
+            .eq("id", purchase.book_id)
+            .single();
+          if (bookData?.title_en) itemTitles = [bookData.title_en];
+        }
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bookreader.lk";
+        const itemList = itemTitles.join(", ") || "your purchase";
+
+        if (purchaseUser.phone) {
+          await sendSMS({
+            to: purchaseUser.phone,
+            text: `Your purchase of ${itemList} has been approved on Meera! Login to start reading: ${appUrl}/auth`,
+            ref: `approval-${purchaseId}`,
+          });
+        } else if (purchaseUser.email) {
+          await sendEmail({
+            to: purchaseUser.email,
+            subject: "Your purchase has been approved!",
+            html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;margin:40px auto;background:#ffffff;border-radius:8px;overflow:hidden;">
+    <tr>
+      <td style="padding:32px 24px;text-align:center;">
+        <h1 style="margin:0 0 8px;font-size:20px;color:#1a1a1a;">Purchase Approved!</h1>
+        <p style="margin:0 0 16px;font-size:14px;color:#666;">ඔබේ මිලදී ගැනීම අනුමත කර ඇත!</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#333;">
+          Your purchase of <strong>${itemList}</strong> has been approved.
+        </p>
+        <a href="${appUrl}/auth" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;">
+          Sign In to Start Reading
+        </a>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`.trim(),
+            text: `Your purchase of ${itemList} has been approved on Meera! Login to start reading: ${appUrl}/auth`,
+          });
+        }
+      }
+    } catch (notifError) {
+      // Don't fail the approval if notification fails
+      console.error("Failed to send approval notification:", notifError);
+    }
   }
 
   return NextResponse.json({
