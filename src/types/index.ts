@@ -7,6 +7,7 @@ export interface User {
   id: string;
   phone: string;
   display_name: string | null;
+  avatar_url: string | null;
   role: UserRole;
   language_preference: LanguagePreference;
   is_first_login: boolean;
@@ -16,6 +17,11 @@ export interface User {
   created_at: string;
   updated_at: string;
   last_active_at: string;
+}
+
+export interface ReadingStats {
+  totalCompletedChapters: number;
+  totalCompletedBooks: number;
 }
 
 export interface Book {

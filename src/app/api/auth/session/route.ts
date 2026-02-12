@@ -19,6 +19,8 @@ export async function GET() {
           email: user.email,
           language: user.language,
           role: user.role,
+          display_name: user.display_name,
+          avatar_url: user.avatar_url,
           createdAt: user.created_at,
         }
       : null,

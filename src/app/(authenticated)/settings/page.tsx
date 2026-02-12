@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { LanguagePreference, ReaderTheme } from "@/types";
+import type { LanguagePreference, ReaderTheme, ReadingStats } from "@/types";
 import { BottomNav } from "@/components/layout/bottom-nav";
+import { ProfileCard } from "@/components/settings/profile-card";
+import { AvatarSelectionSheet } from "@/components/settings/avatar-selection-sheet";
+import { getAvatarUrl, PREDEFINED_AVATARS } from "@/lib/avatar";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 
@@ -13,6 +15,12 @@ export default function SettingsPage() {
   const { isInstallable, isInstalled, isIOS, promptInstall } = usePWAInstall();
   const { permission, isSubscribed, isLoading: isNotifLoading, subscribe, unsubscribe } = usePushNotifications();
   const [phone, setPhone] = React.useState<string | null>(null);
+  const [userId, setUserId] = React.useState<string | null>(null);
+  const [displayName, setDisplayName] = React.useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
+  const [stats, setStats] = React.useState<ReadingStats>({ totalCompletedChapters: 0, totalCompletedBooks: 0 });
+  const [isAvatarSheetOpen, setIsAvatarSheetOpen] = React.useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
   const [language, setLanguage] = React.useState<LanguagePreference>("si");
   const [theme, setTheme] = React.useState<ReaderTheme>("light");
   const [fontSize, setFontSize] = React.useState(18);
@@ -34,6 +42,18 @@ export default function SettingsPage() {
         if (sessionRes.ok) {
           const { user } = await sessionRes.json();
           setPhone(user?.phone || null);
+          setUserId(user?.id || null);
+          setDisplayName(user?.display_name || null);
+          setAvatarUrl(user?.avatar_url || null);
+        }
+
+        // Get reading stats
+        const statsRes = await fetch("/api/user/stats");
+        if (statsRes.ok) {
+          const { stats: readingStats } = await statsRes.json();
+          if (readingStats) {
+            setStats(readingStats);
+          }
         }
 
         // Get preferences
@@ -125,12 +145,52 @@ export default function SettingsPage() {
     }
   };
 
-  const formatPhone = (phone: string) => {
-    const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.startsWith("94") && cleaned.length === 11) {
-      return `+94 ${cleaned.slice(2, 4)} ${cleaned.slice(4, 7)} ${cleaned.slice(7)}`;
+  const handleNameChange = async (name: string) => {
+    setDisplayName(name);
+    try {
+      await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ display_name: name }),
+      });
+    } catch (error) {
+      console.error("Failed to update name:", error);
     }
-    return phone;
+  };
+
+  const handleAvatarSelect = async (url: string) => {
+    setAvatarUrl(url);
+    setIsAvatarSheetOpen(false);
+    try {
+      await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar_url: url }),
+      });
+    } catch (error) {
+      console.error("Failed to update avatar:", error);
+    }
+  };
+
+  const handleCustomUpload = async (file: File) => {
+    setIsUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/user/avatar", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const { avatar_url } = await res.json();
+        setAvatarUrl(avatar_url);
+        setIsAvatarSheetOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to upload avatar:", error);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const THEMES: { id: ReaderTheme; name: string; nameSi: string; bg: string; text: string }[] = [
@@ -160,25 +220,15 @@ export default function SettingsPage() {
         </header>
 
         <div className="kindle-settings-content">
-          {/* Account Section */}
-          <section className="kindle-settings-section">
-            <h2 className="kindle-settings-section-title">Account</h2>
-            <div className="kindle-settings-card">
-              <div className="kindle-settings-account">
-                <div className="kindle-settings-avatar">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                  </svg>
-                </div>
-                <div className="kindle-settings-account-info">
-                  <p className="kindle-settings-phone">
-                    {phone ? formatPhone(phone) : "Loading..."}
-                  </p>
-                  <p className="kindle-settings-phone-label">Phone number</p>
-                </div>
-              </div>
-            </div>
-          </section>
+          {/* Profile Card */}
+          <ProfileCard
+            avatarUrl={getAvatarUrl(avatarUrl, userId || "")}
+            displayName={displayName}
+            phone={phone}
+            stats={stats}
+            onAvatarClick={() => setIsAvatarSheetOpen(true)}
+            onNameChange={handleNameChange}
+          />
 
           {/* Language Section */}
           <section className="kindle-settings-section">
@@ -472,6 +522,16 @@ export default function SettingsPage() {
             </button>
           </section>
         </div>
+
+        <AvatarSelectionSheet
+          isOpen={isAvatarSheetOpen}
+          onClose={() => setIsAvatarSheetOpen(false)}
+          currentAvatarUrl={getAvatarUrl(avatarUrl, userId || "")}
+          predefinedAvatars={PREDEFINED_AVATARS}
+          onSelectAvatar={handleAvatarSelect}
+          onUploadFile={handleCustomUpload}
+          isUploading={isUploadingAvatar}
+        />
       </main>
 
       <BottomNav isLoggedIn={true} />

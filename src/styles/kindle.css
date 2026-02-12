@@ -1544,6 +1544,437 @@
   }
 }
 
+/* ========================================
+   PROFILE CARD
+   ======================================== */
+
+.kindle-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 16px;
+}
+
+.kindle-profile-avatar-btn {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  flex-shrink: 0;
+}
+
+.kindle-profile-avatar-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.kindle-profile-avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 26px;
+  height: 26px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  border: 2.5px solid #FFFFFF;
+}
+
+.kindle-profile-avatar-edit svg {
+  width: 12px;
+  height: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-profile-avatar-edit {
+    background: #E8E8E8;
+    color: #1a1a1a;
+    border-color: #1a1a1a;
+  }
+}
+
+.kindle-profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.kindle-profile-name-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.kindle-profile-name {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kindle-profile-name-placeholder {
+  color: #9a9a9a;
+  font-weight: 500;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-profile-name {
+    color: #F5F5F5;
+  }
+
+  .kindle-profile-name-placeholder {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-profile-name-edit-icon {
+  width: 13px;
+  height: 13px;
+  color: #c0c0c0;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-profile-name-edit-icon {
+    color: #555555;
+  }
+}
+
+.kindle-profile-name-input {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+  background: none;
+  border: none;
+  border-bottom: 1.5px solid #722F37;
+  outline: none;
+  padding: 0 0 2px;
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-profile-name-input {
+    color: #F5F5F5;
+    border-bottom-color: #C9A227;
+  }
+}
+
+.kindle-profile-phone {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: #9a9a9a;
+  margin-top: 3px;
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-profile-phone {
+    color: #6b6b6b;
+  }
+}
+
+/* Stats pills */
+.kindle-profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.kindle-profile-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #F5F5F5;
+  border-radius: 20px;
+  font-family: var(--font-sinhala);
+  font-size: 0.8125rem;
+  color: #6b6b6b;
+}
+
+.kindle-profile-stat svg {
+  width: 16px;
+  height: 16px;
+  color: #1a1a1a;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-profile-stat {
+    background: #242424;
+    color: #9a9a9a;
+  }
+
+  .kindle-profile-stat svg {
+    color: #E8E8E8;
+    opacity: 0.4;
+  }
+}
+
+/* ========================================
+   AVATAR SELECTION SHEET
+   ======================================== */
+
+.kindle-avatar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.kindle-avatar-sheet {
+  width: 100%;
+  max-width: 32rem;
+  max-height: 80vh;
+  background: #FFFFFF;
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-sheet {
+    background: #1a1a1a;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.kindle-avatar-drag-handle {
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 4px;
+  cursor: grab;
+}
+
+.kindle-avatar-drag-handle:active {
+  cursor: grabbing;
+}
+
+.kindle-avatar-drag-bar {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: #d4d4d4;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-drag-bar {
+    background: #444444;
+  }
+}
+
+.kindle-avatar-header {
+  padding: 8px 20px 16px;
+}
+
+.kindle-avatar-title {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-title {
+    color: #F5F5F5;
+  }
+}
+
+.kindle-avatar-subtitle {
+  font-size: 0.75rem;
+  color: #9a9a9a;
+  margin-top: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-subtitle {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-avatar-grid-container {
+  overflow-y: auto;
+  padding: 0 20px 24px;
+  max-height: calc(80vh - 100px);
+}
+
+.kindle-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 400px) {
+  .kindle-avatar-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 520px) {
+  .kindle-avatar-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.kindle-avatar-option {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  background: #f5f5f5;
+  overflow: hidden;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.kindle-avatar-option:hover {
+  transform: scale(1.05);
+}
+
+.kindle-avatar-option-selected {
+  border-color: #722F37;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-option {
+    background: #2d2d2d;
+  }
+
+  .kindle-avatar-option-selected {
+    border-color: #C9A227;
+  }
+}
+
+.kindle-avatar-option-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.kindle-avatar-check {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+}
+
+.kindle-avatar-check svg {
+  width: 28px;
+  height: 28px;
+  color: #FFFFFF;
+}
+
+/* Upload button */
+.kindle-avatar-upload-btn {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2.5px dashed #d4d4d4;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.kindle-avatar-upload-btn:hover {
+  border-color: #9a9a9a;
+  background: #fafafa;
+}
+
+.kindle-avatar-upload-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-upload-btn {
+    border-color: #444444;
+  }
+
+  .kindle-avatar-upload-btn:hover {
+    border-color: #6b6b6b;
+    background: #242424;
+  }
+}
+
+.kindle-avatar-upload-icon {
+  width: 24px;
+  height: 24px;
+  color: #9a9a9a;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-upload-icon {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-avatar-upload-label {
+  font-family: var(--font-sans);
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: #9a9a9a;
+  letter-spacing: 0.02em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-upload-label {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-avatar-upload-spinner {
+  width: 24px;
+  height: 24px;
+  color: #9a9a9a;
+  animation: kindle-spin 1s linear infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .kindle-avatar-upload-spinner {
+    color: #6b6b6b;
+  }
+}
+
+.kindle-avatar-file-input {
+  display: none;
+}
+
 /* Language Grid */
 .kindle-settings-language-grid {
   display: grid;
