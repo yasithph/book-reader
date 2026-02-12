@@ -328,6 +328,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           chapterNumber: currentChapter.chapter_number,
           chapterTitleEn: currentChapter.title_en || undefined,
           chapterTitleSi: currentChapter.title_si || undefined,
+          isUpdate: currentChapter.is_published,
         }).catch((err) => {
           console.error("Failed to send push notifications:", err);
           // Don't fail the API call if notifications fail

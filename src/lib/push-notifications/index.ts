@@ -26,6 +26,7 @@ interface ChapterNotificationData {
   chapterNumber: number;
   chapterTitleEn?: string;
   chapterTitleSi?: string;
+  isUpdate?: boolean;
 }
 
 /**
@@ -201,7 +202,9 @@ function formatChapterNotification(
     ? `Chapter ${data.chapterNumber}`
     : `පරිච්ඡේදය ${data.chapterNumber}`;
 
-  const title = language === "en" ? "New Chapter Available!" : "නව පරිච්ඡේදයක්!";
+  const title = data.isUpdate
+    ? (language === "en" ? "Chapter Updated!" : "පරිච්ඡේදය යාවත්කාලීන විය!")
+    : (language === "en" ? "New Chapter Available!" : "නව පරිච්ඡේදයක්!");
 
   const body = `${bookTitle} - ${chapterLabel}`;
 
