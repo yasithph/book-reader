@@ -28,6 +28,7 @@ export async function GET() {
         created_at,
         last_active_at,
         purchases:purchases!purchases_user_id_fkey (
+          status,
           amount_lkr,
           purchase_group_id,
           bundle_id,

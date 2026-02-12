@@ -31,6 +31,10 @@ interface User {
   email: string | null;
   display_name: string | null;
   created_at: string;
+  purchases?: {
+    status: string;
+    book: { id: string; title_en: string } | null;
+  }[];
 }
 
 interface Purchase {
@@ -241,6 +245,17 @@ export default function AdminSalesPage() {
     const normalizedEmail = email.toLowerCase().trim();
     return users.find((u) => u.email === normalizedEmail) || null;
   }, [emailValid, email, users]);
+
+  // Compute owned book IDs from selected user's approved purchases
+  const ownedBookIds = useMemo(() => {
+    const user = sellerMode === "existing-user" ? selectedUser : null;
+    if (!user?.purchases) return new Set<string>();
+    return new Set(
+      user.purchases
+        .filter((p) => p.status === "approved" && p.book?.id)
+        .map((p) => p.book!.id)
+    );
+  }, [sellerMode, selectedUser]);
 
   // Check if form is valid
   const isFormValid = useMemo(() => {
@@ -807,6 +822,7 @@ export default function AdminSalesPage() {
                       ) : (
                         filteredBooks.map((book) => {
                           const isSelected = selectedBooks.some((b) => b.id === book.id);
+                          const isPurchased = ownedBookIds.has(book.id);
                           return (
                             <div
                               key={book.id}
@@ -830,6 +846,9 @@ export default function AdminSalesPage() {
                               <div className="sales-book-info">
                                 <div className="sales-book-title">{book.title_en}</div>
                                 <div className="sales-book-author">{book.author_en}</div>
+                                {isPurchased && (
+                                  <span className="sales-book-owned-badge">Purchased</span>
+                                )}
                               </div>
                               <div className="sales-book-price">
                                 Rs. {book.price_lkr.toLocaleString()}
@@ -850,6 +869,7 @@ export default function AdminSalesPage() {
                     ) : (
                       bundles.map((bundle) => {
                         const isSelected = selectedBundle?.id === bundle.id;
+                        const ownedCount = bundle.books.filter((b) => ownedBookIds.has(b.id)).length;
                         return (
                           <div
                             key={bundle.id}
@@ -863,6 +883,9 @@ export default function AdminSalesPage() {
                               <div className="sales-bundle-name">{bundle.name_en}</div>
                               <div className="sales-bundle-books">
                                 {bundle.books.length} books included
+                                {ownedCount > 0 && (
+                                  <span className="sales-bundle-owned"> ({ownedCount} already purchased)</span>
+                                )}
                               </div>
                             </div>
                             <div className="sales-bundle-pricing">

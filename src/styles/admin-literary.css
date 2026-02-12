@@ -4151,6 +4151,22 @@
   font-weight: 500;
 }
 
+.sales-book-owned-badge {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--admin-success);
+  background: rgba(22, 163, 74, 0.1);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  margin-top: 0.25rem;
+}
+
+.sales-bundle-owned {
+  color: var(--admin-success);
+  font-weight: 500;
+}
+
 /* Selected Items / Order Summary */
 .sales-selected-list {
   display: flex;
