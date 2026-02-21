@@ -260,24 +260,20 @@ function PhoneStep({
   const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Detect browser autofill that bypasses React onChange
+  // Detect browser autofill that bypasses React onChange.
+  // Checks periodically while phone state is empty, since some
+  // Android browsers don't fire onChange reliably for type="tel".
   React.useEffect(() => {
-    const timer = setTimeout(() => {
+    if (phone !== "") return;
+    const interval = setInterval(() => {
       const input = inputRef.current;
-      if (input && input.value && phone === "") {
+      if (input && input.value) {
         const digits = parsePhoneDigits(input.value);
         if (digits.length > 0) setPhone(digits);
       }
-    }, 600);
-    return () => clearTimeout(timer);
+    }, 500);
+    return () => clearInterval(interval);
   }, [phone]);
-
-  const formatDisplayPhone = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 5) return `${digits.slice(0, 2)} ${digits.slice(2)}`;
-    return `${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 9)}`;
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(parsePhoneDigits(e.target.value));
@@ -309,8 +305,8 @@ function PhoneStep({
             ref={inputRef}
             type="tel"
             inputMode="numeric"
-            placeholder="7X XXX XXXX"
-            value={formatDisplayPhone(phone)}
+            placeholder="7XXXXXXXXX"
+            value={phone}
             onChange={handleChange}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
