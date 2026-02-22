@@ -25,6 +25,7 @@ export async function GET() {
         phone,
         email,
         display_name,
+        avatar_url,
         created_at,
         last_active_at,
         purchases:purchases!purchases_user_id_fkey (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import UserReport from "@/components/admin/UserReport";
+import { getAvatarUrl } from "@/lib/avatar";
 
 type ViewMode = "users" | "reports";
 
@@ -10,6 +11,7 @@ interface UserWithBooks {
   phone: string | null;
   email: string | null;
   display_name: string | null;
+  avatar_url: string | null;
   created_at: string;
   last_active_at: string | null;
   purchases: Array<{
@@ -268,8 +270,7 @@ export default function AdminUsersPage() {
               return (
                 <div key={user.id} className="admin-user-card">
                   <div className="admin-user-avatar">
-                    {user.display_name?.[0]?.toUpperCase() ||
-                      user.phone?.slice(-2) || user.email?.[0]?.toUpperCase() || "?"}
+                    <img src={getAvatarUrl(user.avatar_url, user.id)} alt="" />
                   </div>
                   <div className="admin-user-info">
                     <div className="admin-user-name">
@@ -364,24 +365,17 @@ export default function AdminUsersPage() {
                       <tr key={user.id}>
                         <td>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                            <div
+                            <img
+                              src={getAvatarUrl(user.avatar_url, user.id)}
+                              alt=""
                               style={{
                                 width: "40px",
                                 height: "40px",
-                                background: "var(--admin-gold)",
                                 borderRadius: "50%",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "white",
-                                fontWeight: 600,
-                                fontSize: "0.875rem",
+                                objectFit: "cover",
                                 flexShrink: 0,
                               }}
-                            >
-                              {user.display_name?.[0]?.toUpperCase() ||
-                                user.phone?.slice(-2) || user.email?.[0]?.toUpperCase() || "?"}
-                            </div>
+                            />
                             <div>
                               <div style={{ fontWeight: 500 }}>
                                 {user.display_name || "No name"}

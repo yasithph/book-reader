@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { formatPhoneNumber, isValidSriLankanPhone } from "@/lib/textit/client";
 import IncomeReport from "@/components/admin/IncomeReport";
+import { getAvatarUrl } from "@/lib/avatar";
 
 interface Book {
   id: string;
@@ -30,6 +31,7 @@ interface User {
   phone: string | null;
   email: string | null;
   display_name: string | null;
+  avatar_url: string | null;
   created_at: string;
   purchases?: {
     status: string;
@@ -706,7 +708,7 @@ export default function AdminSalesPage() {
                       <div className="sales-selected-user">
                         <div className="sales-selected-user-info">
                           <div className="sales-selected-user-avatar">
-                            {selectedUser.display_name?.[0] || selectedUser.phone?.slice(-2) || selectedUser.email?.[0]?.toUpperCase() || "?"}
+                            <img src={getAvatarUrl(selectedUser.avatar_url, selectedUser.id)} alt="" />
                           </div>
                           <div>
                             <div className="sales-selected-user-name">
@@ -742,7 +744,7 @@ export default function AdminSalesPage() {
                               onClick={() => setSelectedUser(user)}
                             >
                               <div className="sales-user-avatar">
-                                {user.display_name?.[0] || user.phone?.slice(-2) || user.email?.[0]?.toUpperCase() || "?"}
+                                <img src={getAvatarUrl(user.avatar_url, user.id)} alt="" />
                               </div>
                               <div className="sales-user-info">
                                 <div className="sales-user-name">
