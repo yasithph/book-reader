@@ -174,13 +174,9 @@ body {
 }
 
 .reader-content p {
-  margin-bottom: 1.5em;
-  text-indent: 2em;
+  margin-bottom: 0.75em;
 }
 
-.reader-content p:first-child {
-  text-indent: 0;
-}
 
 .reader-content .secondary {
   color: var(--reader-secondary);
@@ -192,7 +188,6 @@ body {
   font-weight: 600;
   margin-top: 2em;
   margin-bottom: 0.75em;
-  text-indent: 0;
 }
 
 .reader-content h3 {
@@ -201,7 +196,6 @@ body {
   font-weight: 600;
   margin-top: 1.5em;
   margin-bottom: 0.5em;
-  text-indent: 0;
 }
 
 .reader-content strong {
@@ -223,11 +217,6 @@ body {
   margin: 1.5em 0;
   opacity: 0.85;
   font-style: italic;
-  text-indent: 0;
-}
-
-.reader-content blockquote p {
-  text-indent: 0;
 }
 
 .reader-content ul,
@@ -238,7 +227,6 @@ body {
 
 .reader-content li {
   margin-bottom: 0.5em;
-  text-indent: 0;
 }
 
 .reader-content hr {

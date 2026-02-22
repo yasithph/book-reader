@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="si" suppressHydrationWarning style={{ colorScheme: 'light' }}>
+    <html lang="si" suppressHydrationWarning style={{ colorScheme: 'light', overscrollBehaviorX: 'none' }}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />

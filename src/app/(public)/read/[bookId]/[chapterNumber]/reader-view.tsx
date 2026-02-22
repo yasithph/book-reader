@@ -57,7 +57,7 @@ function formatChapterContent(content: string): string {
       .replace(/>/g, "&gt;");
     html = escaped
       .split("\n\n")
-      .map((p) => `<p style="margin-bottom: 1.5em; text-indent: 2em;">${p.replace(/\n/g, "<br>")}</p>`)
+      .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
       .join("");
   }
 
