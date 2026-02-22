@@ -108,6 +108,22 @@
       "downloading": "Downloading...",
       "download": "Download for offline",
       "remove": "Remove download"
+    },
+    "social": {
+      "like": "Like",
+      "unlike": "Unlike",
+      "comments": "Comments",
+      "commentCount": "{count} comment",
+      "commentCountPlural": "{count} comments",
+      "reply": "Reply",
+      "delete": "Delete",
+      "confirmDelete": "Confirm",
+      "cancelDelete": "Cancel",
+      "writeComment": "Write a comment...",
+      "writeReply": "Write a reply...",
+      "noComments": "No comments yet. Be the first to share your thoughts!",
+      "signInPrompt": "Sign in to join the conversation",
+      "commentRemoved": "This comment has been removed"
     }
   },
   "library": {

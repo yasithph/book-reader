@@ -108,6 +108,22 @@
       "downloading": "බාගත වෙමින්...",
       "download": "ඔෆ්ලයින් සඳහා බාගන්න",
       "remove": "බාගැනීම ඉවත් කරන්න"
+    },
+    "social": {
+      "like": "කැමතියි",
+      "unlike": "අකමැතියි",
+      "comments": "අදහස්",
+      "commentCount": "අදහස් {count}ක්",
+      "commentCountPlural": "අදහස් {count}ක්",
+      "reply": "පිළිතුරු",
+      "delete": "මකන්න",
+      "confirmDelete": "තහවුරු කරන්න",
+      "cancelDelete": "අවලංගු කරන්න",
+      "writeComment": "අදහසක් ලියන්න...",
+      "writeReply": "පිළිතුරක් ලියන්න...",
+      "noComments": "තවම අදහස් නැත. ඔබේ අදහස් බෙදා ගන්න!",
+      "signInPrompt": "සංවාදයට සම්බන්ධ වීමට පිවිසෙන්න",
+      "commentRemoved": "මෙම අදහස ඉවත් කර ඇත"
     }
   },
   "library": {

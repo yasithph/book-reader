@@ -4,3 +4,4 @@ export { useDownloadManager, useOnlineStatus } from "./use-download-manager";
 export { usePWAInstall } from "./use-pwa-install";
 export { useServiceWorker } from "./use-service-worker";
 export { usePushNotifications } from "./use-push-notifications";
+export { useChapterSocial } from "./use-chapter-social";

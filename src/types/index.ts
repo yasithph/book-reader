@@ -170,3 +170,53 @@ export interface ProgressUpdate {
   timestamp: Date;
   synced: boolean;
 }
+
+// Social features
+export interface ChapterLike {
+  id: string;
+  user_id: string;
+  chapter_id: string;
+  created_at: string;
+}
+
+export interface ChapterComment {
+  id: string;
+  chapter_id: string;
+  user_id: string;
+  parent_id: string | null;
+  content: string;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommentLike {
+  id: string;
+  comment_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface CommentWithAuthor {
+  id: string;
+  chapter_id: string;
+  user_id: string;
+  parent_id: string | null;
+  content: string;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+  author: {
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+  hearts_count: number;
+  user_has_hearted: boolean;
+  replies: CommentWithAuthor[];
+}
+
+export interface ChapterSocialData {
+  likes_count: number;
+  user_has_liked: boolean;
+  comments_count: number;
+}

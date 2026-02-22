@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import DOMPurify from "dompurify";
 import type { Book, Chapter, ReaderTheme } from "@/types";
-import { SettingsSheet, ChaptersSheet } from "@/components/reader";
+import { SettingsSheet, ChaptersSheet, ChapterSocialBar } from "@/components/reader";
 import { useReadingProgress, useReaderSettings, useDownloadManager, useOnlineStatus, usePWAInstall } from "@/hooks";
 import {
   getOfflineBook,
@@ -32,6 +32,7 @@ interface ReaderViewProps {
   isPreviewMode: boolean;
   previewChaptersRemaining: number;
   isLoggedIn?: boolean;
+  userId?: string;
   hasPendingPurchase?: boolean;
 }
 
@@ -81,6 +82,7 @@ export function ReaderView({
   isPreviewMode,
   previewChaptersRemaining,
   isLoggedIn = false,
+  userId,
   hasPendingPurchase = false,
 }: ReaderViewProps) {
   const router = useRouter();
@@ -293,6 +295,8 @@ export function ReaderView({
   // Handle keyboard navigation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "TEXTAREA" || tag === "INPUT") return; // Don't capture when typing
       if (showSettings || showChapters) return; // Don't navigate when sheets are open
 
       if (e.key === "ArrowLeft") {
@@ -653,6 +657,14 @@ export function ReaderView({
           dangerouslySetInnerHTML={{
             __html: formatChapterContent(activeChapter.content),
           }}
+        />
+
+        {/* Social: likes + comments */}
+        <ChapterSocialBar
+          chapterId={activeChapter.id}
+          isLoggedIn={!!isLoggedIn}
+          currentUserId={userId}
+          theme={settings.theme}
         />
 
         {/* End of chapter - minimal */}

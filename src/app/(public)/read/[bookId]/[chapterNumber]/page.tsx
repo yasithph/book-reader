@@ -160,6 +160,7 @@ export default async function ReaderPage({ params }: ReaderPageProps) {
       isPreviewMode={!hasFullAccess && !book.is_free}
       previewChaptersRemaining={book.free_preview_chapters - chapterNum}
       isLoggedIn={!!session}
+      userId={session?.userId}
       hasPendingPurchase={hasPendingPurchase}
     />
   );
