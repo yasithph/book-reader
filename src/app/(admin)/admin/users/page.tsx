@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import UserReport from "@/components/admin/UserReport";
 import { getAvatarUrl } from "@/lib/avatar";
 
@@ -42,77 +42,78 @@ function calcTotalSpent(purchases: UserWithBooks["purchases"]): number {
   return total;
 }
 
-function matchesDateFilter(createdAt: string, filter: DateFilter): boolean {
-  if (filter === "all") return true;
-  const date = new Date(createdAt);
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  switch (filter) {
-    case "today":
-      return date >= startOfToday;
-    case "yesterday": {
-      const startOfYesterday = new Date(startOfToday);
-      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-      return date >= startOfYesterday && date < startOfToday;
-    }
-    case "7d": {
-      const weekAgo = new Date(startOfToday);
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return date >= weekAgo;
-    }
-    case "30d": {
-      const monthAgo = new Date(startOfToday);
-      monthAgo.setDate(monthAgo.getDate() - 30);
-      return date >= monthAgo;
-    }
-    default:
-      return true;
-  }
-}
-
 export default function AdminUsersPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("users");
   const [users, setUsers] = useState<UserWithBooks[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 50;
   const [editingUser, setEditingUser] = useState<UserWithBooks | null>(null);
   const [editForm, setEditForm] = useState({ display_name: "", phone: "", email: "" });
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (p: number, s: string, df: DateFilter) => {
+    setFetching(true);
     try {
-      const res = await fetch("/api/admin/users");
+      const params = new URLSearchParams({
+        page: String(p),
+        limit: String(limit),
+      });
+      if (s) params.set("search", s);
+      if (df !== "all") params.set("dateFilter", df);
+
+      const res = await fetch(`/api/admin/users?${params}`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       setUsers(data.users || []);
+      setTotal(data.total || 0);
+      setPage(data.page || 1);
     } catch (err) {
       console.error("Error fetching users:", err);
     } finally {
       setLoading(false);
+      setFetching(false);
     }
+  }, []);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchUsers(1, "", "all");
+  }, [fetchUsers]);
+
+  // Debounced search
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      fetchUsers(1, value, dateFilter);
+    }, 300);
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  // Date filter change — cancel any pending debounced search to prevent stale fetch
+  const handleDateFilterChange = (df: DateFilter) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    setDateFilter(df);
+    setPage(1);
+    fetchUsers(1, search, df);
+  };
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
-      // Search filter
-      if (search) {
-        const q = search.toLowerCase();
-        const matchesName = user.display_name?.toLowerCase().includes(q);
-        const matchesPhone = user.phone?.includes(q);
-        const matchesEmail = user.email?.toLowerCase().includes(q);
-        if (!matchesName && !matchesPhone && !matchesEmail) return false;
-      }
-      // Date filter
-      return matchesDateFilter(user.created_at, dateFilter);
-    });
-  }, [users, search, dateFilter]);
+  // Page change
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    fetchUsers(newPage, search, dateFilter);
+  };
+
+  const totalPages = Math.ceil(total / limit);
 
   const openEdit = (user: UserWithBooks) => {
     setEditingUser(user);
@@ -144,7 +145,7 @@ export default function AdminUsersPage() {
         return;
       }
       setEditingUser(null);
-      await fetchUsers();
+      await fetchUsers(page, search, dateFilter);
     } catch {
       setEditError("Failed to update user");
     } finally {
@@ -164,7 +165,7 @@ export default function AdminUsersPage() {
         return;
       }
       setDeletingId(null);
-      await fetchUsers();
+      await fetchUsers(page, search, dateFilter);
     } catch {
       alert("Failed to delete user");
     } finally {
@@ -226,8 +227,8 @@ export default function AdminUsersPage() {
       <div className="admin-page-header">
         <h1 className="admin-page-title">Users</h1>
         <p className="admin-page-subtitle">
-          {filteredUsers.length} of {users.length} registered{" "}
-          {users.length === 1 ? "reader" : "readers"}
+          {total} registered {total === 1 ? "reader" : "readers"}
+          {(search || dateFilter !== "all") && ` (filtered)`}
         </p>
       </div>
 
@@ -240,10 +241,15 @@ export default function AdminUsersPage() {
         <input
           type="text"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search by name, phone, or email..."
           className="admin-user-search-input"
         />
+        {fetching && (
+          <div style={{ position: "absolute", right: "1rem", top: "50%", transform: "translateY(-50%)" }}>
+            <div className="admin-spinner-sm" />
+          </div>
+        )}
       </div>
 
       {/* Date Filter Chips */}
@@ -252,18 +258,18 @@ export default function AdminUsersPage() {
           <button
             key={opt.value}
             className={`admin-user-filter-chip${dateFilter === opt.value ? " active" : ""}`}
-            onClick={() => setDateFilter(opt.value)}
+            onClick={() => handleDateFilterChange(opt.value)}
           >
             {opt.label}
           </button>
         ))}
       </div>
 
-      {filteredUsers.length > 0 ? (
+      {users.length > 0 ? (
         <>
           {/* Mobile Card View */}
-          <div className="admin-user-list admin-stagger">
-            {filteredUsers.map((user) => {
+          <div className={`admin-user-list admin-stagger${fetching ? " admin-fetching" : ""}`}>
+            {users.map((user) => {
               const totalSpent = calcTotalSpent(user.purchases);
               const bookCount = user.purchases?.length || 0;
 
@@ -343,7 +349,7 @@ export default function AdminUsersPage() {
           </div>
 
           {/* Desktop Table View */}
-          <div className="admin-card admin-hidden-mobile">
+          <div className={`admin-card admin-hidden-mobile${fetching ? " admin-fetching" : ""}`}>
             <div className="admin-table-wrapper">
               <table className="admin-table">
                 <thead>
@@ -357,7 +363,7 @@ export default function AdminUsersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user) => {
+                  {users.map((user) => {
                     const totalSpent = calcTotalSpent(user.purchases);
                     const bookCount = user.purchases?.length || 0;
 
@@ -498,6 +504,35 @@ export default function AdminUsersPage() {
               </table>
             </div>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="admin-pagination">
+              <button
+                className="admin-pagination-btn"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page <= 1 || fetching}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                Previous
+              </button>
+              <span className="admin-pagination-info">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                className="admin-pagination-btn"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page >= totalPages || fetching}
+              >
+                Next
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <div className="admin-card">

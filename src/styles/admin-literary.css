@@ -6625,6 +6625,7 @@
 
 /* Search Bar */
 .admin-user-search {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -6880,4 +6881,70 @@
   .report-summary-row-4 {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+/* Admin Pagination */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding: 0.75rem 0;
+}
+
+.admin-pagination-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-elevated);
+  color: var(--admin-text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-pagination-btn:hover:not(:disabled) {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-pagination-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.admin-pagination-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-pagination-info {
+  font-size: 0.875rem;
+  color: var(--admin-text-muted);
+  min-width: 6rem;
+  text-align: center;
+}
+
+/* Fetching state */
+.admin-fetching {
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.admin-spinner-sm {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--admin-border);
+  border-top-color: var(--admin-accent);
+  border-radius: 50%;
+  animation: admin-spin 0.6s linear infinite;
+}
+
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
 }
