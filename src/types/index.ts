@@ -22,6 +22,22 @@ export interface User {
 export interface ReadingStats {
   totalCompletedChapters: number;
   totalCompletedBooks: number;
+  isTopReader?: boolean;
+  topReaderRank?: number;
+  engagementScore?: number;
+  badgeNotified?: boolean;
+}
+
+export interface TopReader {
+  user_id: string;
+  engagement_score: number;
+  rank: number;
+  chapters_completed: number;
+  comments_count: number;
+  chapter_likes_count: number;
+  comment_likes_count: number;
+  refreshed_at: string;
+  badge_notified: boolean;
 }
 
 export interface Book {
@@ -209,6 +225,7 @@ export interface CommentWithAuthor {
   author: {
     display_name: string | null;
     avatar_url: string | null;
+    is_top_reader?: boolean;
   };
   hearts_count: number;
   user_has_hearted: boolean;

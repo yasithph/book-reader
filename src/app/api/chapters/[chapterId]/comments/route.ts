@@ -55,14 +55,28 @@ export async function GET(
     }
   }
 
+  // Check which commenters are top readers
+  const commenterIds = [...new Set((allComments || []).map((c) => c.user_id))];
+  let topReaderSet = new Set<string>();
+  if (commenterIds.length > 0) {
+    const { data: topReaderData } = await supabase
+      .from("top_readers")
+      .select("user_id")
+      .in("user_id", commenterIds);
+    if (topReaderData) {
+      topReaderSet = new Set(topReaderData.map((tr) => tr.user_id));
+    }
+  }
+
   // Build comment tree: top-level comments with nested replies
   const commentMap = new Map<string, typeof allComments>();
   const topLevel: typeof allComments = [];
 
   for (const comment of allComments || []) {
+    const authorData = comment.users || { display_name: null, avatar_url: null };
     const formatted = {
       ...comment,
-      author: comment.users || { display_name: null, avatar_url: null },
+      author: { ...authorData, is_top_reader: topReaderSet.has(comment.user_id) },
       hearts_count: heartCounts[comment.id] || 0,
       user_has_hearted: userHearts.has(comment.id),
       replies: [] as typeof allComments,
@@ -151,9 +165,17 @@ export async function POST(
     return NextResponse.json({ error: "Failed to create comment" }, { status: 500 });
   }
 
+  // Check if the posting user is a top reader
+  const { data: posterTopReader } = await supabase
+    .from("top_readers")
+    .select("user_id")
+    .eq("user_id", session.userId)
+    .maybeSingle();
+
+  const authorData = comment.users || { display_name: null, avatar_url: null };
   const formatted = {
     ...comment,
-    author: comment.users || { display_name: null, avatar_url: null },
+    author: { ...authorData, is_top_reader: !!posterTopReader },
     hearts_count: 0,
     user_has_hearted: false,
     replies: [],

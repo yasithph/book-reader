@@ -44,6 +44,16 @@ export function BottomNav({ isLoggedIn }: BottomNavProps) {
       </Link>
 
       <Link
+        href="/leaderboard"
+        className={`kindle-nav-tab ${isActive("/leaderboard") ? "kindle-nav-tab-active" : ""}`}
+      >
+        <svg className="kindle-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-4.5A3.375 3.375 0 0019.875 10.875 3.375 3.375 0 0016.5 7.5h0V18.75zm-9 0V7.5m0 0h0A3.375 3.375 0 004.125 10.875 3.375 3.375 0 007.5 14.25V18.75m0-11.25h9" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="kindle-nav-label">Top 20</span>
+      </Link>
+
+      <Link
         href="/settings"
         className={`kindle-nav-tab ${isActive("/settings") ? "kindle-nav-tab-active" : ""}`}
       >

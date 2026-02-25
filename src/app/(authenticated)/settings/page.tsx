@@ -9,6 +9,7 @@ import { AvatarSelectionSheet } from "@/components/settings/avatar-selection-she
 import { getAvatarUrl, PREDEFINED_AVATARS } from "@/lib/avatar";
 import { usePWAInstall } from "@/hooks/use-pwa-install";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { TopReaderPopup } from "@/components/ui/top-reader-popup";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function SettingsPage() {
   const [saveMessage, setSaveMessage] = React.useState<string | null>(null);
   const [hasChanges, setHasChanges] = React.useState(false);
   const [isInstalling, setIsInstalling] = React.useState(false);
+  const [showBadgePopup, setShowBadgePopup] = React.useState(false);
 
   // Track initial values for change detection
   const initialValues = React.useRef({ language: "si", theme: "light", fontSize: 18 });
@@ -54,6 +56,9 @@ export default function SettingsPage() {
           const { stats: readingStats } = await statsRes.json();
           if (readingStats) {
             setStats(readingStats);
+            if (readingStats.isTopReader && readingStats.badgeNotified === false) {
+              setShowBadgePopup(true);
+            }
           }
         }
 
@@ -266,6 +271,8 @@ export default function SettingsPage() {
             displayName={displayName}
             phone={phone}
             stats={stats}
+            isTopReader={stats.isTopReader}
+            topReaderRank={stats.topReaderRank}
             onAvatarClick={() => { setUploadError(null); setIsAvatarSheetOpen(true); }}
             onNameChange={handleNameChange}
           />
@@ -562,6 +569,16 @@ export default function SettingsPage() {
             </button>
           </section>
         </div>
+
+        {showBadgePopup && stats.topReaderRank && (
+          <TopReaderPopup
+            rank={stats.topReaderRank}
+            onDismiss={() => {
+              setShowBadgePopup(false);
+              fetch("/api/user/badge-notified", { method: "POST" }).catch(() => {});
+            }}
+          />
+        )}
 
         <AvatarSelectionSheet
           isOpen={isAvatarSheetOpen}

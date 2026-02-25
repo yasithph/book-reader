@@ -6,6 +6,7 @@ import { timeAgo } from "@/lib/utils/time-ago";
 import { getAvatarUrl } from "@/lib/avatar";
 import { LikeButton } from "./like-button";
 import { CommentInput } from "./comment-input";
+import { TopReaderBadge } from "@/components/ui/top-reader-badge";
 
 interface CommentCardProps {
   comment: CommentWithAuthor;
@@ -85,6 +86,7 @@ export function CommentCard({
             <span className="text-xs font-medium" style={{ color: themeColors.text }}>
               {comment.author.display_name || "Reader"}
             </span>
+            {comment.author.is_top_reader && <TopReaderBadge size="sm" />}
             <span className="text-xs" style={{ color: themeColors.secondary }}>
               {timeAgo(comment.created_at)}
             </span>

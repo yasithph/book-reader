@@ -10,6 +10,21 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { getAvatarUrl } from "@/lib/avatar";
+
+interface AdminTopReader {
+  user_id: string;
+  engagement_score: number;
+  rank: number;
+  chapters_completed: number;
+  comments_count: number;
+  chapter_likes_count: number;
+  comment_likes_count: number;
+  refreshed_at: string;
+  display_name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+}
 
 interface UserRecord {
   id: string;
@@ -178,17 +193,27 @@ export default function UserReport() {
   const [books, setBooks] = useState<BookRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("this-month");
+  const [adminTopReaders, setAdminTopReaders] = useState<AdminTopReader[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("/api/admin/reports/users");
-        if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
-        setUsers(data.users || []);
-        setPurchases(data.purchases || []);
-        setReadingProgress(data.readingProgress || []);
-        setBooks(data.books || []);
+        const [res, topReadersRes] = await Promise.all([
+          fetch("/api/admin/reports/users"),
+          fetch("/api/admin/top-readers"),
+        ]);
+        if (res.ok) {
+          const data = await res.json();
+          setUsers(data.users || []);
+          setPurchases(data.purchases || []);
+          setReadingProgress(data.readingProgress || []);
+          setBooks(data.books || []);
+        }
+        if (topReadersRes.ok) {
+          const data = await topReadersRes.json();
+          setAdminTopReaders(data.topReaders || []);
+        }
       } catch (err) {
         console.error("Error fetching user report data:", err);
       } finally {
@@ -197,6 +222,21 @@ export default function UserReport() {
     };
     fetchData();
   }, []);
+
+  const handleRefreshLeaderboard = async () => {
+    setIsRefreshing(true);
+    try {
+      const res = await fetch("/api/admin/top-readers", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setAdminTopReaders(data.topReaders || []);
+      }
+    } catch (err) {
+      console.error("Error refreshing leaderboard:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const bookTitleMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -287,50 +327,6 @@ export default function UserReport() {
         readers: userSet.size,
       }))
       .sort((a, b) => b.readers - a.readers);
-  }, [readingProgress, bookTitleMap]);
-
-  // Top Readers table
-  const topReaders = useMemo(() => {
-    // Aggregate per user
-    const userMap: Record<
-      string,
-      {
-        name: string;
-        booksRead: number;
-        chaptersCompleted: number;
-        lastActive: string | null;
-        bookTitles: string[];
-      }
-    > = {};
-
-    for (const rp of readingProgress) {
-      if (!userMap[rp.user_id]) {
-        const name = rp.display_name || rp.phone || rp.email || "Unknown";
-        userMap[rp.user_id] = {
-          name,
-          booksRead: 0,
-          chaptersCompleted: 0,
-          lastActive: null,
-          bookTitles: [],
-        };
-      }
-      const entry = userMap[rp.user_id];
-      entry.booksRead++;
-      entry.chaptersCompleted += rp.completed_chapters?.length || 0;
-      if (rp.book_id && bookTitleMap[rp.book_id]) {
-        entry.bookTitles.push(bookTitleMap[rp.book_id]);
-      }
-      if (
-        rp.last_read_at &&
-        (!entry.lastActive || rp.last_read_at > entry.lastActive)
-      ) {
-        entry.lastActive = rp.last_read_at;
-      }
-    }
-
-    return Object.values(userMap)
-      .sort((a, b) => b.chaptersCompleted - a.chaptersCompleted)
-      .slice(0, 10);
   }, [readingProgress, bookTitleMap]);
 
   const tooltipStyle = {
@@ -480,69 +476,71 @@ export default function UserReport() {
       )}
 
       {/* Top Readers Table */}
-      {topReaders.length > 0 && (
-        <>
-          <h3 className="report-section-title">Top Readers</h3>
-          <div className="admin-card">
-            <div className="admin-table-wrapper">
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Reader</th>
-                    <th>Books</th>
-                    <th style={{ textAlign: "right" }}>Chapters</th>
-                    <th>Last Active</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topReaders.map((reader, i) => (
-                    <tr key={i}>
-                      <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <span
-                            style={{
-                              width: 10,
-                              height: 10,
-                              borderRadius: "50%",
-                              background: COLORS[i % COLORS.length],
-                              flexShrink: 0,
-                            }}
-                          />
-                          {reader.name}
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className="admin-text-muted"
-                          style={{
-                            fontSize: "0.8125rem",
-                            maxWidth: "200px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {reader.bookTitles.join(", ") || "None"}
-                        </div>
-                      </td>
-                      <td style={{ textAlign: "right", fontWeight: 600 }}>
-                        {reader.chaptersCompleted}
-                      </td>
-                      <td>
-                        {reader.lastActive
-                          ? new Date(reader.lastActive).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })
-                          : "Never"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap", marginTop: "1.5rem", marginBottom: "0.75rem" }}>
+        <h3 className="report-section-title" style={{ margin: 0 }}>Top Readers</h3>
+        <button
+          className="admin-refresh-btn"
+          onClick={handleRefreshLeaderboard}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? "Refreshing..." : "Refresh Leaderboard"}
+        </button>
+      </div>
+      {adminTopReaders.length > 0 ? (
+        <div className="admin-card">
+          {adminTopReaders[0]?.refreshed_at && (
+            <div style={{ padding: "0.5rem 1rem", fontSize: "0.75rem", color: "var(--admin-text-muted)", borderBottom: "1px solid var(--admin-border)" }}>
+              Last refreshed: {new Date(adminTopReaders[0].refreshed_at).toLocaleString()}
             </div>
+          )}
+          <div className="admin-table-wrapper">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Reader</th>
+                  <th style={{ textAlign: "right" }}>Points</th>
+                  <th style={{ textAlign: "right" }}>Chapters</th>
+                  <th style={{ textAlign: "right" }}>Comments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminTopReaders.map((reader, i) => (
+                  <tr key={reader.user_id}>
+                    <td style={{ fontWeight: 600, width: "2rem" }}>{reader.rank}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <img
+                          src={getAvatarUrl(reader.avatar_url, reader.user_id)}
+                          alt=""
+                          style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                        />
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{reader.display_name || reader.phone || "Unknown"}</div>
+                          {reader.display_name && reader.phone && (
+                            <div className="admin-text-muted" style={{ fontSize: "0.75rem" }}>{reader.phone}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 600 }}>
+                      <span style={{ color: COLORS[i % COLORS.length] }}>{reader.engagement_score}</span>
+                    </td>
+                    <td style={{ textAlign: "right" }}>{reader.chapters_completed}</td>
+                    <td style={{ textAlign: "right" }}>{reader.comments_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
+      ) : (
+        <div className="admin-card">
+          <div className="admin-card-empty">
+            <h3 className="admin-card-empty-title">No top readers yet</h3>
+            <p className="admin-card-empty-text">Click &quot;Refresh Leaderboard&quot; to calculate scores</p>
+          </div>
+        </div>
       )}
     </div>
   );

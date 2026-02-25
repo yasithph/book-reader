@@ -43,10 +43,21 @@ export async function GET() {
       }
     }
 
+    // Check if user is a top reader
+    const { data: topReaderData } = await supabase
+      .from("top_readers")
+      .select("rank, engagement_score, badge_notified")
+      .eq("user_id", session.userId)
+      .maybeSingle();
+
     return NextResponse.json({
       stats: {
         totalCompletedChapters,
         totalCompletedBooks,
+        isTopReader: !!topReaderData,
+        topReaderRank: topReaderData?.rank ?? undefined,
+        engagementScore: topReaderData?.engagement_score ?? undefined,
+        badgeNotified: topReaderData?.badge_notified ?? undefined,
       },
     });
   } catch (error) {

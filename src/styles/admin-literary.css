@@ -6696,6 +6696,34 @@
   color: white;
 }
 
+.admin-dark .admin-user-filter-chip.active {
+  color: var(--admin-bg);
+}
+
+.admin-refresh-btn {
+  flex-shrink: 0;
+  padding: 0.4375rem 0.875rem;
+  border: 1.5px solid var(--admin-border);
+  border-radius: 20px;
+  background: var(--admin-elevated);
+  color: var(--admin-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--admin-transition-fast);
+  white-space: nowrap;
+}
+
+.admin-refresh-btn:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-accent);
+}
+
+.admin-refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Card Actions */
 .admin-user-card-actions {
   display: flex;
