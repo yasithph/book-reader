@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [stats, setStats] = React.useState<ReadingStats>({ totalCompletedChapters: 0, totalCompletedBooks: 0 });
   const [isAvatarSheetOpen, setIsAvatarSheetOpen] = React.useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
   const [language, setLanguage] = React.useState<LanguagePreference>("si");
   const [theme, setTheme] = React.useState<ReaderTheme>("light");
   const [fontSize, setFontSize] = React.useState(18);
@@ -172,11 +173,46 @@ export default function SettingsPage() {
     }
   };
 
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const MAX_DIM = 512;
+        let { width, height } = img;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas not supported")); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { reject(new Error("Compression failed")); return; }
+            resolve(new File([blob], "avatar.jpg", { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          0.8
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
+      const objectUrl = URL.createObjectURL(file);
+      img.src = objectUrl;
+    });
+  };
+
   const handleCustomUpload = async (file: File) => {
     setIsUploadingAvatar(true);
+    setUploadError(null);
     try {
+      const compressed = await compressImage(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const res = await fetch("/api/user/avatar", {
         method: "POST",
         body: formData,
@@ -185,9 +221,13 @@ export default function SettingsPage() {
         const { avatar_url } = await res.json();
         setAvatarUrl(avatar_url);
         setIsAvatarSheetOpen(false);
+      } else {
+        const data = await res.json().catch(() => null);
+        setUploadError(data?.error || "Upload failed. Please try again.");
       }
     } catch (error) {
       console.error("Failed to upload avatar:", error);
+      setUploadError("Upload failed. Please try again.");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -226,7 +266,7 @@ export default function SettingsPage() {
             displayName={displayName}
             phone={phone}
             stats={stats}
-            onAvatarClick={() => setIsAvatarSheetOpen(true)}
+            onAvatarClick={() => { setUploadError(null); setIsAvatarSheetOpen(true); }}
             onNameChange={handleNameChange}
           />
 
@@ -531,6 +571,7 @@ export default function SettingsPage() {
           onSelectAvatar={handleAvatarSelect}
           onUploadFile={handleCustomUpload}
           isUploading={isUploadingAvatar}
+          uploadError={uploadError}
         />
       </main>
 

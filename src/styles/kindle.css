@@ -1971,6 +1971,14 @@
   }
 }
 
+.kindle-avatar-error {
+  color: #dc2626;
+  font-size: 13px;
+  text-align: center;
+  padding: 0 16px 12px;
+  margin: 0;
+}
+
 .kindle-avatar-file-input {
   display: none;
 }

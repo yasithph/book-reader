@@ -10,6 +10,7 @@ interface AvatarSelectionSheetProps {
   onSelectAvatar: (url: string) => void;
   onUploadFile: (file: File) => void;
   isUploading: boolean;
+  uploadError?: string | null;
 }
 
 export function AvatarSelectionSheet({
@@ -20,6 +21,7 @@ export function AvatarSelectionSheet({
   onSelectAvatar,
   onUploadFile,
   isUploading,
+  uploadError,
 }: AvatarSelectionSheetProps) {
   const [isDragging, setIsDragging] = React.useState(false);
   const [dragOffset, setDragOffset] = React.useState(0);
@@ -172,6 +174,10 @@ export function AvatarSelectionSheet({
             </button>
           </div>
         </div>
+
+        {uploadError && (
+          <p className="kindle-avatar-error">{uploadError}</p>
+        )}
 
         <input
           ref={fileInputRef}

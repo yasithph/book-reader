@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSession } from "@/lib/auth";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: "File too large. Maximum 2MB" },
+        { error: "File too large. Maximum 5MB" },
         { status: 400 }
       );
     }
@@ -50,9 +50,13 @@ export async function POST(request: NextRequest) {
     const ext = typeToExt[file.type] || "png";
     const fileName = `${session.userId}/${Date.now()}.${ext}`;
 
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("profile-pictures")
-      .upload(fileName, file, {
+      .upload(fileName, buffer, {
+        contentType: file.type,
         cacheControl: "3600",
         upsert: false,
       });
