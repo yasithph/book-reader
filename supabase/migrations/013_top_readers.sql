@@ -11,6 +11,7 @@ CREATE TABLE top_readers (
   comments_count INTEGER NOT NULL DEFAULT 0,
   chapter_likes_count INTEGER NOT NULL DEFAULT 0,
   comment_likes_count INTEGER NOT NULL DEFAULT 0,
+  comment_likes_received_count INTEGER NOT NULL DEFAULT 0,
   badge_notified BOOLEAN NOT NULL DEFAULT FALSE,
   refreshed_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -38,7 +39,7 @@ BEGIN
   TRUNCATE top_readers;
 
   -- Insert top N users with calculated scores
-  INSERT INTO top_readers (user_id, engagement_score, rank, chapters_completed, comments_count, chapter_likes_count, comment_likes_count, refreshed_at)
+  INSERT INTO top_readers (user_id, engagement_score, rank, chapters_completed, comments_count, chapter_likes_count, comment_likes_count, comment_likes_received_count, refreshed_at)
   SELECT
     user_id,
     score,
@@ -47,18 +48,21 @@ BEGIN
     comments_count,
     comment_likes_count,
     chapter_likes_count,
+    comment_likes_received_count,
     now()
   FROM (
     SELECT
       u.id AS user_id,
       COALESCE(rp.chapters_completed_count, 0) * 10
-        + COALESCE(cc.comments_count, 0) * 10
+        + COALESCE(cc.comments_count, 0) * 20
         + COALESCE(cl.comment_likes_count, 0) * 3
-        + COALESCE(chl.chapter_likes_count, 0) * 1 AS score,
+        + COALESCE(chl.chapter_likes_count, 0) * 1
+        + COALESCE(clr.comment_likes_received_count, 0) * 5 AS score,
       COALESCE(rp.chapters_completed_count, 0)::INTEGER AS chapters_completed_count,
       COALESCE(cc.comments_count, 0)::INTEGER AS comments_count,
       COALESCE(cl.comment_likes_count, 0)::INTEGER AS comment_likes_count,
-      COALESCE(chl.chapter_likes_count, 0)::INTEGER AS chapter_likes_count
+      COALESCE(chl.chapter_likes_count, 0)::INTEGER AS chapter_likes_count,
+      COALESCE(clr.comment_likes_received_count, 0)::INTEGER AS comment_likes_received_count
     FROM users u
     LEFT JOIN (
       SELECT user_id, SUM(array_length(completed_chapters, 1)) AS chapters_completed_count
@@ -82,12 +86,20 @@ BEGIN
       FROM chapter_likes
       GROUP BY user_id
     ) chl ON chl.user_id = u.id
+    LEFT JOIN (
+      SELECT c.user_id, COUNT(*) AS comment_likes_received_count
+      FROM comment_likes lk
+      JOIN chapter_comments c ON c.id = lk.comment_id
+      WHERE c.is_deleted = false
+      GROUP BY c.user_id
+    ) clr ON clr.user_id = u.id
     WHERE u.role = 'user'
       AND (
         COALESCE(rp.chapters_completed_count, 0) * 10
-        + COALESCE(cc.comments_count, 0) * 10
+        + COALESCE(cc.comments_count, 0) * 20
         + COALESCE(cl.comment_likes_count, 0) * 3
         + COALESCE(chl.chapter_likes_count, 0) * 1
+        + COALESCE(clr.comment_likes_received_count, 0) * 5
       ) > 0
     ORDER BY score DESC
     LIMIT top_n

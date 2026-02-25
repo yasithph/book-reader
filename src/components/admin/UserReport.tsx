@@ -20,6 +20,7 @@ interface AdminTopReader {
   comments_count: number;
   chapter_likes_count: number;
   comment_likes_count: number;
+  comment_likes_received_count: number;
   refreshed_at: string;
   display_name: string | null;
   phone: string | null;

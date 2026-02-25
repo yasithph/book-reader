@@ -6653,16 +6653,33 @@
    TOP READER BADGE
    =========================================== */
 
-.top-reader-badge-sm {
+.top-reader-badge-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: linear-gradient(135deg, #F5C518, #E8A900);
+  color: #5C3D00;
+  height: 16px;
+  padding: 0 6px 0 4px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(245, 197, 24, 0.4);
+  vertical-align: middle;
+}
+
+.top-reader-badge-pill-star {
+  width: 10px;
+  height: 10px;
   flex-shrink: 0;
 }
 
-.top-reader-badge-img-sm {
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
+.top-reader-badge-pill-text {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 16px;
 }
 
 .top-reader-badge-md {

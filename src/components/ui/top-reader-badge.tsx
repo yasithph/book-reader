@@ -13,8 +13,13 @@ export function TopReaderBadge({ size = "sm", rank }: TopReaderBadgeProps) {
 
   if (size === "sm") {
     return (
-      <span className="top-reader-badge-sm" title={isTopThree ? `Top Reader #${rank}` : "Top Reader"}>
-        <img src={badgeSrc} alt="" className="top-reader-badge-img-sm" />
+      <span className="top-reader-badge-pill" title={isTopThree ? `Top Reader #${rank}` : "Top Reader"}>
+        <svg className="top-reader-badge-pill-star" viewBox="0 0 12 12" fill="currentColor">
+          <path d="M6 0l1.76 3.57 3.94.57-2.85 2.78.67 3.93L6 8.89 2.48 10.85l.67-3.93L.3 4.14l3.94-.57z" />
+        </svg>
+        <span className="top-reader-badge-pill-text">
+          {isTopThree ? `#${rank}` : "Top"}
+        </span>
       </span>
     );
   }

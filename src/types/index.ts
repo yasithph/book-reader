@@ -36,6 +36,7 @@ export interface TopReader {
   comments_count: number;
   chapter_likes_count: number;
   comment_likes_count: number;
+  comment_likes_received_count: number;
   refreshed_at: string;
   badge_notified: boolean;
 }
