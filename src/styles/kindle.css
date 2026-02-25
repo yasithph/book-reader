@@ -1687,9 +1687,26 @@
   letter-spacing: 0.01em;
 }
 
+.kindle-profile-points {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  margin-top: 5px;
+  letter-spacing: 0.01em;
+  background: #f0f0f0;
+  padding: 2px 10px;
+  border-radius: 9999px;
+}
+
 @media (prefers-color-scheme: dark) {
   .kindle-profile-phone {
     color: #6b6b6b;
+  }
+  .kindle-profile-points {
+    color: #999;
+    background: #2a2a2a;
   }
 }
 
@@ -1713,11 +1730,6 @@
   color: #9a9a9a;
 }
 
-.kindle-profile-score {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #D4A017;
-}
 
 .kindle-profile-achievements-row {
   display: flex;

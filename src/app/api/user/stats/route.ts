@@ -50,13 +50,30 @@ export async function GET() {
       .eq("user_id", session.userId)
       .maybeSingle();
 
+    // Compute engagement score for all users (lightweight per-user queries)
+    let engagementScore = topReaderData?.engagement_score;
+    if (engagementScore == null) {
+      const [comments, commentLikesGiven, chapterLikes, commentLikesReceived] = await Promise.all([
+        supabase.from("chapter_comments").select("id", { count: "exact", head: true }).eq("user_id", session.userId).eq("is_deleted", false),
+        supabase.from("comment_likes").select("id", { count: "exact", head: true }).eq("user_id", session.userId),
+        supabase.from("chapter_likes").select("id", { count: "exact", head: true }).eq("user_id", session.userId),
+        supabase.from("comment_likes").select("comment_id, chapter_comments!inner(user_id)", { count: "exact", head: true }).eq("chapter_comments.user_id", session.userId),
+      ]);
+      engagementScore =
+        totalCompletedChapters * 10
+        + (comments.count ?? 0) * 20
+        + (commentLikesGiven.count ?? 0) * 3
+        + (chapterLikes.count ?? 0) * 1
+        + (commentLikesReceived.count ?? 0) * 5;
+    }
+
     return NextResponse.json({
       stats: {
         totalCompletedChapters,
         totalCompletedBooks,
         isTopReader: !!topReaderData,
         topReaderRank: topReaderData?.rank ?? undefined,
-        engagementScore: topReaderData?.engagement_score ?? undefined,
+        engagementScore,
         badgeNotified: topReaderData?.badge_notified ?? undefined,
       },
     });

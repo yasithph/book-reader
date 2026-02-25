@@ -120,6 +120,9 @@ export function ProfileCard({
             <p className="kindle-profile-phone">
               {phone ? formatPhone(phone) : "Loading..."}
             </p>
+            <p className="kindle-profile-points">
+              {stats.engagementScore ?? 0} points
+            </p>
           </div>
         </div>
 
@@ -127,11 +130,6 @@ export function ProfileCard({
         <div className="kindle-profile-achievements">
           <div className="kindle-profile-achievements-header">
             <span className="kindle-profile-achievements-title">Achievements</span>
-            {isTopReader && stats.engagementScore && (
-              <span className="kindle-profile-score">
-                {stats.engagementScore} pts
-              </span>
-            )}
           </div>
           <div className="kindle-profile-achievements-row">
             {isTopReader && (
